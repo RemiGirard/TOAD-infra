@@ -1,6 +1,12 @@
-# typescript-devops
+# TOAD infra
 
-Devops tools written in typescript.
+**T**raefik, **O**penStack, **A**nsible, **D**ocker
+
+Devops configuration files to create a cluster with :
+- Infomaniak : Openstack provider
+- OpenStack : create servers and networks
+- Ansible : install docker, docker swarm, docker registry
+- Docker Swarm : create traefik (reverse proxy), docker registry, deploy applications
 
 ## Full cluster creation
 
