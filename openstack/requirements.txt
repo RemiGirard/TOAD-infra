@@ -1,0 +1,8 @@
+openstackclient
+setuptools
+python-heatclient
+python-swiftclient
+python-glanceclient
+python-novaclient
+gnocchiclient
+python-cloudkittyclient
