@@ -29,17 +29,19 @@ Check if access is working:
   +----+------------+--------------+---------------+--------------+
   +----+------------+--------------+---------------+--------------+
 ```
-
-- Create a 
- requirements:
 - create a key pair
 ```
   ssh-keygen -t rsa -b 4096 -f ~/.ssh/certificates/test-ts-bastion.key
   cat ~/.ssh/certificates/test-ts-bastion.key.pub
   ssh-keygen -t rsa -b 4096 -f ~/.ssh/certificates/test-ts-worker.key
   cat ~/.ssh/certificates/test-ts-worker.key.pub
+  
+  # copy ssh keys to Horizon or create them via CLI :
+  openstack keypair create --public-key ~/.ssh/certificates/test-ts-bastion.key.pub test-ts-bastion
+  openstack keypair create --public-key ~/.ssh/certificates/test-ts-worker.key.pub test-ts-worker
 ```
-copy ssh keys to Horizon
+  
+Create a stack with the template:
 ```
   openstack stack create --template ./heat/02-MultipleNode/V3/swarm-cluster.yaml --wait test-ts-stack
 ```
@@ -58,7 +60,7 @@ nano ~/.ssh/config
 ```
 ```
 Host test-ts
-  HostName 195.15.197.122
+  HostName 123.456.789.012
   User debian
   IdentityFile /home/ubuntu/.ssh/certificates/test-ts-bastion.key
 ```
@@ -178,7 +180,7 @@ networks:
 ```
 
 
-optionnal:add bastionkey to be able to access manually to the workers
+optional:add bastionkey to be able to access manually to the workers
 ```
 ssh test-ts
 nano .ssh/id_ed25519.pub
