@@ -8,6 +8,16 @@ Devops configuration files to create a cluster with :
 - Ansible : install docker, docker swarm, docker registry
 - Docker Swarm : create traefik (reverse proxy), docker registry, deploy applications
 
+## Features
+
+- scalable hardware on Openstack
+- Docker swarm cluster
+- Reverse proxy / load balancer
+- staging environments on the fly (based on git branch name or any other parameters)
+- auto SSL certificates for HTTPS (staging environments included)
+- Isolated docker swarm services with common network only for exposed containers
+- full Infrastructure As Code with Heat, Ansible, Docker compose
+
 ## Full cluster creation
 
 ### From zero to Horizon
