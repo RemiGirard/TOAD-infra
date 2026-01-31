@@ -1,0 +1,179 @@
+heat_template_version: '2018-08-31'
+
+description: |
+  TOAD Level 0: Single Node Infrastructure
+
+  Provisions a single VM with:
+  - Security group allowing SSH (22), HTTP (80), HTTPS (443)
+  - Floating IP for public access
+  - Cloud-init for basic OS setup (updates only)
+
+  Docker and Swarm setup is handled by Ansible in the parent directory.
+
+parameters:
+  flavor:
+    type: string
+    description: Nova flavor name (e.g., "a2-ram4-disk20-perf1")
+    constraints:
+      - custom_constraint: nova.flavor
+
+  image:
+    type: string
+    description: Glance image name (e.g., "Ubuntu 22.04 LTS")
+    constraints:
+      - custom_constraint: glance.image
+
+  keypair_name:
+    type: string
+    description: Nova keypair name for SSH access
+    constraints:
+      - custom_constraint: nova.keypair
+
+  public_network:
+    type: string
+    description: Name of the public network for floating IPs (typically "public")
+    default: "public"
+
+resources:
+  # Security group with basic ports
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group for single node - SSH, HTTP, HTTPS
+      rules:
+        # SSH
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+          direction: ingress
+        # HTTP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+          direction: ingress
+        # HTTPS
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+          direction: ingress
+        # ICMP (ping)
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: ingress
+        # Egress (allow all)
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: egress
+
+  # Network for the instance
+  private_network:
+    type: OS::Neutron::Net
+    properties:
+      name: toad-level0-net
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_network }
+      cidr: 10.0.0.0/24
+      gateway_ip: 10.0.0.1
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+
+  # Router for public access
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_network }
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet }
+
+  # Network port for the instance
+  instance_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  # Floating IP
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
+    properties:
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: instance_port }
+
+  # Compute instance
+  server:
+    type: OS::Nova::Server
+    properties:
+      name: toad-level0-node
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: instance_port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            set -e
+            apt-get update
+            apt-get upgrade -y
+            apt-get autoremove -y
+            apt-get clean
+            apt-get install -y curl wget git jq htop
+          params: {}
+      metadata:
+        stack: { get_stack_id }
+
+outputs:
+  server_id:
+    description: Server ID
+    value: { get_resource: server }
+
+  server_name:
+    description: Server name
+    value: { get_attr: [server, name] }
+
+  private_ip:
+    description: Private IP address
+    value: { get_attr: [server, networks, toad-level0-net, 0] }
+
+  floating_ip:
+    description: Floating public IP address
+    value: { get_attr: [floating_ip, floating_ip_address] }
+
+  ssh_command:
+    description: SSH command to connect to the server
+    value:
+      str_replace:
+        template: "ssh -i /path/to/key ubuntu@IP"
+        params:
+          IP: { get_attr: [floating_ip, floating_ip_address] }
+
+  security_group_id:
+    description: Security group ID
+    value: { get_resource: security_group }
+
+  network_id:
+    description: Private network ID
+    value: { get_resource: private_network }

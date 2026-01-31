@@ -1,0 +1,323 @@
+heat_template_version: '2018-08-31'
+
+description: |
+  TOAD Level 3: Three-Node Docker Swarm Cluster (HA)
+
+  Provisions three VMs for highly-available Docker Swarm:
+  - 3 identical instances
+  - Shared security group with Swarm ports
+  - Private network for inter-node communication
+  - Floating IPs for public access
+  - Cloud-init for basic OS setup only
+
+  Swarm initialization (1 manager + 2 workers) handled by Ansible.
+
+parameters:
+  flavor:
+    type: string
+    description: Nova flavor name
+    constraints:
+      - custom_constraint: nova.flavor
+
+  image:
+    type: string
+    description: Glance image name
+    constraints:
+      - custom_constraint: glance.image
+
+  keypair_name:
+    type: string
+    description: Nova keypair name for SSH access
+    constraints:
+      - custom_constraint: nova.keypair
+
+  public_network:
+    type: string
+    description: Name of the public network for floating IPs
+    default: "public"
+
+resources:
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group for 3-node Swarm cluster
+      rules:
+        # SSH
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+          direction: ingress
+
+        # HTTP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+          direction: ingress
+
+        # HTTPS
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+          direction: ingress
+
+        # Docker Swarm - Port 2377 TCP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 2377
+          port_range_max: 2377
+          direction: ingress
+
+        # Docker Swarm - Port 7946 TCP/UDP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 7946
+          port_range_max: 7946
+          direction: ingress
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          port_range_min: 7946
+          port_range_max: 7946
+          direction: ingress
+
+        # Docker Swarm - Port 4789 UDP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          port_range_min: 4789
+          port_range_max: 4789
+          direction: ingress
+
+        # ICMP (ping)
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: ingress
+
+        # Egress rules
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          direction: egress
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          direction: egress
+
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: egress
+
+  private_network:
+    type: OS::Neutron::Net
+    properties:
+      name: toad-level3-net
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_network }
+      cidr: 10.0.0.0/24
+      gateway_ip: 10.0.0.1
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_network }
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet }
+
+  # Node 1
+  node1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  node1_floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
+    properties:
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: node1_port }
+
+  node1:
+    type: OS::Nova::Server
+    properties:
+      name: toad-level3-node1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: node1_port }
+      user_data: |
+        #!/bin/bash
+        set -e
+        apt-get update
+        apt-get upgrade -y
+        apt-get autoremove -y
+        apt-get clean
+        apt-get install -y curl wget git jq htop
+      metadata:
+        stack: { get_stack_id }
+        node: "node1"
+
+  # Node 2
+  node2_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  node2_floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
+    properties:
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: node2_port }
+
+  node2:
+    type: OS::Nova::Server
+    properties:
+      name: toad-level3-node2
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: node2_port }
+      user_data: |
+        #!/bin/bash
+        set -e
+        apt-get update
+        apt-get upgrade -y
+        apt-get autoremove -y
+        apt-get clean
+        apt-get install -y curl wget git jq htop
+      metadata:
+        stack: { get_stack_id }
+        node: "node2"
+
+  # Node 3
+  node3_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  node3_floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
+    properties:
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: node3_port }
+
+  node3:
+    type: OS::Nova::Server
+    properties:
+      name: toad-level3-node3
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: node3_port }
+      user_data: |
+        #!/bin/bash
+        set -e
+        apt-get update
+        apt-get upgrade -y
+        apt-get autoremove -y
+        apt-get clean
+        apt-get install -y curl wget git jq htop
+      metadata:
+        stack: { get_stack_id }
+        node: "node3"
+
+outputs:
+  node1_id:
+    description: Node 1 server ID
+    value: { get_resource: node1 }
+
+  node1_private_ip:
+    description: Node 1 private IP address
+    value: { get_attr: [node1, networks, toad-level3-net, 0] }
+
+  node1_floating_ip:
+    description: Node 1 floating public IP address
+    value: { get_attr: [node1_floating_ip, floating_ip_address] }
+
+  node1_ssh_command:
+    description: SSH command to Node 1
+    value:
+      str_replace:
+        template: "ssh -i /path/to/key ubuntu@IP"
+        params:
+          IP: { get_attr: [node1_floating_ip, floating_ip_address] }
+
+  node2_id:
+    description: Node 2 server ID
+    value: { get_resource: node2 }
+
+  node2_private_ip:
+    description: Node 2 private IP address
+    value: { get_attr: [node2, networks, toad-level3-net, 0] }
+
+  node2_floating_ip:
+    description: Node 2 floating public IP address
+    value: { get_attr: [node2_floating_ip, floating_ip_address] }
+
+  node2_ssh_command:
+    description: SSH command to Node 2
+    value:
+      str_replace:
+        template: "ssh -i /path/to/key ubuntu@IP"
+        params:
+          IP: { get_attr: [node2_floating_ip, floating_ip_address] }
+
+  node3_id:
+    description: Node 3 server ID
+    value: { get_resource: node3 }
+
+  node3_private_ip:
+    description: Node 3 private IP address
+    value: { get_attr: [node3, networks, toad-level3-net, 0] }
+
+  node3_floating_ip:
+    description: Node 3 floating public IP address
+    value: { get_attr: [node3_floating_ip, floating_ip_address] }
+
+  node3_ssh_command:
+    description: SSH command to Node 3
+    value:
+      str_replace:
+        template: "ssh -i /path/to/key ubuntu@IP"
+        params:
+          IP: { get_attr: [node3_floating_ip, floating_ip_address] }
+
+  network_id:
+    description: Private network ID
+    value: { get_resource: private_network }
+
+  security_group_id:
+    description: Security group ID
+    value: { get_resource: security_group }
+
+  ha_ready:
+    description: 3 nodes provisioned for HA Swarm setup
+    value: "true"

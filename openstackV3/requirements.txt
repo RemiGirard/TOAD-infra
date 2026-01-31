@@ -1,0 +1,6 @@
+# OpenStack client libraries for Infomaniak OpenCloud
+openstacksdk>=4.0.0
+python-openstackclient>=7.0.0
+python-heatclient>=4.0.0
+python-keystoneclient>=5.0.0
+pyyaml>=6.0

@@ -1,0 +1,86 @@
+# Virtual environments
+openstack_cli/
+venv/
+.venv
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.sublime-project
+.sublime-workspace
+
+# OpenStack credentials and secrets
+credentials/PCU-*.yaml
+credentials/*.yaml
+!credentials/.gitkeep
+!credentials/*.example
+clouds.yaml
+openrc.sh
+
+# Stack backups and temporary files
+*.bak
+*.tmp
+*.temp
+stack-backup/
+.stack-history
+
+# Environment files (keep example)
+heat/env/*.yaml
+!heat/env/example.yaml
+heat/env/.*
+.env
+.env.local
+
+# Node modules and TypeScript build
+node_modules/
+dist/
+*.js
+!scripts/discover.ts
+!scripts/deploy-stack.ts
+!scripts/cleanup-stack.ts
+
+# npm and yarn
+package-lock.json
+yarn.lock
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Heat template backups
+heat/*.bak
+heat/*.backup

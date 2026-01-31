@@ -1,0 +1,327 @@
+heat_template_version: '2018-08-31'
+
+description: |
+  TOAD Level 4: Standard Docker Swarm with Gateway
+
+  Architecture:
+  - 1 Gateway node (Traefik) with floating IP
+  - 3 Swarm nodes on private network (no floating IPs)
+  - Total: 4 nodes, 1 floating IP
+
+  Traffic flow:
+  Internet → Floating IP → Gateway/Traefik → Swarm nodes
+
+  SSH access via gateway node.
+
+parameters:
+  flavor:
+    type: string
+    description: Nova flavor for all nodes
+    constraints:
+      - custom_constraint: nova.flavor
+
+  image:
+    type: string
+    description: Glance image name
+    constraints:
+      - custom_constraint: glance.image
+
+  keypair_name:
+    type: string
+    description: SSH keypair name
+    constraints:
+      - custom_constraint: nova.keypair
+
+  public_network:
+    type: string
+    description: Public network for floating IP
+    default: "ext-floating1"
+
+  swarm_node_count:
+    type: number
+    description: Number of Swarm nodes
+    default: 3
+    constraints:
+      - range: { min: 1, max: 10 }
+
+resources:
+  # === SECURITY GROUPS ===
+
+  gateway_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group for gateway node (public facing)
+      rules:
+        # SSH
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+          direction: ingress
+        # HTTP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+          direction: ingress
+        # HTTPS
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+          direction: ingress
+        # ICMP
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: ingress
+        # Egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: egress
+
+  swarm_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Security group for swarm nodes (private network)
+      rules:
+        # SSH from private network
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+          direction: ingress
+        # HTTP from gateway
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 80
+          port_range_max: 80
+          direction: ingress
+        # HTTPS from gateway
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+          direction: ingress
+        # Docker Swarm ports (internal)
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 2377
+          port_range_max: 2377
+          direction: ingress
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 7946
+          port_range_max: 7946
+          direction: ingress
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: udp
+          port_range_min: 7946
+          port_range_max: 7946
+          direction: ingress
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: udp
+          port_range_min: 4789
+          port_range_max: 4789
+          direction: ingress
+        # All ports from private network (for Traefik to reach any service)
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 1
+          port_range_max: 65535
+          direction: ingress
+        # ICMP
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: icmp
+          direction: ingress
+        # Egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: udp
+          direction: egress
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+          direction: egress
+
+  # === NETWORK ===
+
+  private_network:
+    type: OS::Neutron::Net
+    properties:
+      name: toad-level4-net
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_network }
+      cidr: 10.0.0.0/24
+      gateway_ip: 10.0.0.1
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: public_network }
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet }
+
+  # === GATEWAY NODE ===
+
+  gateway_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: gateway_security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+          ip_address: 10.0.0.10
+
+  gateway_floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
+    properties:
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: gateway_port }
+
+  gateway:
+    type: OS::Nova::Server
+    properties:
+      name: toad-gateway
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: gateway_port }
+      user_data: |
+        #!/bin/bash
+        apt-get update && apt-get upgrade -y
+        apt-get install -y curl wget git jq htop
+      metadata:
+        role: gateway
+
+  # === SWARM NODES ===
+
+  swarm1_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: swarm_security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+          ip_address: 10.0.0.11
+
+  swarm1:
+    type: OS::Nova::Server
+    properties:
+      name: toad-swarm-1
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: swarm1_port }
+      user_data: |
+        #!/bin/bash
+        apt-get update && apt-get upgrade -y
+        apt-get install -y curl wget git jq htop
+      metadata:
+        role: swarm-manager
+
+  swarm2_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: swarm_security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+          ip_address: 10.0.0.12
+
+  swarm2:
+    type: OS::Nova::Server
+    properties:
+      name: toad-swarm-2
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: swarm2_port }
+      user_data: |
+        #!/bin/bash
+        apt-get update && apt-get upgrade -y
+        apt-get install -y curl wget git jq htop
+      metadata:
+        role: swarm-worker
+
+  swarm3_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_network }
+      security_groups:
+        - { get_resource: swarm_security_group }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+          ip_address: 10.0.0.13
+
+  swarm3:
+    type: OS::Nova::Server
+    properties:
+      name: toad-swarm-3
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks:
+        - port: { get_resource: swarm3_port }
+      user_data: |
+        #!/bin/bash
+        apt-get update && apt-get upgrade -y
+        apt-get install -y curl wget git jq htop
+      metadata:
+        role: swarm-worker
+
+outputs:
+  gateway_floating_ip:
+    description: Gateway public IP (entry point)
+    value: { get_attr: [gateway_floating_ip, floating_ip_address] }
+
+  gateway_private_ip:
+    description: Gateway private IP
+    value: 10.0.0.10
+
+  swarm_private_ips:
+    description: Swarm node private IPs
+    value:
+      - 10.0.0.11
+      - 10.0.0.12
+      - 10.0.0.13
+
+  ssh_gateway:
+    description: SSH to gateway
+    value:
+      str_replace:
+        template: ssh ubuntu@IP
+        params:
+          IP: { get_attr: [gateway_floating_ip, floating_ip_address] }
+
+  ssh_swarm_via_gateway:
+    description: SSH to swarm nodes via gateway
+    value: "ssh -J ubuntu@<gateway-ip> ubuntu@10.0.0.11"
+
+  network_id:
+    description: Private network ID
+    value: { get_resource: private_network }
