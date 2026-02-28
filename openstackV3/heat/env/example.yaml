@@ -1,0 +1,28 @@
+# TOAD Heat Environment File - Example
+# Copy to a new file (e.g., myenv.yaml) and customize
+# Usage: openstack stack create -t heat/levelX.yaml -e heat/env/myenv.yaml stack-name
+
+parameters:
+  # Instance flavor (run: openstack flavor list)
+  # Small: a1-ram2-disk20-perf1 (1 vCPU, 2GB RAM)
+  # Medium: a2-ram4-disk20-perf1 (2 vCPU, 4GB RAM) - recommended
+  # Large: a4-ram8-disk50-perf1 (4 vCPU, 8GB RAM)
+  flavor: "a2-ram4-disk20-perf1"
+
+  # Ubuntu image (run: openstack image list)
+  image: "Ubuntu 24.04 LTS Noble Numbat"
+
+  # SSH keypair name (run: openstack keypair list)
+  keypair_name: "toad-key"
+
+  # External network for floating IPs
+  public_network: "ext-floating1"
+
+  # SSH access restriction (security)
+  # Default: open to all (0.0.0.0/0)
+  # Recommended: restrict to your IP (e.g., "203.0.113.50/32")
+  # Or VPN/office CIDR (e.g., "10.100.0.0/16")
+  # ssh_allowed_cidr: "0.0.0.0/0"
+
+  # For level4/level5: number of worker nodes (default: 3)
+  # node_count: 3

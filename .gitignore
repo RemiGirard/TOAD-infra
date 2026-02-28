@@ -1,4 +1,55 @@
-.idea
-.vscode
+# =============================================================================
+# TOAD-infra .gitignore
+# =============================================================================
 
-*/credentials/*
+# -- Secrets & Credentials --
+# Never commit credentials, keys, passwords, tokens
+**/credentials/*
+!**/credentials/.gitkeep
+*.pem
+*.key
+!*.key.pub
+**/.env
+**/.env.*
+!**/.env.example
+
+# -- Python --
+venv/
+.venv/
+openstack_cli/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# -- Node --
+node_modules/
+dist/
+*.js
+*.js.map
+npm-debug.log*
+
+# -- IDE --
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# -- Claude / AI --
+.claude/
+
+# -- Generated files --
+**/inventory.yaml
+!**/inventory.example.yaml
+
+# -- Logs & Temp --
+*.log
+*.bak
+*.tmp
+*.temp
+
+# -- Old versions (removed from tracking, kept locally) --
+openstack/
+openstackV2/

@@ -3,8 +3,8 @@
   hosts: main
   become: yes
   vars:
-#    registry_domain: remigirard.dev
-    registry_domain: lheuredescomptes.org
+    # EDIT: set your domain name for the Docker registry
+    registry_domain: example.com
     ansible_python_interpreter: /usr/bin/python3
     certs_dir: /opt/registry/certs
     data_dir: /opt/registry/data

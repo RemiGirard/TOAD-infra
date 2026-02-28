@@ -1,0 +1,14 @@
+# Ansible inventory template
+# Copy this file to inventory.yaml and fill in your values.
+# inventory.yaml is gitignored - never commit real host details.
+
+swarm:
+  hosts:
+    main:
+      # EDIT: your manager node hostname or IP
+      ansible_host: your-server.example.com
+      # EDIT: private IP of the manager (used for swarm init --advertise-addr)
+      private_ip: 10.0.0.10
+      ansible_user: debian
+      # EDIT: path to your SSH private key
+      ansible_ssh_private_key_file: ~/.ssh/your-key

@@ -1,0 +1,25 @@
+{
+  "name": "toad-openstack",
+  "version": "1.0.0",
+  "description": "TOAD Infrastructure for Infomaniak OpenCloud",
+  "type": "module",
+  "scripts": {
+    "cli": "tsx scripts/index.ts",
+    "setup": "tsx scripts/index.ts setup",
+    "discover": "tsx scripts/index.ts discover",
+    "deploy": "tsx scripts/index.ts deploy",
+    "destroy": "tsx scripts/index.ts destroy",
+    "status": "tsx scripts/index.ts status",
+    "ssh": "tsx scripts/index.ts ssh",
+    "inventory": "tsx scripts/index.ts inventory",
+    "os": "tsx scripts/index.ts os"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.8.2"
+  }
+}
