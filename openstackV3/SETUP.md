@@ -1,119 +1,60 @@
 # TOAD OpenStack Setup Guide
 
-Quick setup for Infomaniak OpenCloud infrastructure.
+One-command setup for Infomaniak OpenCloud infrastructure.
 
 ## Prerequisites
 
+- Node.js 18+
+- Python 3.8+
 - Infomaniak OpenCloud account
-- SSH key pair on your local machine (`~/.ssh/id_ed25519` or `~/.ssh/id_rsa`)
 
-## 1. Clone and Setup
-
-```bash
-cd /path/to/TOAD-infra/openstackV3
-
-# Create Python virtual environment
-python3 -m venv openstack_cli
-source openstack_cli/bin/activate
-pip install -r requirements.txt
-```
-
-## 2. Configure Credentials
+## Quick Start
 
 ```bash
-# Copy template
-cp .env.example .env
+# 1. Install npm dependencies
+npm install
 
-# Edit and add your password
-nano .env
+# 2. Run setup (creates venv, prompts for credentials, generates SSH key)
+npm run setup
+
+# 3. Deploy infrastructure
+npm run deploy
+
+# 4. Check status
+npm run status
+
+# 5. SSH to nodes
+npm run ssh
+
+# 6. Generate Ansible inventory
+npm run inventory <stack-name>
+
+# 7. Cleanup
+npm run destroy
 ```
 
-Your `.env` should look like:
-```
-OS_AUTH_URL=https://api.pub1.infomaniak.cloud/identity/v3
-OS_USERNAME=PCU-XXXXXXX
-OS_PASSWORD=your-password-here
-OS_PROJECT_NAME=PCP-XXXXXXX
-OS_USER_DOMAIN_NAME=default
-OS_PROJECT_DOMAIN_NAME=default
-OS_IDENTITY_API_VERSION=3
-OS_REGION_NAME=dc3-a
-```
+## Available Commands
 
-## 3. Load Environment and Test
+| Command | Description |
+|---------|-------------|
+| `npm run setup` | Full setup: Python venv, credentials, SSH key |
+| `npm run discover` | Show available flavors, images, networks |
+| `npm run deploy` | Deploy a stack (interactive) |
+| `npm run status` | Show all stacks, servers, IPs |
+| `npm run ssh` | SSH to any node (interactive) |
+| `npm run inventory` | Generate Ansible inventory.yaml |
+| `npm run destroy` | Delete a stack (interactive) |
 
-```bash
-source scripts/source-env.sh
-openstack token issue
-```
-
-## 4. Create SSH Keypair
-
-```bash
-# Upload your public key to OpenStack
-openstack keypair create --public-key ~/.ssh/id_ed25519.pub my-key
-
-# Verify
-openstack keypair list
-```
-
-## 5. Update Environment File
-
-Edit `heat/env/example.yaml` with your values:
-
-```yaml
-parameters:
-  flavor: "a2-ram4-disk20-perf1"
-  image: "Ubuntu 24.04 LTS Noble Numbat"
-  keypair_name: "my-key"          # Your keypair name from step 4
-  public_network: "ext-floating1"
-```
-
-## 6. Deploy
-
-Choose your level:
+## Deployment Levels
 
 | Level | Description | Nodes | Floating IPs |
 |-------|-------------|-------|--------------|
-| 4 | Standard (1 gateway + 3 swarm) | 4 | 1 |
-| 5 | HA (bastion + LB + 2 gateways + 3 swarm) | 6 | 2 |
-
-```bash
-# Deploy Level 4 (standard)
-./scripts/deploy.sh 4 my-stack heat/env/example.yaml
-
-# Or deploy Level 5 (HA)
-./scripts/deploy.sh 5 my-stack heat/env/example.yaml
-```
-
-## 7. Get Connection Info
-
-```bash
-openstack stack output show my-stack --all
-```
-
-## 8. Connect
-
-**Level 4:**
-```bash
-ssh ubuntu@<gateway-floating-ip>
-ssh -J ubuntu@<gateway-ip> ubuntu@10.0.0.11  # swarm node
-```
-
-**Level 5:**
-```bash
-ssh ubuntu@<bastion-floating-ip>
-ssh -J ubuntu@<bastion-ip> ubuntu@10.0.0.10  # gateway node
-```
-
-## 9. Cleanup
-
-```bash
-./scripts/cleanup.sh my-stack
-openstack keypair delete my-key
-```
-
----
+| 0 | Single node | 1 | 1 |
+| 1 | Single node + Swarm ports | 1 | 1 |
+| 2 | 2-node cluster | 2 | 2 |
+| 3 | 3-node HA cluster | 3 | 3 |
+| **4** | Gateway + 3 Swarm (Standard) | 4 | 1 |
+| **5** | Bastion + LB + 2 Gateways + 3 Swarm (HA) | 6 | 2 |
 
 ## Architecture
 
@@ -123,13 +64,12 @@ Internet
     │
     ▼
 ┌─────────────────┐
-│  Floating IP    │
+│  1 Floating IP  │
 └────────┬────────┘
-         │
          ▼
-┌─────────────────┐
-│    Gateway      │ 10.0.0.10  (Traefik + SSH)
-└────────┬────────┘
+    ┌─────────┐
+    │ Gateway │ 10.0.0.10
+    └────┬────┘
          │
     ┌────┴────┬─────────┐
     ▼         ▼         ▼
@@ -143,39 +83,74 @@ Internet
 ```
 Internet
     │
-    ├──────────────────┐
-    ▼                  ▼
-┌─────────┐      ┌─────────┐
-│ FIP:SSH │      │ FIP:LB  │
-└────┬────┘      └────┬────┘
-     │                │
-     ▼                ▼
-┌─────────┐      ┌─────────┐
-│ Bastion │      │Octavia  │
-│  .5     │      │  LB     │
-└────┬────┘      └────┬────┘
-     │                │
-     │           ┌────┴────┐
-     │           ▼         ▼
-     │      ┌───────┐ ┌───────┐
-     │      │  GW 1 │ │  GW 2 │
-     │      │  .10  │ │  .11  │
-     │      └───┬───┘ └───┬───┘
-     │          │         │
-     │     ┌────┴─────────┴────┐
-     │     ▼         ▼         ▼
-     │ ┌───────┐ ┌───────┐ ┌───────┐
-     └─│Swarm 1│ │Swarm 2│ │Swarm 3│
-       │  .20  │ │  .21  │ │  .22  │
-       └───────┘ └───────┘ └───────┘
+    ├────────────────┐
+    ▼                ▼
+┌─────────┐    ┌──────────┐
+│ FIP:SSH │    │ FIP:HTTP │
+└────┬────┘    └────┬─────┘
+     ▼              ▼
+┌─────────┐    ┌─────────┐
+│ Bastion │    │Octavia  │
+│   .5    │    │   LB    │
+└─────────┘    └────┬────┘
+                    │
+              ┌─────┴─────┐
+              ▼           ▼
+         ┌────────┐ ┌────────┐
+         │  GW 1  │ │  GW 2  │
+         │  .10   │ │  .11   │
+         └────┬───┘ └────┬───┘
+              │          │
+         ┌────┴──────────┴────┐
+         ▼         ▼          ▼
+    ┌────────┐ ┌────────┐ ┌────────┐
+    │Swarm 1 │ │Swarm 2 │ │Swarm 3 │
+    │  .20   │ │  .21   │ │  .22   │
+    └────────┘ └────────┘ └────────┘
 ```
 
-## Troubleshooting
+## File Structure
 
-**"keypair not found"**: Run step 4 to create keypair.
+```
+openstackV3/
+├── package.json          # npm scripts
+├── .env                  # Credentials (gitignored)
+├── .env.example          # Credentials template
+├── credentials/
+│   ├── toad-key          # SSH private key (gitignored)
+│   └── toad-key.pub      # SSH public key (gitignored)
+├── heat/
+│   ├── env/example.yaml  # Heat parameters
+│   └── level*.yaml       # Heat templates
+├── scripts/
+│   ├── lib/openstack.ts  # Shared utilities
+│   ├── setup.ts          # npm run setup
+│   ├── discover.ts       # npm run discover
+│   ├── deploy.ts         # npm run deploy
+│   ├── status.ts         # npm run status
+│   ├── ssh.ts            # npm run ssh
+│   ├── inventory.ts      # npm run inventory
+│   └── cleanup.ts        # npm run destroy
+└── inventory.yaml        # Generated Ansible inventory
+```
 
-**"quota exceeded"**: Delete old resources or request quota increase.
+## Isolation
 
-**SSH timeout**: Wait 1-2 minutes for instance to boot.
+Everything stays local to this project:
+- SSH keys: `credentials/toad-key` (not `~/.ssh/`)
+- Python venv: `openstack_cli/` (not global)
+- Credentials: `.env` (not environment)
+- Ansible inventory: `inventory.yaml` (generated per stack)
 
-**LB status ERROR**: Expected until Traefik is installed by Ansible.
+No global files are modified.
+
+## Next Steps After Deploy
+
+```bash
+# Generate Ansible inventory
+npm run inventory my-stack
+
+# Run Ansible playbooks
+cd ../ansible
+ansible-playbook -i ../openstackV3/inventory.yaml playbooks/initJoinSwarm.yaml
+```

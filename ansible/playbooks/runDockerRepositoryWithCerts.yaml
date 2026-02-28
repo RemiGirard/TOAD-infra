@@ -4,7 +4,7 @@
   become: yes
   vars:
 #    registry_domain: remigirard.dev
-    registry_domain: myregistry.example.com
+    registry_domain: lheuredescomptes.org
     ansible_python_interpreter: /usr/bin/python3
     certs_dir: /opt/registry/certs
     data_dir: /opt/registry/data

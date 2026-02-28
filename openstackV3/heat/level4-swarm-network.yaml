@@ -37,6 +37,11 @@ parameters:
     description: Public network for floating IP
     default: "ext-floating1"
 
+  ssh_allowed_cidr:
+    type: string
+    description: CIDR allowed for SSH access (restrict to your IP for security)
+    default: "0.0.0.0/0"
+
   swarm_node_count:
     type: number
     description: Number of Swarm nodes
@@ -52,8 +57,8 @@ resources:
     properties:
       description: Security group for gateway node (public facing)
       rules:
-        # SSH
-        - remote_ip_prefix: 0.0.0.0/0
+        # SSH (restricted by parameter)
+        - remote_ip_prefix: { get_param: ssh_allowed_cidr }
           protocol: tcp
           port_range_min: 22
           port_range_max: 22
@@ -70,8 +75,8 @@ resources:
           port_range_min: 443
           port_range_max: 443
           direction: ingress
-        # ICMP
-        - remote_ip_prefix: 0.0.0.0/0
+        # ICMP internal only
+        - remote_ip_prefix: 10.0.0.0/24
           protocol: icmp
           direction: ingress
         # Egress
@@ -96,24 +101,24 @@ resources:
           port_range_min: 22
           port_range_max: 22
           direction: ingress
-        # HTTP from gateway
+        # HTTP/HTTPS from gateway
         - remote_ip_prefix: 10.0.0.0/24
           protocol: tcp
           port_range_min: 80
           port_range_max: 80
           direction: ingress
-        # HTTPS from gateway
         - remote_ip_prefix: 10.0.0.0/24
           protocol: tcp
           port_range_min: 443
           port_range_max: 443
           direction: ingress
-        # Docker Swarm ports (internal)
+        # Docker Swarm management
         - remote_ip_prefix: 10.0.0.0/24
           protocol: tcp
           port_range_min: 2377
           port_range_max: 2377
           direction: ingress
+        # Docker Swarm node communication
         - remote_ip_prefix: 10.0.0.0/24
           protocol: tcp
           port_range_min: 7946
@@ -124,16 +129,23 @@ resources:
           port_range_min: 7946
           port_range_max: 7946
           direction: ingress
+        # Docker overlay network
         - remote_ip_prefix: 10.0.0.0/24
           protocol: udp
           port_range_min: 4789
           port_range_max: 4789
           direction: ingress
-        # All ports from private network (for Traefik to reach any service)
+        # Docker Registry
         - remote_ip_prefix: 10.0.0.0/24
           protocol: tcp
-          port_range_min: 1
-          port_range_max: 65535
+          port_range_min: 5000
+          port_range_max: 5000
+          direction: ingress
+        # Application ports (Traefik backend services)
+        - remote_ip_prefix: 10.0.0.0/24
+          protocol: tcp
+          port_range_min: 8000
+          port_range_max: 9000
           direction: ingress
         # ICMP
         - remote_ip_prefix: 10.0.0.0/24
