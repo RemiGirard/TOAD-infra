@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/RemiGirard/TOAD-infra/compare/v1.1.0...v1.1.1) (2026-09-16)
+
+
+### Bug Fixes
+
+* **release:** enable attested image publishing ([#19](https://github.com/RemiGirard/TOAD-infra/issues/19)) ([b959f6e](https://github.com/RemiGirard/TOAD-infra/commit/b959f6e144fbc56fa450925a9a6f03cb773ef869))
+
 ## [1.1.0](https://github.com/RemiGirard/TOAD-infra/compare/v1.0.0...v1.1.0) (2026-09-16)
 
 
