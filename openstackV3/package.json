@@ -3,8 +3,25 @@
   "version": "1.0.0",
   "description": "TOAD Infrastructure for Infomaniak OpenCloud",
   "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "packageManager": "pnpm@12.4.2",
   "scripts": {
     "cli": "tsx scripts/index.ts",
+    "check": "tsc --noEmit && tsx scripts/validate.ts && tsx --test tests/**/*.test.ts",
+    "check:ansible": "tsx scripts/check-ansible.ts",
+    "commitlint": "tsx scripts/conventional-commit.ts",
+    "validate": "tsx scripts/validate.ts",
+    "doctor": "tsx scripts/index.ts doctor",
+    "apply": "tsx scripts/index.ts apply",
+    "verify": "tsx scripts/index.ts verify",
+    "admin-pki": "tsx scripts/index.ts admin-pki",
+    "dns": "tsx scripts/index.ts dns",
+    "dns-token": "tsx scripts/index.ts dns-token",
+    "app": "tsx scripts/index.ts app",
+    "maintenance": "tsx scripts/index.ts maintenance",
+    "probe": "tsx scripts/index.ts probe",
+    "platform": "tsx scripts/index.ts platform",
+    "context": "tsx scripts/index.ts context",
     "setup": "tsx scripts/index.ts setup",
     "discover": "tsx scripts/index.ts discover",
     "deploy": "tsx scripts/index.ts deploy",
@@ -15,9 +32,9 @@
     "os": "tsx scripts/index.ts os"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "yaml": "^2.8.2"

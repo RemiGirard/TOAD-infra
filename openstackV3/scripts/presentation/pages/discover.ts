@@ -28,7 +28,7 @@ function showFlavors(): void {
     for (const line of lines) {
       const parts = line.split(/\s+/);
       if (parts.length >= 4) {
-        console.log(`${parts[0].padEnd(25)} ${parts[1].padStart(5)}  ${parts[2].padStart(7)}  ${parts[3].padStart(8)}`);
+        console.log(`${parts[0]!.padEnd(25)} ${parts[1]!.padStart(5)}  ${parts[2]!.padStart(7)}  ${parts[3]!.padStart(8)}`);
       }
     }
     console.log('... (run: pnpm run os -- flavor list for full list)\n');
@@ -42,7 +42,7 @@ function showImages(): void {
   section('', 50);
 
   try {
-    const images = openstack(['image', 'list', '-f', 'value', '-c', 'Name', '--limit', '10']);
+    const images = openstack(['image', 'list', '-f', 'table', '-c', 'ID', '-c', 'Name', '--limit', '10']);
     console.log(images);
   } catch {
     console.log('Failed to list images\n');

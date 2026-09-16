@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+        working-directory: openstackV3
+      - name: Validate pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          TOAD_COMMIT_MESSAGE: ${{ github.event.pull_request.title }}
+        run: pnpm run commitlint
+        working-directory: openstackV3
+      - run: pnpm run check
+        working-directory: openstackV3
+      - run: python3 -m venv ansible/venv
+      - run: ansible/venv/bin/pip install --requirement ansible/requirements.lock.txt
+      - run: pnpm run check:ansible
+        working-directory: openstackV3
+      - run: docker build --tag toad-operator:test .

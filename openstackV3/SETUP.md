@@ -1,156 +1,99 @@
-# TOAD OpenStack Setup Guide
+# Infomaniak setup
 
-One-command setup for Infomaniak OpenCloud infrastructure.
+## 1. Create a project service user
 
-## Prerequisites
+In Infomaniak Manager, open **Public Cloud → Users**, create a user dedicated to
+TOAD, and grant the project roles required for compute, network, orchestration,
+load balancing, and DNS. Save the generated password in a password manager.
 
-- Node.js 18+
-- Python 3.8+
-- Infomaniak OpenCloud account
+Use password authentication for the Heat profile. Application credentials work
+for many OpenStack APIs, but Infomaniak Heat creates a Keystone trust and a
+delegated token cannot manage trusts.
 
-## Quick Start
+Create `credentials/clouds.yaml`:
 
-```bash
-# 1. Install npm dependencies
-npm install
-
-# 2. Run setup (creates venv, prompts for credentials, generates SSH key)
-npm run setup
-
-# 3. Deploy infrastructure
-npm run deploy
-
-# 4. Check status
-npm run status
-
-# 5. SSH to nodes
-npm run ssh
-
-# 6. Generate Ansible inventory
-npm run inventory <stack-name>
-
-# 7. Cleanup
-npm run destroy
+```yaml
+clouds:
+  openstack:
+    auth:
+      auth_url: https://api.pub1.infomaniak.cloud/identity/v3
+      project_name: YOUR_PROJECT_NAME
+      project_domain_name: Default
+      username: YOUR_SERVICE_USER
+      user_domain_name: Default
+    region_name: dc4-a
+    interface: public
+    identity_api_version: 3
 ```
 
-## Available Commands
+Run `pnpm run setup`; it prompts for the password, saves it separately with mode
+`0600`, creates the local OpenStack environment, generates a project SSH key,
+and uploads the public key. Do not commit anything under `credentials/`.
 
-| Command | Description |
-|---------|-------------|
-| `npm run setup` | Full setup: Python venv, credentials, SSH key |
-| `npm run discover` | Show available flavors, images, networks |
-| `npm run deploy` | Deploy a stack (interactive) |
-| `npm run status` | Show all stacks, servers, IPs |
-| `npm run ssh` | SSH to any node (interactive) |
-| `npm run inventory` | Generate Ansible inventory.yaml |
-| `npm run destroy` | Delete a stack (interactive) |
+## 2. Configure inputs
 
-## Deployment Levels
-
-| Level | Description | Nodes | Floating IPs |
-|-------|-------------|-------|--------------|
-| 0 | Single node | 1 | 1 |
-| 1 | Single node + Swarm ports | 1 | 1 |
-| 2 | 2-node cluster | 2 | 2 |
-| 3 | 3-node HA cluster | 3 | 3 |
-| **4** | Gateway + 3 Swarm (Standard) | 4 | 1 |
-| **5** | Bastion + LB + 2 Gateways + 3 Swarm (HA) | 6 | 2 |
-
-## Architecture
-
-### Level 4 - Standard
-```
-Internet
-    │
-    ▼
-┌─────────────────┐
-│  1 Floating IP  │
-└────────┬────────┘
-         ▼
-    ┌─────────┐
-    │ Gateway │ 10.0.0.10
-    └────┬────┘
-         │
-    ┌────┴────┬─────────┐
-    ▼         ▼         ▼
-┌───────┐ ┌───────┐ ┌───────┐
-│Swarm 1│ │Swarm 2│ │Swarm 3│
-│  .11  │ │  .12  │ │  .13  │
-└───────┘ └───────┘ └───────┘
+```sh
+cp heat/env/example.yaml heat/env/production.yaml
+cp ../router/config.example.yaml ../router/config.yaml
 ```
 
-### Level 5 - HA
-```
-Internet
-    │
-    ├────────────────┐
-    ▼                ▼
-┌─────────┐    ┌──────────┐
-│ FIP:SSH │    │ FIP:HTTP │
-└────┬────┘    └────┬─────┘
-     ▼              ▼
-┌─────────┐    ┌─────────┐
-│ Bastion │    │Octavia  │
-│   .5    │    │   LB    │
-└─────────┘    └────┬────┘
-                    │
-              ┌─────┴─────┐
-              ▼           ▼
-         ┌────────┐ ┌────────┐
-         │  GW 1  │ │  GW 2  │
-         │  .10   │ │  .11   │
-         └────┬───┘ └────┬───┘
-              │          │
-         ┌────┴──────────┴────┐
-         ▼         ▼          ▼
-    ┌────────┐ ┌────────┐ ┌────────┐
-    │Swarm 1 │ │Swarm 2 │ │Swarm 3 │
-    │  .20   │ │  .21   │ │  .22   │
-    └────────┘ └────────┘ └────────┘
+Set the discovered flavor, immutable image UUID, network, three availability zones, your DNS
+child zone, and an SSH source CIDR such as `203.0.113.9/32`. Never deploy a
+client environment with SSH open to `0.0.0.0/0`.
+
+Create an API token at
+<https://manager.infomaniak.com/v3/ng/accounts/token/list> with only
+`dns:read` and `dns:write`. Save it locally without terminal
+echo:
+
+```sh
+pnpm run dns-token
 ```
 
-## File Structure
+This token controls DNS records, so keep it in the same secret backup as the
+OpenStack credential. It is ignored by Git and reaches Traefik only as a Docker
+secret file.
 
-```
-openstackV3/
-├── package.json          # npm scripts
-├── .env                  # Credentials (gitignored)
-├── .env.example          # Credentials template
-├── credentials/
-│   ├── toad-key          # SSH private key (gitignored)
-│   └── toad-key.pub      # SSH public key (gitignored)
-├── heat/
-│   ├── env/example.yaml  # Heat parameters
-│   └── level*.yaml       # Heat templates
-├── scripts/
-│   ├── lib/openstack.ts  # Shared utilities
-│   ├── setup.ts          # npm run setup
-│   ├── discover.ts       # npm run discover
-│   ├── deploy.ts         # npm run deploy
-│   ├── status.ts         # npm run status
-│   ├── ssh.ts            # npm run ssh
-│   ├── inventory.ts      # npm run inventory
-│   └── cleanup.ts        # npm run destroy
-└── inventory.yaml        # Generated Ansible inventory
+## 3. Apply
+
+```sh
+pnpm run check
+pnpm run doctor -- --cloud
+pnpm run apply -- toad-prod heat/env/production.yaml
 ```
 
-## Isolation
+The first apply also creates a local admin CA and 90-day operator certificate.
+Import `credentials/admin-pki/operator.p12` into the operator browser to open
+`https://traefik.toad.remigirard.dev/dashboard/`. The directory is ignored by
+Git; back up the CA key securely and never copy it to a server.
 
-Everything stays local to this project:
-- SSH keys: `credentials/toad-key` (not `~/.ssh/`)
-- Python venv: `openstack_cli/` (not global)
-- Credentials: `.env` (not environment)
-- Ansible inventory: `inventory.yaml` (generated per stack)
+## 4. Delegate DNS once
 
-No global files are modified.
+In the parent domain's DNS zone, add `NS` records for the child label (for
+example `toad`) using the two Designate nameservers. For Infomaniak Public Cloud
+these are currently:
 
-## Next Steps After Deploy
-
-```bash
-# Generate Ansible inventory
-npm run inventory my-stack
-
-# Run Ansible playbooks
-cd ../ansible
-ansible-playbook -i ../openstackV3/inventory.yaml playbooks/initJoinSwarm.yaml
+```text
+ns1.pub2.infomaniak.cloud.
+ns2.pub2.infomaniak.cloud.
 ```
+
+Heat owns the child zone, wildcard/apex records, and their load-balancer IP. The
+parent delegation remains when the stack is destroyed, enabling a clean rebuild.
+The TypeScript `dns` command owns only the parent `@` and `*` A records; it does
+not modify MX, TXT, CAA, or the child-zone NS delegation.
+
+## 5. Verify or destroy
+
+```sh
+pnpm run verify -- toad-prod --json
+pnpm run destroy -- toad-prod
+```
+
+After destruction, verify that stack resources, instances, floating IPs,
+load balancers, the tenant network, and the Designate child zone are gone. Run
+the same `apply` command to rebuild them.
+
+To repair only the parent DNS after a load-balancer change, run
+`pnpm run dns -- toad-prod`. Normal `apply` already performs this operation at
+the safe point after ingress is deployed.

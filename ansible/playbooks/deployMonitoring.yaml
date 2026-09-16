@@ -1,0 +1,155 @@
+---
+- name: Deploy the TOAD monitoring profile
+  hosts: managers[0]
+  become: true
+  vars_files:
+    - "{{ toad_router_config_path | default(playbook_dir ~ '/../../router/config.yaml') }}"
+  vars:
+    remote_dir: /opt/toad/monitoring
+  tasks:
+    - name: Pin stateful monitoring services to this manager
+      ansible.builtin.command:
+        argv:
+          - docker
+          - node
+          - update
+          - --label-add
+          - toad.monitoring-state=true
+          - "{{ ansible_facts['hostname'] }}"
+      changed_when: false
+
+    - name: Create monitoring deployment directory
+      ansible.builtin.file:
+        path: "{{ remote_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy the pinned monitoring stack and static configuration
+      ansible.builtin.copy:
+        src: ../../monitoring/
+        dest: "{{ remote_dir }}/"
+        mode: preserve
+
+    - name: Create the Alloy configuration directory on every manager
+      ansible.builtin.file:
+        path: "{{ remote_dir }}/alloy"
+        state: directory
+        mode: '0755'
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['managers'] }}"
+
+    - name: Install the Alloy collector configuration on every manager
+      ansible.builtin.copy:
+        src: ../../monitoring/alloy/config.alloy
+        dest: "{{ remote_dir }}/alloy/config.alloy"
+        mode: '0644'
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['managers'] }}"
+
+    - name: Render the environment-specific Prometheus configuration
+      ansible.builtin.template:
+        src: ../../monitoring/prometheus.yml.j2
+        dest: "{{ remote_dir }}/prometheus.yml"
+        mode: '0644'
+
+    - name: Restrict the deployed stack definition
+      ansible.builtin.file:
+        path: "{{ remote_dir }}/docker-compose.yaml"
+        mode: '0640'
+
+    - name: Calculate the effective observability configuration fingerprint
+      ansible.builtin.command:
+        argv:
+          - sha256sum
+          - prometheus.yml
+          - alerts.yml
+          - loki-config.yml
+          - alloy/config.alloy
+          - grafana/provisioning/datasources/prometheus.yml
+          - grafana/provisioning/datasources/loki.yml
+          - grafana/dashboards/toad-overview.json
+        chdir: "{{ remote_dir }}"
+      register: observability_config_files
+      changed_when: false
+
+    - name: Set the observability configuration fingerprint
+      ansible.builtin.set_fact:
+        observability_config_hash: "{{ observability_config_files.stdout | hash('sha256') }}"
+
+    - name: Validate the rendered Swarm stack
+      ansible.builtin.command:
+        argv: [docker, stack, config, -c, docker-compose.yaml]
+        chdir: "{{ remote_dir }}"
+      environment:
+        TOAD_DOMAIN: "{{ base_domain }}"
+        PROMETHEUS_CONFIG_HASH: "{{ observability_config_hash }}"
+        OBSERVABILITY_CONFIG_HASH: "{{ observability_config_hash }}"
+      changed_when: false
+
+    - name: Validate Prometheus configuration and alert rules
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --volume
+          - "{{ remote_dir }}:/etc/prometheus:ro"
+          - --entrypoint
+          - /bin/promtool
+          - prom/prometheus:v3.5.5
+          - check
+          - config
+          - /etc/prometheus/prometheus.yml
+      changed_when: false
+
+    - name: Validate Alertmanager configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --volume
+          - "{{ remote_dir }}:/etc/alertmanager:ro"
+          - --entrypoint
+          - /bin/amtool
+          - prom/alertmanager:v0.33.1
+          - check-config
+          - /etc/alertmanager/alertmanager.yml
+      changed_when: false
+
+    - name: Validate Loki configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --volume
+          - "{{ remote_dir }}/loki-config.yml:/etc/loki/loki-config.yml:ro"
+          - grafana/loki:3.7.0
+          - -config.file=/etc/loki/loki-config.yml
+          - -verify-config=true
+      changed_when: false
+
+    - name: Validate Alloy configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --volume
+          - "{{ remote_dir }}/alloy/config.alloy:/etc/alloy/config.alloy:ro"
+          - grafana/alloy:v1.18.0
+          - validate
+          - /etc/alloy/config.alloy
+      changed_when: false
+
+    - name: Deploy the monitoring stack
+      ansible.builtin.command:
+        argv: [docker, stack, deploy, --prune, -c, docker-compose.yaml, monitoring]
+        chdir: "{{ remote_dir }}"
+      environment:
+        TOAD_DOMAIN: "{{ base_domain }}"
+        PROMETHEUS_CONFIG_HASH: "{{ observability_config_hash }}"
+        OBSERVABILITY_CONFIG_HASH: "{{ observability_config_hash }}"
+      register: monitoring_deploy
+      changed_when: "'Updating service' in monitoring_deploy.stdout or 'Creating service' in monitoring_deploy.stdout"

@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /openstackV3
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directories:
+      - /ansible
+      - /openstackV3
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker-compose
+    directories:
+      - /apps/*
+      - /monitoring
+      - /router
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

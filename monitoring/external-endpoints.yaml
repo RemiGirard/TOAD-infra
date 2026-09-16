@@ -1,0 +1,14 @@
+version: 1
+endpoints:
+  - name: root
+    url: https://${ROOT_DOMAIN}/
+    status: 200
+  - name: root-www
+    url: https://www.${ROOT_DOMAIN}/
+    status: 200
+  - name: hello
+    url: https://hello.${TOAD_DOMAIN}/
+    status: 200
+  - name: whoami
+    url: https://whoami.${TOAD_DOMAIN}/
+    status: 200

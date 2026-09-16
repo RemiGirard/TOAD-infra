@@ -14,7 +14,7 @@ import type { StackRepository } from '../ports/stack-repository.js';
  * Parse IP list from stack outputs.
  * Handles both comma-separated strings and JSON arrays.
  */
-function parseIpList(value: string): string[] {
+function parseIpList(value: string | undefined): string[] {
   if (!value) return [];
 
   // Try JSON array first (e.g., ["10.0.0.1", "10.0.0.2"])
@@ -39,6 +39,28 @@ export function getStackNodes(repo: StackRepository, stackName: string): Node[] 
       floatingIp: outputs.floating_ip,
       privateIp: outputs.private_ip,
       role: 'node',
+    });
+    return nodes;
+  }
+
+  // Stable production output contract.
+  if (outputs.manager_private_ips) {
+    if (outputs.bastion_floating_ip) {
+      nodes.push({
+        name: 'bastion',
+        floatingIp: outputs.bastion_floating_ip,
+        privateIp: outputs.bastion_private_ip || '10.0.0.5',
+        role: 'bastion',
+      });
+    }
+    parseIpList(outputs.manager_private_ips).forEach((privateIp, index) => {
+      const floatingIp = index === 0 ? outputs.ssh_floating_ip : undefined;
+      nodes.push({
+        name: `manager-${index + 1}`,
+        privateIp,
+        role: 'manager',
+        ...(floatingIp ? { floatingIp } : {}),
+      });
     });
     return nodes;
   }

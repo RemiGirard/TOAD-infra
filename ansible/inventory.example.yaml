@@ -1,14 +1,16 @@
-# Ansible inventory template
-# Copy this file to inventory.yaml and fill in your values.
-# inventory.yaml is gitignored - never commit real host details.
+# Syntax-checking and manual-operation example only.
+# The normal production path generates openstackV3/inventory.yaml from Heat.
 
-swarm:
-  hosts:
-    main:
-      # EDIT: your manager node hostname or IP
-      ansible_host: your-server.example.com
-      # EDIT: private IP of the manager (used for swarm init --advertise-addr)
-      private_ip: 10.0.0.10
-      ansible_user: debian
-      # EDIT: path to your SSH private key
-      ansible_ssh_private_key_file: ~/.ssh/your-key
+all:
+  vars:
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: /secure/path/to/operator-key
+    ansible_ssh_common_args: -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new
+  children:
+    managers:
+      hosts:
+        example-manager-1:
+          ansible_host: 192.0.2.10
+          private_ip: 10.0.0.10
+    workers:
+      hosts: {}

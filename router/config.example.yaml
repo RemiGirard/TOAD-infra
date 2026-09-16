@@ -1,0 +1,5 @@
+# Copy to config.yaml. This file contains non-secret deployment settings.
+letsencrypt_email: admin@example.com
+traefik_log_level: INFO
+base_domain: toad.remigirard.dev
+root_domain: remigirard.dev

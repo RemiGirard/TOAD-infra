@@ -13,10 +13,10 @@
  * Usage: pnpm run setup
  */
 
-import { existsSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
+import { chmodSync, existsSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { banner, ask, success, error, info, closeReadline } from '../../infrastructure/cli.js';
-import { run } from '../../infrastructure/shell.js';
+import { banner, ask, askSecret, success, error, info, closeReadline } from '../../infrastructure/cli.js';
+import { runProgram } from '../../infrastructure/shell.js';
 import {
   ROOT_DIR,
   CREDENTIALS_DIR,
@@ -30,6 +30,8 @@ import {
   passwordExists,
   findCloudsYaml,
   getDefaultCloud,
+  usesApplicationCredential,
+  usesInlinePassword,
 } from '../../infrastructure/credentials.js';
 import {
   venvExists,
@@ -46,14 +48,13 @@ async function setupVenv(): Promise<void> {
     return;
   }
 
-  run(`python3 -m venv ${VENV_DIR}`, { cwd: ROOT_DIR });
+  runProgram('python3', ['-m', 'venv', VENV_DIR], { cwd: ROOT_DIR });
 
   const pip = join(VENV_DIR, 'bin', 'pip');
-  const requirements = join(ROOT_DIR, 'requirements.txt');
+  const requirements = join(ROOT_DIR, 'requirements.lock.txt');
 
   info('Installing dependencies...');
-  run(`${pip} install -q -r ${requirements}`, { cwd: ROOT_DIR });
-  run(`${pip} install -q python-octaviaclient`, { cwd: ROOT_DIR });
+  runProgram(pip, ['install', '-q', '-r', requirements], { cwd: ROOT_DIR });
 
   info('Virtual environment ready');
 }
@@ -75,6 +76,17 @@ async function setupCredentials(): Promise<void> {
     process.exit(1);
   }
   info('Found clouds.yaml');
+  chmodSync(findCloudsYaml()!, 0o600);
+
+  if (usesApplicationCredential()) {
+    info('Using application credential from clouds.yaml');
+    return;
+  }
+
+  if (usesInlinePassword()) {
+    info('Using password credential from clouds.yaml');
+    return;
+  }
 
   // Check for password
   if (passwordExists()) {
@@ -85,7 +97,8 @@ async function setupCredentials(): Promise<void> {
     }
   }
 
-  const password = await ask('   Enter your OpenStack password');
+  const password = await askSecret('   Enter the dedicated OpenStack service-user password');
+  if (!password) throw new Error('Password cannot be empty.');
   writeFileSync(PASSWORD_FILE, password + '\n', { mode: 0o600 });
   info('Password saved to credentials/password');
 }
@@ -99,7 +112,7 @@ async function setupSSHKey(): Promise<void> {
 
   if (!sshKeyExists()) {
     info('Generating new SSH keypair in credentials/...');
-    run(`ssh-keygen -t ed25519 -f ${SSH_KEY_PATH} -N "" -C "toad-infra"`, { showOutput: false });
+    runProgram('ssh-keygen', ['-t', 'ed25519', '-f', SSH_KEY_PATH, '-N', '', '-C', 'toad-infra'], { showOutput: false });
     info('SSH keypair generated');
   } else {
     info('SSH keypair already exists');
@@ -165,7 +178,9 @@ export async function run(_args: string[]): Promise<void> {
   console.log('  source openstack_cli/bin/activate');
   console.log(`  export OS_CLIENT_CONFIG_FILE=${cloudsFile}`);
   console.log(`  export OS_CLOUD=${cloudName}`);
-  console.log('  export OS_PASSWORD=$(cat credentials/password)');
+  if (!usesApplicationCredential() && !usesInlinePassword()) {
+    console.log('  export OS_PASSWORD=$(cat credentials/password)');
+  }
   console.log('  openstack stack list\n');
 
   closeReadline();

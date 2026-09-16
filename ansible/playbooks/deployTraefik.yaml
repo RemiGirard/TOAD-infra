@@ -1,0 +1,91 @@
+---
+- name: Deploy Traefik to the Swarm
+  hosts: managers[0]
+  become: true
+  vars_files:
+    - "{{ toad_router_config_path | default(playbook_dir ~ '/../../router/config.yaml') }}"
+  vars:
+    remote_dir: /opt/toad/traefik
+    local_credentials_dir: "{{ toad_credentials_dir | default(playbook_dir ~ '/../../openstackV3/credentials') }}"
+    local_dns_token_path: "{{ local_credentials_dir }}/infomaniak-dns-token"
+  tasks:
+    - name: Read the local Infomaniak DNS token
+      ansible.builtin.set_fact:
+        infomaniak_dns_token: "{{ lookup('ansible.builtin.file', local_dns_token_path) | trim }}"
+      no_log: true
+
+    - name: Derive an immutable Docker secret name for this token version
+      ansible.builtin.set_fact:
+        infomaniak_dns_secret_name: "toad-infomaniak-dns-{{ (infomaniak_dns_token | hash('sha256'))[:12] }}"
+      no_log: true
+
+    - name: Check whether this DNS token version is already a Docker secret
+      ansible.builtin.command:
+        argv: [docker, secret, inspect, "{{ infomaniak_dns_secret_name }}"]
+      register: infomaniak_secret_inspect
+      failed_when: false
+      changed_when: false
+      no_log: true
+
+    - name: Create the versioned Infomaniak DNS Docker secret
+      ansible.builtin.command:
+        argv:
+          - docker
+          - secret
+          - create
+          - --label
+          - toad.purpose=infomaniak-dns
+          - "{{ infomaniak_dns_secret_name }}"
+          - '-'
+        stdin: "{{ infomaniak_dns_token }}"
+        stdin_add_newline: false
+      when: infomaniak_secret_inspect.rc != 0
+      no_log: true
+
+    - name: Pin the ACME volume owner to this manager
+      ansible.builtin.command:
+        argv:
+          - docker
+          - node
+          - update
+          - --label-add
+          - toad.traefik-certificates=true
+          - "{{ ansible_facts['hostname'] }}"
+      register: traefik_node_label
+      changed_when: false
+
+    - name: Create deployment directory
+      ansible.builtin.file:
+        path: "{{ remote_dir }}"
+        state: directory
+        mode: '0750'
+
+    - name: Copy the pinned Traefik stack
+      ansible.builtin.copy:
+        src: ../../router/docker-compose.yaml
+        dest: "{{ remote_dir }}/docker-compose.yaml"
+        mode: '0640'
+
+    - name: Copy the mTLS dynamic configuration
+      ansible.builtin.copy:
+        src: ../../router/dynamic.yaml
+        dest: "{{ remote_dir }}/dynamic.yaml"
+        mode: '0644'
+
+    - name: Install the public admin client CA certificate
+      ansible.builtin.copy:
+        src: "{{ local_credentials_dir }}/admin-pki/ca.crt"
+        dest: "{{ remote_dir }}/admin-client-ca.crt"
+        mode: '0644'
+
+    - name: Deploy the Traefik stack
+      ansible.builtin.command:
+        argv: [docker, stack, deploy, --prune, -c, docker-compose.yaml, traefik]
+        chdir: "{{ remote_dir }}"
+      environment:
+        LETSENCRYPT_EMAIL: "{{ letsencrypt_email }}"
+        TRAEFIK_LOG_LEVEL: "{{ traefik_log_level | default('INFO') }}"
+        TOAD_DOMAIN: "{{ base_domain }}"
+        INFOMANIAK_DNS_SECRET: "{{ infomaniak_dns_secret_name }}"
+      register: traefik_deploy
+      changed_when: "'Updating service' in traefik_deploy.stdout or 'Creating service' in traefik_deploy.stdout"

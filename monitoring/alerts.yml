@@ -1,0 +1,65 @@
+groups:
+  - name: toad
+    rules:
+      - alert: MonitoringTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Monitoring target is down"
+          description: "{{ $labels.job }} target {{ $labels.instance }} has been unreachable for two minutes."
+
+      - alert: PublicEndpointDown
+        expr: probe_success{job="public-https"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Public HTTPS endpoint is down"
+          description: "{{ $labels.instance }} has failed external HTTPS probes for two minutes."
+
+      - alert: HostMemoryLow
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host memory is below 10%"
+          description: "{{ $labels.instance }} has had less than 10% available memory for ten minutes."
+
+      - alert: HostDiskLow
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"} < 0.10 and node_filesystem_readonly == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host filesystem is below 10% free"
+          description: "{{ $labels.instance }} filesystem {{ $labels.mountpoint }} is nearly full."
+
+      - alert: HostCpuHigh
+        expr: 1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) > 0.90
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host CPU is above 90%"
+          description: "{{ $labels.instance }} has sustained high CPU usage for fifteen minutes."
+
+      - alert: TraefikBackendDown
+        expr: traefik_service_server_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Traefik backend is unavailable"
+          description: "Backend {{ $labels.service }} at {{ $labels.url }} is down."
+
+      - alert: TraefikCertificateExpiring
+        expr: traefik_tls_certs_not_after - time() < 21 * 24 * 60 * 60
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TLS certificate expires within 21 days"
+          description: "A Traefik-managed certificate is approaching expiration."

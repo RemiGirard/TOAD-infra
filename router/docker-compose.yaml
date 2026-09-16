@@ -1,45 +1,131 @@
-version: "3.8"
-
 services:
   traefik:
-    image: traefik:v3.4.0
-    deploy:
-      mode: global
-      placement:
-        constraints:
-          - node.role == manager
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.dashboard.rule=Host(${HOST_URL})"
-        - "traefik.http.routers.dashboard.service=api@internal"
-        - "traefik.http.routers.dashboard.tls.certresolver=wildcardresolver"
-        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-    environment:
-      - INFOMANIAK_ACCESS_TOKEN=${INFOMANIAK_ACCESS_TOKEN}
+    image: traefik:v3.7.13@sha256:f86a2cab1b5c649070c49f883c743dd32d8485a56e3368c5f93b9e91f1e91259
     command:
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
       - "--providers.swarm=true"
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.swarm.exposedbydefault=false"
+      - "--providers.swarm.network=traefik-public"
+      - "--providers.file.filename=/etc/traefik/dynamic.yaml"
+      - "--providers.file.watch=true"
+      - "--core.stricttlsoptions=true"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.aliasheadersstrategy=reject"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedslash=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedbackslash=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodednullcharacter=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedsemicolon=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedpercent=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedquestionmark=false"
+      - "--entrypoints.web.http.encodedcharacters.allowencodedhash=false"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.wildcardresolver.acme.email=${LETSENCRYPT_EMAIL}"
-      - "--certificatesresolvers.wildcardresolver.acme.storage=/certificates/acme.json"
-      - "--certificatesresolvers.wildcardresolver.acme.dnschallenge.provider=infomaniak"
-      - "--certificatesresolvers.wildcardresolver.acme.dnschallenge.delaybeforecheck=60"
-      - "--certificatesresolvers.wildcardresolver.acme.certificatesduration=720"
+      - "--entrypoints.websecure.http.aliasheadersstrategy=reject"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedslash=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedbackslash=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodednullcharacter=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedsemicolon=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedpercent=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedquestionmark=false"
+      - "--entrypoints.websecure.http.encodedcharacters.allowencodedhash=false"
+      - "--entrypoints.traefik.address=:8080"
+      - "--entrypoints.traefik.http.aliasheadersstrategy=reject"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedslash=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedbackslash=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodednullcharacter=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedsemicolon=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedpercent=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedquestionmark=false"
+      - "--entrypoints.traefik.http.encodedcharacters.allowencodedhash=false"
+      - "--entrypoints.metrics.address=:9100"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entrypoint=metrics"
+      - "--metrics.prometheus.addrouterslabels=true"
+      - "--metrics.prometheus.addserviceslabels=true"
+      - "--metrics.addinternals=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/certificates/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.infomaniak.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.infomaniak.acme.storage=/certificates/acme-infomaniak.json"
+      - "--certificatesresolvers.infomaniak.acme.dnschallenge.provider=infomaniak"
+      - "--certificatesresolvers.infomaniak.acme.dnschallenge.resolvers=ns11.infomaniak.ch:53,ns12.infomaniak.ch:53"
       - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--ping=true"
+      - "--global.checknewversion=false"
+      - "--global.sendanonymoususage=false"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-INFO}"
+      - "--accesslog=true"
     volumes:
       - traefik-certificates:/certificates
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/toad/traefik/dynamic.yaml:/etc/traefik/dynamic.yaml:ro
+      - /opt/toad/traefik/admin-client-ca.crt:/etc/traefik/admin-client-ca.crt:ro
+    environment:
+      # Docker Engine 29 rejects the legacy API version used by older Go
+      # clients before negotiation. This is supported by both Engine 24+ and
+      # the pinned Traefik release.
+      DOCKER_API_VERSION: "1.44"
+      INFOMANIAK_ACCESS_TOKEN_FILE: /run/secrets/infomaniak-dns-token
+      INFOMANIAK_PROPAGATION_TIMEOUT: "300"
+      INFOMANIAK_POLLING_INTERVAL: "10"
+    secrets:
+      - infomaniak-dns-token
     networks:
       - traefik-public
     ports:
-      - "80:80"
-      - "443:443"
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: ingress
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: ingress
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik-admin.rule=Host(`traefik.${TOAD_DOMAIN}`)"
+        - "traefik.http.routers.traefik-admin.entrypoints=websecure"
+        - "traefik.http.routers.traefik-admin.tls=true"
+        - "traefik.http.routers.traefik-admin.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.traefik-admin.tls.options=admin-mtls@file"
+        - "traefik.http.routers.traefik-admin.service=api@internal"
+        - "traefik.http.services.traefik-admin-dummy.loadbalancer.server.port=9999"
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.toad.traefik-certificates == true
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
 
 volumes:
   traefik-certificates:
+
+secrets:
+  infomaniak-dns-token:
+    external: true
+    name: ${INFOMANIAK_DNS_SECRET}
 
 networks:
   traefik-public:

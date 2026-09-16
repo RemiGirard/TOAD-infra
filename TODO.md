@@ -1,5 +1,24 @@
-# TODO
+# Roadmap
 
-- [ ] add diagrams for global architecture
-- [ ] rollback strategy
-- [ ] rolling releases - progressive deployment
+- [x] Complete a real destroy/rebuild acceptance test on Infomaniak (2026-09-13)
+- [x] Add a generic manifest-driven application lifecycle CLI
+- [x] Add parseable application diagnostics and negative policy tests for agents
+- [x] Add declarative age-encrypted, content-addressed Swarm application secrets
+- [x] Add encrypted, operator-side backup/restore for Traefik and monitoring volumes
+- [ ] Add a documented optional cold Raft backup after real disaster-recovery testing
+- [x] Add offline integrity/decryption/archive verification for platform backups
+- [ ] Complete and record a disposable-stack service recovery drill
+- [x] Add encrypted streaming backup/restore for manifest-declared app volumes
+- [x] Add Prometheus/Grafana/Alertmanager as a monitored production profile
+- [x] Add optional Loki/Alloy centralized logs
+- [x] Add a credential-free external probe and generic webhook hook
+- [x] Add an update/maintenance command with quorum-aware rolling reboots
+- [x] Package the CLI as a provenance/SBOM-enabled, keyless-signed OCI image
+- [x] Pin workload and workflow dependencies immutably and configure updates
+- [ ] Evaluate a standalone executable after the OCI workflow is used by clients
+- [ ] Add a guarded web/Tauri operator UI powered by the JSON CLI
+- [ ] Add optional step-ca enrollment and revocation for larger admin teams
+- [ ] Design Kubernetes as a separate provider after the Swarm path is stable
+- [x] License the project under GNU AGPL-3.0-or-later
+- [x] Add Conventional Commit validation and automated SemVer release pull requests
+- [x] Add isolated client contexts and per-context mutation locking

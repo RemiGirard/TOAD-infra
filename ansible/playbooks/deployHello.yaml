@@ -1,0 +1,29 @@
+---
+- name: Deploy public hello-world services
+  hosts: managers[0]
+  become: true
+  vars_files:
+    - "{{ toad_router_config_path | default(playbook_dir ~ '/../../router/config.yaml') }}"
+  vars:
+    remote_dir: /opt/toad/hello
+  tasks:
+    - name: Create deployment directory
+      ansible.builtin.file:
+        path: "{{ remote_dir }}"
+        state: directory
+        mode: '0750'
+
+    - name: Copy the pinned hello-world stack
+      ansible.builtin.copy:
+        src: ../../apps/hello/docker-compose.yaml
+        dest: "{{ remote_dir }}/docker-compose.yaml"
+        mode: '0640'
+
+    - name: Deploy hello-world stack
+      ansible.builtin.command:
+        argv: [docker, stack, deploy, --prune, -c, docker-compose.yaml, hello]
+        chdir: "{{ remote_dir }}"
+      environment:
+        TOAD_DOMAIN: "{{ base_domain }}"
+      register: hello_deploy
+      changed_when: "'Updating service' in hello_deploy.stdout or 'Creating service' in hello_deploy.stdout"

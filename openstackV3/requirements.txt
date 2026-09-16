@@ -3,4 +3,6 @@ openstacksdk>=4.0.0
 python-openstackclient>=7.0.0
 python-heatclient>=4.0.0
 python-keystoneclient>=5.0.0
+python-octaviaclient>=3.0.0
+python-designateclient>=6.0.0
 pyyaml>=6.0

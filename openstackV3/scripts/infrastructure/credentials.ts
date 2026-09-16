@@ -10,9 +10,21 @@ import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { parse as parseYaml } from 'yaml';
 import { CREDENTIALS_DIR, PASSWORD_FILE } from './paths.js';
-import { runCheck } from './shell.js';
 
 let cachedCloudsYaml: string | null | undefined = undefined;
+
+interface CloudConfig {
+  auth_type?: string;
+  auth?: {
+    application_credential_id?: string;
+    application_credential_secret?: string;
+    password?: string;
+  };
+}
+
+interface CloudsConfig {
+  clouds?: Record<string, CloudConfig>;
+}
 
 export function findCloudsYaml(): string | null {
   if (cachedCloudsYaml !== undefined) return cachedCloudsYaml;
@@ -33,27 +45,45 @@ export function getDefaultCloud(): string | null {
   if (!cloudsFile) return null;
 
   const content = readFileSync(cloudsFile, 'utf-8');
-  const config = parseYaml(content) as { clouds: Record<string, unknown> };
+  const config = parseYaml(content) as CloudsConfig;
 
   const clouds = Object.keys(config.clouds || {});
   return clouds[0] || null;
 }
 
-export function loadPassword(): string {
-  if (!existsSync(PASSWORD_FILE)) {
-    throw new Error('credentials/password not found. Run: pnpm run setup');
-  }
-  return readFileSync(PASSWORD_FILE, 'utf-8').trim();
+function getDefaultCloudConfig(): CloudConfig | undefined {
+  const cloudsFile = findCloudsYaml();
+  const cloudName = getDefaultCloud();
+  if (!cloudsFile || !cloudName) return undefined;
+  const config = parseYaml(readFileSync(cloudsFile, 'utf8')) as CloudsConfig;
+  return config.clouds?.[cloudName];
+}
+
+export function usesApplicationCredential(): boolean {
+  const cloud = getDefaultCloudConfig();
+  return Boolean(
+    cloud?.auth_type?.toLowerCase().includes('applicationcredential') ||
+    (cloud?.auth?.application_credential_id && cloud.auth.application_credential_secret),
+  );
+}
+
+export function usesInlinePassword(): boolean {
+  return Boolean(getDefaultCloudConfig()?.auth?.password);
+}
+
+export function loadPassword(): string | undefined {
+  if (!existsSync(PASSWORD_FILE)) return undefined;
+  return readFileSync(PASSWORD_FILE, 'utf-8').trim() || undefined;
 }
 
 export function cloudsYamlExists(): boolean {
-  return runCheck(`ls credentials/*clouds.yaml`, { actualCmd: `ls ${CREDENTIALS_DIR}/*clouds.yaml 2>/dev/null` });
+  return findCloudsYaml() !== null;
 }
 
 export function passwordExists(): boolean {
-  return runCheck(`test -f credentials/password && echo "ok"`, { actualCmd: `test -f ${PASSWORD_FILE} && echo "ok"` });
+  return existsSync(PASSWORD_FILE);
 }
 
 export function credentialsExist(): boolean {
-  return cloudsYamlExists() && passwordExists();
+  return cloudsYamlExists() && (usesApplicationCredential() || usesInlinePassword() || passwordExists());
 }
