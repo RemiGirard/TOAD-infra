@@ -1,6 +1,6 @@
 services:
   web:
-    image: nginx:1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8
+    image: nginx:1.31.0-alpine@sha256:2f07d83bf561b506400dc183b1b2003803e39efbd22451f848adaba14d28c7c7
     security_opt: [no-new-privileges:true]
     volumes:
       - site-data:/usr/share/nginx/html
