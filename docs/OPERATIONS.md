@@ -1,14 +1,28 @@
 # Operations and recovery
 
+Examples use the stack `toad-prod`, parent domain `example.com`, and delegated
+platform domain `platform.example.com`. Replace them with the values in the
+selected client context.
+
+```mermaid
+flowchart TD
+    observe["Observe<br/>doctor · status · verify · diagnose"] --> decide{"Healthy?"}
+    decide -->|"Yes"| record["Record evidence"]
+    decide -->|"No"| scope["Identify app, host, DNS, or platform layer"]
+    scope --> repair["Apply the narrowest declarative repair"]
+    repair --> verify["Verify replicas, endpoints, TLS, and monitoring"]
+    verify --> decide
+```
+
 ## Automatic public certificates and parent DNS
 
-`remigirard.dev` and every direct subdomain use one ACME wildcard certificate
+`example.com` and every direct subdomain use one ACME wildcard certificate
 requested through Infomaniak DNS-01. Traefik reads the API token from
 `/run/secrets/infomaniak-dns-token`; it is never placed in a stack label or a
 remote file. The external Docker secret name includes a hash of the token, so
 rotation is an ordinary `apply` and does not mutate a Swarm secret in place.
 
-The delegated `toad.remigirard.dev` routes retain Traefik HTTP-01 certificates,
+The delegated `platform.example.com` routes retain Traefik HTTP-01 certificates,
 because their authoritative records belong to OpenStack Designate rather than
 the parent Infomaniak zone. Both resolvers store renewal state in the pinned
 Traefik certificate volume.
@@ -50,7 +64,7 @@ credentials.
 ## Admin mTLS
 
 The Traefik dashboard at
-`https://traefik.toad.remigirard.dev/dashboard/` requires a client certificate
+`https://traefik.platform.example.com/dashboard/` requires a client certificate
 during the TLS handshake. There is no dashboard password, public login form, or
 JWT service to operate. Port 8080 is not exposed.
 
@@ -83,7 +97,7 @@ the envelope's legacy algorithms. Command-line agents can use the PEM files:
 ```sh
 curl --cert credentials/admin-pki/operator.crt \
   --key credentials/admin-pki/operator.key \
-  https://traefik.toad.remigirard.dev/dashboard/
+  https://traefik.platform.example.com/dashboard/
 ```
 
 Back up `ca.key` and `ca.crt` together in an encrypted, offline location. They
@@ -119,9 +133,9 @@ pnpm run os -- zone list
 Monitoring interfaces use the same client certificate as Traefik:
 
 ```text
-https://grafana.toad.remigirard.dev/
-https://prometheus.toad.remigirard.dev/
-https://alerts.toad.remigirard.dev/
+https://grafana.platform.example.com/
+https://prometheus.platform.example.com/
+https://alerts.platform.example.com/
 ```
 
 `verify --json` checks that all monitoring services have their desired
@@ -144,6 +158,18 @@ docker service logs --since 15m monitoring_grafana
 ```
 
 ## Application lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Validated: app validate
+    Validated --> Deploying: app deploy
+    Deploying --> Healthy: replicas and HTTPS pass
+    Deploying --> RolledBack: Swarm update fails
+    Healthy --> Diagnosing: app diagnose
+    Diagnosing --> Healthy: no fault found
+    Diagnosing --> RolledBack: app rollback
+    RolledBack --> Validated: fix desired state
+```
 
 Use `pnpm run app -- create NAME` to scaffold an app. Each `apps/NAME/toad.yaml`
 manifest is the source of truth for the Swarm stack, its services, its exact
@@ -215,6 +241,15 @@ commands require an explicit typed confirmation unless `--yes` is intentionally
 used by a controlled automation. A failed node remains drained for diagnosis.
 
 ## Encrypted platform recovery
+
+```mermaid
+flowchart LR
+    volume["Named Docker volume"] -->|"quiesce owner"| stream["SSH tar stream"]
+    stream -->|"encrypt locally"| archive["age archive + checksum"]
+    archive --> external["Independent protected storage"]
+    external -->|"explicit restore"| fresh["Fresh exact volume"]
+    fresh --> verify["Full platform verification"]
+```
 
 TOAD can back up the local volumes that hold Traefik certificates and
 monitoring state. The stream leaves the manager over SSH and is encrypted on

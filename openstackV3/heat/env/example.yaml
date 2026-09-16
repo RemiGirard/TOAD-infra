@@ -24,8 +24,8 @@ parameters:
   ssh_allowed_cidr: "192.0.2.1/32"
 
   # Delegated child zone managed by OpenStack Designate
-  dns_zone_name: "toad.remigirard.dev."
-  dns_email: "hostmaster@remigirard.dev"
+  dns_zone_name: "platform.example.com."
+  dns_email: "hostmaster@example.com"
 
   # Spread the three managers across failure domains
   manager1_availability_zone: "az-1"
