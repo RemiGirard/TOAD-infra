@@ -16,15 +16,19 @@ request creates the `vMAJOR.MINOR.PATCH` GitHub release and invokes the reusable
 image workflow. The workflow publishes the OCI image with SBOM and provenance,
 then signs its immutable digest with keyless Cosign.
 
+If artifact publication fails after the GitHub release and tag exist, rerun the
+`Signed operator image` workflow from the Actions page and provide the existing
+tag (for example, `v1.1.0`) as `ref`. This recovery path is idempotent and does
+not create a replacement version or tag.
+
 The release pull request updates both `version.txt` and
 `openstackV3/package.json`. Do not edit either version manually. Manual `v*`
 tags remain supported for recovery, but the normal path is the generated pull
 request.
 
-The repository has no historical `v*` tag, so the manifest starts from version
-`1.0.0` and records the initial commit as `bootstrap-sha`. The first generated
-release will therefore calculate the next version from Conventional Commits
-after that point; it does not require fabricating an old release tag.
+The release manifest was bootstrapped at `1.0.0` from the initial commit.
+Subsequent releases calculate their version from Conventional Commits after the
+latest release tag.
 
 Examples:
 
