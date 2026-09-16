@@ -6,6 +6,15 @@ the encrypted operator escrow restores identities and tokens; application and
 platform archives restore state. A Swarm Raft snapshot is optional acceleration,
 not the primary recovery mechanism.
 
+```mermaid
+flowchart LR
+    desired["Git<br/>Heat, Ansible, app manifests"] --> rebuild["Fresh infrastructure"]
+    escrow["Operator escrow<br/>cloud, DNS, SSH, age, mTLS"] --> rebuild
+    archives["Encrypted application<br/>and platform backups"] --> restore["Restore exact datasets"]
+    rebuild --> restore
+    restore --> proof["Production verifier<br/>plus data assertions"]
+```
+
 ## What “proved” means
 
 A backup is not proved merely because a command produced a file. Evidence must
@@ -38,6 +47,17 @@ stack, an isolated DNS zone, and either a separate OpenStack project or clearly
 prefixed resources. Never reuse the production root domain.
 
 The drill is:
+
+```mermaid
+flowchart TD
+    select["Select backup and objectives"] --> context["Create disposable context"]
+    context --> build["Apply a fresh isolated stack"]
+    build --> empty["Verify empty platform"]
+    empty --> restore["Restore one exact dataset"]
+    restore --> tests["Run platform and application checks"]
+    tests --> evidence["Record hashes, versions, replicas, RPO and RTO"]
+    evidence --> destroy["Destroy the named drill stack after approval"]
+```
 
 1. Record the target RPO and RTO and the exact backup index being tested.
 2. Create and select a context dedicated to the drill.

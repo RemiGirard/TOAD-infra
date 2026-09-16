@@ -34,8 +34,10 @@ deploy with:
 ansible-playbook -i openstackV3/inventory.yaml ansible/playbooks/deployTraefik.yaml
 ```
 
-Certificates use HTTP-01. DNS for `*.toad.remigirard.dev` is owned by the Heat
-stack through OpenStack Designate, so Traefik needs no DNS-provider credential.
+Delegated application routes use HTTP-01. For example, DNS for
+`*.platform.example.com` is owned by the Heat stack through OpenStack
+Designate, so those routes need no DNS-provider credential. Replace the
+example domain with `base_domain` from the selected deployment configuration.
 
 Application labels must be placed under `deploy.labels`, use the
 `traefik-public` network, and reference the `letsencrypt` certificate resolver.

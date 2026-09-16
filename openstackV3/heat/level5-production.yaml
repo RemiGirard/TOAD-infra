@@ -40,12 +40,10 @@ parameters:
   dns_zone_name:
     type: string
     description: Delegated DNS zone owned by this stack (must end with a dot)
-    default: toad.remigirard.dev.
 
   dns_email:
     type: string
     description: SOA contact for the delegated DNS zone
-    default: hostmaster@remigirard.dev
 
   manager1_availability_zone:
     type: string

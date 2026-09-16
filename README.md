@@ -1,81 +1,127 @@
 # TOAD infra
 
-TOAD is a small, open infrastructure stack for Infomaniak Public Cloud:
+TOAD deploys a small, production-shaped Docker Swarm platform on Infomaniak
+Public Cloud. It uses OpenStack Heat for cloud resources, Ansible for host
+configuration, Traefik for automatic HTTPS routing, and a TypeScript CLI for
+the complete lifecycle. Terraform is intentionally not used.
 
-- **T**raefik for label-driven HTTPS routing
-- **O**penStack Heat and Designate for infrastructure and DNS as code
-- **A**nsible for the thin host-configuration layer
-- **D**ocker Swarm for application orchestration
+This guide follows the normal production path: three Swarm managers, an
+Octavia load balancer, delegated DNS, automatic certificates, monitoring, and
+mTLS-protected admin interfaces.
 
-Terraform is not used. TypeScript owns the operator CLI; Python exists only in
-project-local virtual environments for the official OpenStack CLI and Ansible.
+> All domain names in this documentation are placeholders. Replace
+> `example.com` with a domain you control and `platform.example.com` with the
+> delegated child domain you want TOAD to manage.
 
-## Supported profiles
+## What gets deployed
 
-| Profile | Purpose | Compute nodes | Public IPs |
-|---|---|---:|---:|
-| `1` | Development / small installation | 1 manager | 1 |
-| `5` | Production-shaped HA | 3 managers | 2 (SSH bootstrap + Octavia) |
-
-The old experimental templates remain in `openstackV3/heat/`, but the CLI does
-not offer them. Three managers are the smallest Swarm control plane that can
-lose one manager and retain quorum.
-
-## Production traffic path
-
-```text
-Internet
-   |
-   +-- SSH (restricted CIDR) --> manager 1 --> managers 2/3
-   |
-   +-- HTTP/HTTPS --> Octavia TCP load balancer
-                            |
-              +-------------+-------------+
-              |             |             |
-          manager 1     manager 2     manager 3
-              \_____________|_____________/
-                       Swarm routing mesh
-                              |
-                      Traefik (1 replica)
-                              |
-                 application overlay services
+```mermaid
+flowchart LR
+    user["Public users"] --> parentDns["Parent DNS<br/>example.com"]
+    parentDns --> lb["Octavia load balancer<br/>ports 80 and 443"]
+    lb --> m1["Swarm manager 1"]
+    lb --> m2["Swarm manager 2"]
+    lb --> m3["Swarm manager 3"]
+    m1 --> traefik["Traefik OSS"]
+    m2 --> traefik
+    m3 --> traefik
+    traefik --> apps["Application stacks"]
+    traefik --> monitoring["Grafana · Prometheus<br/>Alertmanager"]
+    operator["Operator or support agent"] -->|"mTLS client certificate"| traefik
+    designate["OpenStack Designate<br/>platform.example.com"] --> parentDns
 ```
 
-`toad.remigirard.dev` is a delegated child zone managed by OpenStack Designate.
-Heat creates its apex and wildcard A records from the Octavia floating IP. The
-TypeScript operator also keeps the Infomaniak parent-zone apex and wildcard A
-records synchronized with that IP. Mail records and the `toad` NS delegation
-are deliberately outside its ownership.
+| Profile | Intended use | Nodes | Public entry points |
+|---|---|---:|---:|
+| `1` | Development or evaluation | 1 manager | 1 floating IP |
+| `5` | Maintained production profile | 3 managers | SSH bootstrap IP + Octavia IP |
 
-## Prerequisites
+Three managers are the smallest Swarm control plane that can lose one manager
+and retain quorum. Swarm is the maintained default because its operational
+surface is small and its Traefik label integration is excellent.
 
-- Node.js 20+ and pnpm
-- Python 3 with `venv` support
-- OpenSSH client
-- [`age`](https://age-encryption.org/) and `age-keygen` when applications use encrypted secrets
-- A dedicated Infomaniak Public Cloud service user with password authentication.
-  Infomaniak Heat creates a Keystone trust, which cannot be created from an
-  application-credential token. Do not use your personal account password.
-- `toad.remigirard.dev` delegated to the Designate nameservers returned after
-  the first stack creation
-- An Infomaniak API token limited to `dns:read` and `dns:write`
+## Before you start
 
-Use a public `/32` CIDR for SSH. Do not use `0.0.0.0/0` for a client or
-production installation.
+You need:
 
-## Install and diagnose
+- an Infomaniak Public Cloud project with enough quota for three instances,
+  networks, floating IPs, and one Octavia load balancer;
+- a dedicated project service user with a password;
+- a domain hosted in Infomaniak DNS;
+- an Infomaniak API token limited to `dns:read` and `dns:write`;
+- Node.js 22, pnpm, Python 3 with `venv`, OpenSSH, and Docker;
+- `age` and `age-keygen` when using encrypted secrets or backups.
+
+Do not use a personal Infomaniak password. Heat creates a Keystone trust, so
+the full deployment currently requires a dedicated password-authenticated
+service user rather than an OpenStack application credential.
+
+For the examples below:
+
+| Setting | Example | Meaning |
+|---|---|---|
+| Stack name | `toad-prod` | Name of the Heat stack |
+| Parent domain | `example.com` | Existing zone in Infomaniak DNS |
+| Platform domain | `platform.example.com` | Child zone delegated to Designate |
+| Application URL | `hello.platform.example.com` | Routed automatically by Traefik |
+
+## Deployment flow
+
+```mermaid
+sequenceDiagram
+    actor Operator
+    participant CLI as TOAD TypeScript CLI
+    participant Heat as OpenStack Heat
+    participant Hosts as Three cloud instances
+    participant Swarm as Docker Swarm
+    participant DNS as Infomaniak DNS + Designate
+    participant Verify as Acceptance checks
+
+    Operator->>CLI: doctor and check
+    Operator->>CLI: apply toad-prod
+    CLI->>Heat: create or update declared resources
+    Heat-->>CLI: instances, Octavia IP, DNS zone
+    CLI->>Hosts: install and harden Docker hosts
+    CLI->>Swarm: initialize managers and deploy stacks
+    CLI->>DNS: synchronize parent apex and wildcard
+    CLI->>Verify: test quorum, replicas, DNS, TLS, mTLS, monitoring
+    Verify-->>Operator: machine-readable result
+```
+
+The first deployment has one manual DNS delegation step. Every later `apply`
+is an idempotent create-or-update operation.
+
+## 1. Get the project and validate your workstation
 
 ```sh
-cd openstackV3
+git clone https://github.com/RemiGirard/TOAD-infra.git
+cd TOAD-infra/openstackV3
 pnpm install --frozen-lockfile
 pnpm run check
 pnpm run doctor -- --json
 ```
 
-Store the service-user `clouds.yaml` in `openstackV3/credentials/clouds.yaml`.
-The password can be in that file or, preferably, in
-`openstackV3/credentials/password`. Both are ignored by Git and forced to mode
-`0600` by setup. Then:
+The doctor reports missing prerequisites without printing credential contents.
+Resolve failures before continuing. A missing host `age` binary is acceptable
+only if all secret and backup operations will run through the operator image.
+
+## 2. Create the cloud service user
+
+In Infomaniak Manager, open **Public Cloud → Users**, create a user dedicated
+to this deployment, and give it the project roles required for Compute,
+Network, Orchestration, Load Balancing, and DNS.
+
+Download its `clouds.yaml` and save it as:
+
+```text
+openstackV3/credentials/clouds.yaml
+```
+
+Do not commit the `credentials/` directory. If `clouds.yaml` does not contain
+the password, `pnpm run setup` asks for it without echoing and stores it in the
+ignored `credentials/password` file with mode `0600`.
+
+Initialize the project-local OpenStack CLI and SSH key:
 
 ```sh
 pnpm run setup
@@ -83,299 +129,319 @@ pnpm run doctor -- --cloud
 pnpm run discover
 ```
 
-Create a restricted token at
-<https://manager.infomaniak.com/v3/ng/accounts/token/list>, then save its value
-with `pnpm run dns-token` (the prompt does not echo it). This creates
-`openstackV3/credentials/infomaniak-dns-token` with mode `0600`. This
-ignored local file is used both by the parent-DNS TypeScript client and as the
-source of a versioned Docker secret; the token is never copied into a remote
-deployment directory or Compose environment file.
+`discover` prints the available flavors, immutable image UUIDs, networks,
+availability zones, and quota. Use an image UUID, not a mutable image name.
 
-The setup creates `openstackV3/openstack_cli/`; it never installs Python
-packages globally. See [credentials and recovery](docs/OPERATIONS.md).
+## 3. Configure the deployment
 
-## Reproducible operator image
-
-The Node, Python, OpenStack, Ansible, SSH, and age tooling is also packaged in a
-credential-free operator image. Exact pnpm and Python dependency locks are used,
-and the base image is digest-pinned. Build and validate it locally with:
+From `openstackV3`:
 
 ```sh
-docker build --tag toad-operator:test .
-docker run --rm toad-operator:test --help
+cp heat/env/example.yaml heat/env/production.yaml
+cp ../router/config.example.yaml ../router/config.yaml
 ```
 
-Environment-specific and secret files are intentionally excluded from the
-image. A published image is used by mounting only operator state and inputs:
+Edit `heat/env/production.yaml`:
 
-```sh
-docker run --rm -it \
-  --volume toad-state:/state \
-  --volume "$PWD/backups:/backups" \
-  --volume "$PWD/openstackV3/credentials:/opt/toad/openstackV3/credentials" \
-  --volume "$PWD/openstackV3/heat/env/production.yaml:/opt/toad/openstackV3/heat/env/production.yaml:ro" \
-  --volume "$PWD/router/config.yaml:/opt/toad/router/config.yaml:ro" \
-  --volume "$PWD/apps:/opt/toad/apps:ro" \
-  ghcr.io/remigirard/toad-infra:VERSION verify toad-prod --json
+```yaml
+parameters:
+  flavor: "YOUR_FLAVOR"
+  image: "YOUR_IMMUTABLE_IMAGE_UUID"
+  keypair_name: "toad-key"
+  public_network: "YOUR_PUBLIC_NETWORK"
+  ssh_allowed_cidr: "192.0.2.1/32"
+  dns_zone_name: "platform.example.com."
+  dns_email: "hostmaster@example.com"
+  manager1_availability_zone: "YOUR_AZ_1"
+  manager2_availability_zone: "YOUR_AZ_2"
+  manager3_availability_zone: "YOUR_AZ_3"
 ```
 
-Use a host backup directory rather than an anonymous `/backups` volume. Mount
-`apps` read-write only when deliberately using `app create`. Release tags build
-the OCI image with an SBOM and provenance in GitHub Actions, publish it to GHCR,
-and keyless-sign its immutable digest with Sigstore Cosign. Verify the selected
-release digest before giving it client credentials.
+The `apply` command replaces the documentation SSH CIDR with the operator
+workstation's current public IPv4 `/32`. It never intentionally opens SSH to
+`0.0.0.0/0`.
 
-## One-command production apply
+Edit `router/config.yaml`:
 
-Copy the local settings and set the flavor, immutable OpenStack image UUID,
-public network, domain, and email. Use the ID printed by
-`pnpm run discover`, not an image display name that the provider may retarget:
+```yaml
+letsencrypt_email: admin@example.com
+traefik_log_level: INFO
+base_domain: platform.example.com
+root_domain: example.com
+```
+
+TOAD owns the following DNS records once deployed:
+
+```mermaid
+flowchart TD
+    parent["Infomaniak parent zone<br/>example.com"]
+    child["Designate child zone<br/>platform.example.com"]
+    lb["Octavia public IP"]
+
+    parent -->|"A: @ and *"| lb
+    parent -->|"NS delegation: platform"| child
+    child -->|"A: @ and *"| lb
+
+    note["TOAD does not change parent MX, TXT, CAA,<br/>or unrelated records"]
+    parent --- note
+```
+
+The parent `@` and `*` records will point to TOAD. Use a dedicated domain if
+that is not appropriate for an existing website. The child `NS` delegation is
+manual and deliberately survives stack deletion.
+
+## 4. Add the restricted DNS token
+
+Create an Infomaniak API token with only `dns:read` and `dns:write`, then store
+it through the non-echoing prompt:
 
 ```sh
-cp openstackV3/heat/env/example.yaml openstackV3/heat/env/production.yaml
-cp router/config.example.yaml router/config.yaml
-cd openstackV3
+pnpm run dns-token
+```
+
+The token stays in the ignored local credentials directory. Traefik receives
+it as a versioned Docker secret, never as a Compose label or environment file.
+
+## 5. Deploy
+
+```sh
+pnpm run check
+pnpm run doctor -- --cloud
 pnpm run apply -- toad-prod heat/env/production.yaml
 ```
 
-`apply` discovers the operator workstation's public IPv4 and restricts SSH to
-that `/32`; it then validates Heat, creates or updates networks, security groups, three
-instances, two floating IPs, Octavia, and Designate; it then generates the
-inventory, installs Docker, creates the Swarm, deploys Traefik, monitoring, and
-the test services, initializes the local admin mTLS PKI, synchronizes the
-parent apex/wildcard DNS only after ingress is ready, and runs the end-to-end
-checks. Re-running the same command is the normal idempotent maintenance path.
-If the workstation address changes, refresh only that Heat-managed rule with
-`pnpm run maintenance -- refresh-ssh-access toad-prod --yes`.
+`apply` performs the entire reconciliation:
 
-For agents and monitoring, the read-only result is machine-readable:
+1. validates the Heat template and local inputs;
+2. creates or updates the network, security groups, instances, floating IPs,
+   Octavia load balancer, and Designate zone;
+3. generates the Ansible inventory;
+4. installs Docker and creates the three-manager Swarm;
+5. deploys Traefik, monitoring, the landing page, and test services;
+6. initializes the local admin mTLS PKI;
+7. synchronizes the parent-domain apex and wildcard records;
+8. verifies infrastructure, Swarm, DNS, HTTPS, mTLS, and monitoring.
+
+On the first run, public verification may wait or fail until the child zone is
+delegated. This does not require rebuilding anything.
+
+## 6. Delegate the platform child zone once
+
+List the child zone's `NS` record:
+
+```sh
+pnpm run os -- recordset list platform.example.com.
+```
+
+In the Infomaniak DNS zone for `example.com`, create `NS` records named
+`platform` using the authoritative nameservers shown by Designate. Then wait
+for DNS propagation and rerun the same apply command:
+
+```sh
+pnpm run apply -- toad-prod heat/env/production.yaml
+```
+
+```mermaid
+flowchart LR
+    first["First apply"] --> zone["Designate zone exists"]
+    zone --> delegate["Add child NS records once"]
+    delegate --> second["Rerun apply"]
+    second --> green["All acceptance checks pass"]
+    green --> later["Future changes: rerun apply"]
+```
+
+## 7. Verify the installation
 
 ```sh
 pnpm run verify -- toad-prod --json
 ```
 
-The first deployment needs a one-time parent-zone delegation. Add two `NS`
-records named `toad` in the Infomaniak DNS zone for `remigirard.dev`, pointing
-to `ns1.pub2.infomaniak.cloud.` and `ns2.pub2.infomaniak.cloud.`. This delegation
-is outside the OpenStack project and intentionally survives stack destruction.
-The parent apex and wildcard A records are not a manual step: `apply` manages
-them using the restricted Infomaniak token.
+The production verifier checks manager quorum, service replica counts, load
+balancer members, DNS, redirects, public certificates, test endpoints,
+monitoring targets and rules, and rejection of unauthenticated admin requests.
 
-Traefik uses two automatic ACME paths. Routes in the delegated `toad` zone keep
-HTTP-01 issuance, while `remigirard.dev` and `*.remigirard.dev` use Infomaniak
-DNS-01. The latter produces one wildcard certificate and renews it without
-opening another port or requiring a manual DNS record.
+You should then have:
 
-## Manual layer-by-layer path
+| URL | Access |
+|---|---|
+| `https://example.com/` | Public landing page |
+| `https://hello.platform.example.com/` | Public deployment test |
+| `https://whoami.platform.example.com/` | Public routing test |
+| `https://traefik.platform.example.com/dashboard/` | Admin mTLS |
+| `https://grafana.platform.example.com/` | Admin mTLS |
+| `https://prometheus.platform.example.com/` | Admin mTLS |
+| `https://alerts.platform.example.com/` | Admin mTLS |
 
-## Configure Swarm and ingress
+### If deployment stops
 
-Use this path when debugging a specific layer:
+Do not start by changing resources manually in Horizon. Use the layer-specific
+diagnostic so the repository remains the source of truth:
 
-```sh
-cd ansible
-python3 -m venv venv
-venv/bin/pip install -r requirements.lock.txt
-venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/installDocker.yaml
-venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/initJoinSwarm.yaml
+| Symptom | First command |
+|---|---|
+| Local prerequisite or credential failure | `pnpm run doctor -- --cloud` |
+| Heat stack failure | `pnpm run os -- stack failures list toad-prod --long` |
+| Child domain does not resolve | `pnpm run os -- recordset list platform.example.com.` |
+| Swarm manager or quorum problem | `pnpm run maintenance -- status --json` |
+| One application is unhealthy | `pnpm run app -- diagnose APP --json` |
+| Public TLS or monitoring failure | `pnpm run verify -- toad-prod --json` |
+
+After correcting configuration, rerun `apply`; do not repair ordinary desired
+state with ad-hoc `docker service update` or manual cloud-console changes.
+
+## 8. Import the admin certificate
+
+The first apply creates an initial browser bundle under:
+
+```text
+openstackV3/credentials/admin-pki/operator.p12
 ```
 
-Deploy Traefik and the two public test services:
+Import it into the operator's browser or operating-system certificate store
+using the password stored beside it. These files are private operator state;
+back up the CA key securely and never copy it to a server.
+
+Issue a separate short-lived identity for each person or device:
 
 ```sh
-ansible/venv/bin/ansible-playbook -i openstackV3/inventory.yaml ansible/playbooks/deployTraefik.yaml
-ansible/venv/bin/ansible-playbook -i openstackV3/inventory.yaml ansible/playbooks/deployRoot.yaml
-ansible/venv/bin/ansible-playbook -i openstackV3/inventory.yaml ansible/playbooks/deployMonitoring.yaml
-ansible/venv/bin/ansible-playbook -i openstackV3/inventory.yaml ansible/playbooks/deployHello.yaml
-```
-
-After parent-zone delegation has propagated, verify:
-
-```sh
-curl --fail --show-error https://hello.toad.remigirard.dev
-curl --fail --show-error https://whoami.toad.remigirard.dev
-curl --fail --show-error https://remigirard.dev
-curl --fail --show-error https://anything.remigirard.dev
-```
-
-The Traefik dashboard is available at
-`https://traefik.toad.remigirard.dev/dashboard/`, but its TLS handshake requires
-a client certificate. `apply` creates the initial browser bundle at
-`openstackV3/credentials/admin-pki/operator.p12` and its local import password
-file. Import the bundle into the operator's browser or OS certificate store;
-keep both files private. Issue a separate, short-lived identity for each person
-or device with:
-
-```sh
-cd openstackV3
 pnpm run admin-pki -- issue alice-laptop 90
 ```
 
-The same certificate opens the mTLS-protected Grafana, Prometheus, and
-Alertmanager interfaces at `grafana`, `prometheus`, and `alerts` under the base
-domain. Only the public CA certificate is deployed to Traefik. The CA key and
-all client keys remain in the ignored local credentials directory. See
-[admin access and certificate recovery](docs/OPERATIONS.md#admin-mtls) and the
-[monitoring profile](monitoring/README.md).
+There is no shared dashboard password or JWT service to maintain. The browser
+presents the client certificate during the TLS handshake.
 
 ## Deploy an application
 
-Applications live in `apps/APP/` and declare their deployment contract in
-`toad.yaml`. The manifest is deliberately small: stack and service names, an
-allow-list of files that may leave the workstation, HTTPS acceptance checks,
-and optional encrypted secrets. Create a safe Traefik/Swarm starter and deploy
-it with:
-
-```sh
-cd openstackV3
-pnpm run app -- create my-service
-# Edit ../apps/my-service/docker-compose.yaml and ../apps/my-service/toad.yaml
-pnpm run app -- validate my-service
-pnpm run app -- deploy my-service
-pnpm run app -- status my-service
-pnpm run app -- diagnose my-service --json
-pnpm run app -- logs my-service
+```mermaid
+flowchart LR
+    create["app create"] --> edit["Edit manifest and Compose"]
+    edit --> validate["app validate"]
+    validate --> deploy["app deploy"]
+    deploy --> swarm["Swarm converges or rolls back"]
+    swarm --> diagnose["app diagnose --json"]
 ```
 
-The generated route is `https://my-service.toad.remigirard.dev`. Images must
-include an immutable SHA-256 digest, published host ports are rejected, and
-every service must use Swarm's automatic rollback policy. Traefik-enabled
-services must join the external `traefik-public` overlay and declare their
-container port. `deploy` copies only manifest-declared files, runs `docker
-stack config`, deploys with `--prune`, shows replica state, and performs every
-declared HTTPS check.
+Create a safe starter application:
 
-`diagnose --json` is the preferred agent entry point for one application. It
-returns valid JSON containing the validated manifest identity, desired and
-running replicas, immutable image references, endpoint latency/status, recent
-failed Swarm task errors, and focused next-step hints. It is read-only and exits
-non-zero when the application or an endpoint is unhealthy.
+```sh
+pnpm run app -- create my-service
+# Edit ../apps/my-service/toad.yaml and docker-compose.yaml
+pnpm run app -- validate my-service
+pnpm run app -- deploy my-service
+pnpm run app -- diagnose my-service --json
+```
 
-Routine lifecycle commands are:
+The generated route is `https://my-service.platform.example.com`. Application
+images must use immutable SHA-256 digests. Direct published ports, privileged
+containers, missing resource limits, and unsafe volume contracts are rejected.
+Traefik routes applications through the shared `traefik-public` overlay.
+
+Useful lifecycle commands:
 
 ```sh
 pnpm run app -- list
+pnpm run app -- status my-service
+pnpm run app -- logs my-service
 pnpm run app -- verify my-service
-pnpm run app -- logs my-service api
-pnpm run app -- rollback my-service api
-pnpm run app -- remove my-service       # exact stack-name confirmation
+pnpm run app -- rollback my-service
+pnpm run app -- remove my-service
 ```
 
-For a secret, declare it in `toad.yaml` and as an external Compose secret whose
-name is an environment reference. For example:
+See the [agent runbook](docs/AGENT-RUNBOOK.md) for safe agent-assisted
+diagnosis and deployment.
 
-```yaml
-# apps/my-service/toad.yaml
-secrets:
-  - name: api-token
-    source: secrets/api-token.age
-    environment: API_TOKEN_SECRET
-```
-
-```yaml
-# apps/my-service/docker-compose.yaml
-secrets:
-  api-token:
-    external: true
-    name: ${API_TOKEN_SECRET}
-```
-
-Initialize the local encryption identity and encrypt a file:
+## Routine operation
 
 ```sh
-pnpm run app -- secret init
-pnpm run app -- secret recipient
-pnpm run app -- secret encrypt my-service api-token --from-file /secure/input
+pnpm run doctor -- --cloud
+pnpm run maintenance -- status --json
+pnpm run verify -- toad-prod --json
 ```
 
-Commit the `.age` ciphertext, never the input. Back up the ignored
-`openstackV3/credentials/toad-app-secrets.agekey` in a real secret manager.
-During deployment the TypeScript CLI decrypts in memory, sends plaintext to
-`docker secret create` over SSH stdin, and injects only the content-addressed
-secret name into Compose. No plaintext secret file is created on a node.
+If the operator's public IP changes, update only the Heat-managed SSH rule:
 
-Platform-owned state uses the same encrypted streaming path. Back up every
-Traefik and monitoring volume, or one selected dataset, with:
+```sh
+pnpm run maintenance -- refresh-ssh-access toad-prod --yes
+```
+
+For client isolation, create one context per customer or environment:
+
+```sh
+pnpm run context -- create customer-prod --use
+pnpm run context -- current --json
+```
+
+Each context has separate configuration, credentials, inventory, backups, and
+an operation lock. Never reuse one context across unrelated clients.
+
+## Backup and recovery
+
+Back up platform volumes before manager replacement or destructive work:
 
 ```sh
 pnpm run platform -- list
 pnpm run platform -- backup
-pnpm run platform -- backup traefik-certificates
+pnpm run platform -- verify --from /secure/platform-backup/index.json --json
 ```
 
-The command briefly quiesces only the owning service and writes an ignored,
-age-encrypted archive on the operator host. Guarded restore syntax and failure
-semantics are documented in
-[operations and recovery](docs/OPERATIONS.md#encrypted-platform-recovery).
+The archives are streamed off the manager and encrypted with age. Copy them
+and the age identity to separate protected storage. Restores replace one exact
+volume and require explicit confirmation.
 
-## Destroy and rebuild test
+```mermaid
+flowchart LR
+    git["Git repository<br/>desired state"] --> apply["apply"]
+    secrets["Encrypted secrets<br/>and operator identities"] --> apply
+    backups["Encrypted volume backups"] --> restore["guarded restore"]
+    apply --> rebuilt["Rebuilt Swarm platform"]
+    restore --> rebuilt
+    rebuilt --> verify["verify --json"]
+```
 
-The compute/DNS stack is deleted with:
+Read [operations and recovery](docs/OPERATIONS.md),
+[stateful storage profiles](docs/STATEFUL-STORAGE.md), and the
+[disaster-recovery drill](docs/DISASTER-RECOVERY.md) before restoring or
+destroying data.
+
+## Destroying a stack
+
+Destruction is intentionally separate from `apply` and requires confirmation:
 
 ```sh
-cd openstackV3
 pnpm run destroy -- toad-prod
 ```
 
-Confirm `pnpm run status` shows no managed stack resources, then repeat the
-`apply` command above. The parent `NS` delegation and restricted DNS token are
-the only persistent bootstrap state. `apply` updates the parent apex/wildcard
-to the newly allocated Octavia IP after every rebuild.
+This removes only resources owned by the named Heat stack. The parent-zone NS
+delegation, local credentials, admin CA, age identity, and external backups
+remain. Review the exact stack resources before deletion.
 
 ## Repository map
 
-```text
-openstackV3/   TypeScript CLI and Heat templates
-ansible/       Docker, Swarm, Traefik, and test-app configuration
-router/        Pinned Traefik Swarm stack
-apps/hello/    Public end-to-end verification services
-apps/root/     Parent-domain and wildcard landing service
-apps/stateful-example/  Opt-in pinned-volume and encrypted-backup example
-monitoring/    Prometheus, Grafana, alerts, probes, and provisioned dashboards
-docs/          Architecture and operating procedures
-SECURITY.md    Supported-version, disclosure, and trust-boundary guidance
-CONTRIBUTING.md  Validation and pull-request workflow
-AGENTS.md      Guardrails for coding and operations agents
-```
-
-Provider and upstream references: [Infomaniak Heat](https://docs.infomaniak.cloud/orchestration/heat/),
-[Infomaniak Octavia](https://docs.infomaniak.cloud/network/loadbalancers/),
-[Infomaniak application credentials](https://docs.infomaniak.cloud/identity/applications_credentials/),
-[Docker Swarm manager quorum](https://docs.docker.com/engine/swarm/admin_guide/),
-[Docker routing mesh](https://docs.docker.com/engine/swarm/ingress/), and
-[Traefik's Swarm provider](https://doc.traefik.io/traefik/v3.7/providers/swarm/)
-and [mTLS client authentication](https://doc.traefik.io/traefik/v3.7/reference/routing-configuration/http/tls/tls-options/#client-authentication-mtls).
+| Path | Purpose |
+|---|---|
+| `openstackV3/` | TypeScript operator CLI and Heat templates |
+| `ansible/` | Host, Swarm, ingress, and monitoring configuration |
+| `router/` | Traefik Swarm stack |
+| `apps/` | Manifest-driven example and user applications |
+| `monitoring/` | Prometheus, Grafana, Loki, Alloy, and alerts |
+| `docs/` | Operations, recovery, storage, releases, and agent procedures |
 
 ## Current boundaries
 
-- The project is Swarm-first. Kubernetes should be a separate provider/profile,
-  not conditionals throughout the Swarm implementation.
-- Swarm is the default because the operational surface is small and Traefik's
-  service-label integration is excellent. Choose Kubernetes only when a client
-  actually needs its ecosystem, scheduling primitives, or managed-control-plane
-  integrations; three small self-managed Kubernetes control-plane nodes are
-  materially heavier to operate.
-- Traefik OSS runs one replica because its local ACME file cannot safely have
-  multiple writers. Swarm reschedules it; a cross-node move can reissue
-  certificates. Use the encrypted platform backup before maintenance.
+- The production provider is Docker Swarm. Kubernetes should be implemented as
+  a separate provider rather than hidden conditionals in the Swarm path.
+- Traefik OSS runs one replica because its local ACME store cannot safely have
+  multiple writers. Swarm reschedules it, and encrypted platform backups
+  protect its state.
+- Local named volumes are not replicated. Stateful workloads must select an
+  explicit storage and backup profile.
+- Monitoring inside the Swarm cannot detect a complete provider outage; run
+  the credential-free external probe from another provider or GitHub Actions.
 
 ## License
 
-Copyright (C) 2026 Remi Girard.
-
-TOAD is free software licensed under the
+TOAD is free software under the
 [GNU Affero General Public License, version 3 or later](LICENSE)
 (`AGPL-3.0-or-later`). You may use, study, modify, and redistribute it under
-those terms. If you run a modified version as a network service, section 13
-requires offering its users the corresponding source code.
-
-For agent-assisted operation, start with the
-[agent runbook](docs/AGENT-RUNBOOK.md). It separates read-only diagnosis from
-actions that require exact human authorization and defines the evidence an
-agent must return after a change.
-
-For persistence and recovery decisions, use the
-[stateful storage profiles](docs/STATEFUL-STORAGE.md) and the
-[disaster-recovery proof](docs/DISASTER-RECOVERY.md).
-Contributors and maintainers should follow the
-[Conventional Commit release workflow](docs/RELEASING.md).
+those terms. Modified versions offered as network services must provide their
+corresponding source as required by AGPL section 13.

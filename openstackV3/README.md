@@ -4,6 +4,19 @@ The TypeScript CLI manages Infomaniak Public Cloud through the official
 OpenStack clients installed in a project-local Python virtual environment. It
 does not use Terraform and does not install global Python packages.
 
+For a first deployment, follow the guided
+[Infomaniak deployment checklist](SETUP.md). The CLI is organized around this
+safe loop:
+
+```mermaid
+flowchart LR
+    diagnose["doctor"] --> validate["check"]
+    validate --> reconcile["apply"]
+    reconcile --> verify["verify --json"]
+    verify --> operate["app · maintenance · platform"]
+    operate --> verify
+```
+
 ## Setup
 
 ```sh

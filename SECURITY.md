@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-Security fixes are made on the current `main` branch. Until the project starts
-publishing releases, deployments should pin a reviewed commit and apply updates
-only after `pnpm run check` and a staging verification pass.
+Security fixes are made on the current `main` branch and published as versioned
+releases. Production deployments should pin a reviewed release image by digest
+and apply updates only after `pnpm run check` and a staging verification pass.
 
 ## Reporting a vulnerability
 
