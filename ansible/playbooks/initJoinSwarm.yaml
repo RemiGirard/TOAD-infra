@@ -1,44 +1,110 @@
 ---
-- name: Initialize Docker Swarm on main host
-  hosts: main
+- name: Initialize the first Swarm manager
+  hosts: managers[0]
   become: true
+  vars:
+    # Never overlap OpenStack's 10.0.0.0/24 tenant subnet. Swarm allocates a
+    # /24 from this pool for ingress and each subsequently created overlay.
+    swarm_default_address_pool: 10.20.0.0/16
+    swarm_default_address_pool_mask_length: 24
   tasks:
-    - name: Check if node is already a Swarm manager
-      shell: docker info --format '{{ "{{.Swarm.LocalNodeState}}" }}'
-      register: swarm_state
-      changed_when: false
-
-    - name: Initialize Docker Swarm if not already a manager
-      shell: docker swarm init --advertise-addr {{ private_ip }}
-      when: swarm_state.stdout != "active"
-      register: swarm_init_output
-      ignore_errors: true
-
-    - name: Get join token for worker nodes
-      shell: docker swarm join-token -q worker
-      register: worker_join_token
-
-    - name: Set worker join token fact globally
-      set_fact:
-        worker_join_token_value: "{{ worker_join_token.stdout }}"
-
-- name: Join worker nodes to the swarm
-  hosts: workers
-  become: true
-  tasks:
-    - name: Check if worker is already part of a Swarm
-      shell: docker info --format '{{"{{.Swarm.LocalNodeState}}"}}'
-      register: worker_swarm_state
+    - name: Check manager membership
+      ansible.builtin.command:
+        argv: [docker, node, ls]
+      register: first_manager
       changed_when: false
       failed_when: false
 
-    - name: Leave swarm if already part of one
-      shell: docker swarm leave --force
-      when: worker_swarm_state.stdout | trim | lower in ['active', 'error']
-      ignore_errors: true
+    - name: Initialize Swarm
+      ansible.builtin.command:
+        argv:
+          - docker
+          - swarm
+          - init
+          - --advertise-addr
+          - "{{ private_ip }}"
+          - --default-addr-pool
+          - "{{ swarm_default_address_pool }}"
+          - --default-addr-pool-mask-length
+          - "{{ swarm_default_address_pool_mask_length | string }}"
+      when: first_manager.rc != 0
 
-    - name: Join worker node to the swarm
-      shell: docker swarm join --token {{ hostvars['main']['worker_join_token_value'] }} {{ hostvars['main']['private_ip'] }}:2377
-      when: hostvars['main']['worker_join_token_value'] is defined
+    - name: Read manager join token
+      ansible.builtin.command:
+        argv: [docker, swarm, join-token, -q, manager]
+      register: manager_token
+      changed_when: false
+      no_log: true
 
+    - name: Read worker join token
+      ansible.builtin.command:
+        argv: [docker, swarm, join-token, -q, worker]
+      register: worker_token
+      changed_when: false
+      no_log: true
 
+- name: Join the remaining managers
+  hosts: managers[1:]
+  serial: 1
+  become: true
+  tasks:
+    - name: Check whether this node is already a manager
+      ansible.builtin.command:
+        argv: [docker, node, ls]
+      register: manager_state
+      changed_when: false
+      failed_when: false
+
+    - name: Join as a manager
+      ansible.builtin.command:
+        argv:
+          - docker
+          - swarm
+          - join
+          - --token
+          - "{{ hostvars[groups['managers'][0]].manager_token.stdout }}"
+          - "{{ hostvars[groups['managers'][0]].private_ip }}:2377"
+          - --advertise-addr
+          - "{{ private_ip }}"
+      when: manager_state.rc != 0
+      no_log: true
+
+- name: Join optional workers
+  hosts: workers
+  become: true
+  tasks:
+    - name: Read local Swarm state
+      ansible.builtin.command:
+        argv: [docker, info]
+      register: worker_state
+      changed_when: false
+
+    - name: Join as a worker
+      ansible.builtin.command:
+        argv:
+          - docker
+          - swarm
+          - join
+          - --token
+          - "{{ hostvars[groups['managers'][0]].worker_token.stdout }}"
+          - "{{ hostvars[groups['managers'][0]].private_ip }}:2377"
+          - --advertise-addr
+          - "{{ private_ip }}"
+      when: "'Swarm: active' not in worker_state.stdout"
+      no_log: true
+
+- name: Prepare shared ingress network
+  hosts: managers[0]
+  become: true
+  tasks:
+    - name: Inspect Traefik overlay network
+      ansible.builtin.command:
+        argv: [docker, network, inspect, traefik-public]
+      register: traefik_network
+      changed_when: false
+      failed_when: false
+
+    - name: Create Traefik overlay network
+      ansible.builtin.command:
+        argv: [docker, network, create, --driver, overlay, --attachable, traefik-public]
+      when: traefik_network.rc != 0

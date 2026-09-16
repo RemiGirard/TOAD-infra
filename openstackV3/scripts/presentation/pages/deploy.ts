@@ -49,7 +49,7 @@ export async function run(args: string[]): Promise<void> {
   // Get deployment parameters
   const level = args[0] && !isNaN(parseInt(args[0]))
     ? parseInt(args[0])
-    : parseInt(await ask('Select level (0-5)', '5'));
+    : parseInt(await ask('Select profile (1 or 5)', '1'));
 
   if (!isValidLevel(level)) {
     error(`Invalid level: ${level}`);
@@ -57,7 +57,7 @@ export async function run(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const levelInfo = LEVELS[level];
+  const levelInfo = LEVELS[level]!;
   const stackName = args[1] || await ask('Stack name', `toad-level${level}`);
   const envFile = args[2] || await ask('Environment file', 'heat/env/example.yaml');
 

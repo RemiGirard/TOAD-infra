@@ -7,10 +7,9 @@
 
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { spawn } from 'child_process';
 import { ROOT_DIR, VENV_DIR, SSH_KEY_PATH, SSH_KEY_PUB_PATH } from './paths.js';
 import { findCloudsYaml, getDefaultCloud, loadPassword } from './credentials.js';
-import { run, runCheck, runAsync } from './shell.js';
+import { runProgram, runProgramAsync, runProgramStream } from './shell.js';
 
 function getOpenStackEnv(): Record<string, string> {
   const cloudsFile = findCloudsYaml();
@@ -29,15 +28,18 @@ function getOpenStackEnv(): Record<string, string> {
     ...process.env,
     OS_CLIENT_CONFIG_FILE: cloudsFile,
     OS_CLOUD: cloudName,
-    OS_PASSWORD: password,
-  } as Record<string, string>;
+    ...(password ? { OS_PASSWORD: password } : {}),
+  };
 }
 
 function getOpenstackBin(): string {
   return join(VENV_DIR, 'bin', 'openstack');
 }
 
-export function openstack(args: string[], options: { showOutput?: boolean } = {}): string {
+export function openstack(
+  args: string[],
+  options: { showOutput?: boolean; showCommand?: boolean } = {},
+): string {
   const bin = getOpenstackBin();
 
   if (!existsSync(bin)) {
@@ -46,11 +48,12 @@ export function openstack(args: string[], options: { showOutput?: boolean } = {}
 
   const env = getOpenStackEnv();
 
-  const result = run(`openstack ${args.join(' ')}`, {
+  const result = runProgram(bin, args, {
     showOutput: options.showOutput,
+    showCommand: options.showCommand,
     cwd: ROOT_DIR,
     env,
-    actualCmd: `${bin} ${args.join(' ')}`,
+    displayCommand: `openstack ${args.map((arg) => JSON.stringify(arg)).join(' ')}`,
   });
   return result;
 }
@@ -58,36 +61,25 @@ export function openstack(args: string[], options: { showOutput?: boolean } = {}
 export function openstackStream(args: string[]): Promise<number> {
   const bin = getOpenstackBin();
   const env = getOpenStackEnv();
-
-  const DIM = '\x1b[2m';
-  const RESET = '\x1b[0m';
-  console.log(`${DIM}$ openstack ${args.join(' ')}${RESET}`);
-
-  return new Promise((resolve) => {
-    const proc = spawn(bin, args, {
-      env,
-      stdio: 'inherit',
-      cwd: ROOT_DIR,
-    });
-
-    proc.on('close', (code) => {
-      resolve(code || 0);
-    });
+  return runProgramStream(bin, args, {
+    env,
+    cwd: ROOT_DIR,
+    displayCommand: `openstack ${args.map((arg) => JSON.stringify(arg)).join(' ')}`,
   });
 }
 
 export function venvExists(): boolean {
   const bin = join(VENV_DIR, 'bin', 'openstack');
-  return runCheck(`test -f openstack_cli/bin/openstack && echo "ok"`, { actualCmd: `test -f ${bin} && echo "ok"` });
+  return existsSync(bin);
 }
 
 export function sshKeyExists(): boolean {
-  return runCheck(`test -f credentials/toad-key && echo "ok"`, { actualCmd: `test -f ${SSH_KEY_PATH} && echo "ok"` });
+  return existsSync(SSH_KEY_PATH);
 }
 
 export function testConnection(): boolean {
   try {
-    openstack(['token', 'issue'], { showOutput: false });
+    openstack(['token', 'issue'], { showOutput: false, showCommand: false });
     return true;
   } catch {
     return false;
@@ -106,11 +98,11 @@ export async function openstackAsync(
 
   const env = getOpenStackEnv();
 
-  const result = await runAsync(`openstack ${args.join(' ')}`, {
+  const result = await runProgramAsync(bin, args, {
     showOutput: options.showOutput,
     cwd: ROOT_DIR,
     env,
-    actualCmd: `${bin} ${args.join(' ')}`,
+    displayCommand: `openstack ${args.map((arg) => JSON.stringify(arg)).join(' ')}`,
     spinner: options.spinner,
   });
 

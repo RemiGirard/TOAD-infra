@@ -1,0 +1,230 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.5@sha256:332c2f43e7e389d74d3893b55bb02fbbd684208e681eeb604641d5d769c0fe2a
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=5GB
+      - --web.external-url=https://prometheus.${TOAD_DOMAIN}/
+    environment:
+      TOAD_CONFIG_HASH: ${PROMETHEUS_CONFIG_HASH}
+    volumes:
+      - prometheus-data:/prometheus
+      - /opt/toad/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /opt/toad/monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    networks: [monitoring, traefik-public]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.toad.monitoring-state == true
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      labels:
+        - "toad.config.prometheus=${PROMETHEUS_CONFIG_HASH}"
+        - traefik.enable=true
+        - traefik.http.routers.prometheus.rule=Host(`prometheus.${TOAD_DOMAIN}`)
+        - traefik.http.routers.prometheus.entrypoints=websecure
+        - traefik.http.routers.prometheus.tls=true
+        - traefik.http.routers.prometheus.tls.certresolver=letsencrypt
+        - traefik.http.routers.prometheus.tls.options=admin-mtls@file
+        - traefik.http.services.prometheus.loadbalancer.server.port=9090
+      update_config:
+        order: stop-first
+        failure_action: rollback
+
+  loki:
+    image: grafana/loki:3.7.0@sha256:c316b7c7589a5eeca843b6926c7446149d18300b79ac8538dc4ae063bc478da2
+    command:
+      - -config.file=/etc/loki/loki-config.yml
+    environment:
+      TOAD_CONFIG_HASH: ${OBSERVABILITY_CONFIG_HASH}
+    volumes:
+      - loki-data:/loki
+      - /opt/toad/monitoring/loki-config.yml:/etc/loki/loki-config.yml:ro
+    networks: [monitoring]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.toad.monitoring-state == true
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+      update_config:
+        order: stop-first
+        failure_action: rollback
+
+  alloy:
+    image: grafana/alloy:v1.18.0@sha256:491b0578c04983fd54fe99b587b6fab4404dc46d0dc16677bd6b00cc1140b308
+    command:
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    environment:
+      TOAD_CONFIG_HASH: ${OBSERVABILITY_CONFIG_HASH}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/toad/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+    networks: [monitoring]
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 48M
+      update_config:
+        order: stop-first
+        failure_action: rollback
+
+  alertmanager:
+    image: prom/alertmanager:v0.33.1@sha256:9e082985f56f4c8c9f724e18f2288c6708f472e56a5286b8863d080434ea065d
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=https://alerts.${TOAD_DOMAIN}/
+    volumes:
+      - alertmanager-data:/alertmanager
+      - /opt/toad/monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [monitoring, traefik-public]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.toad.monitoring-state == true
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.alertmanager.rule=Host(`alerts.${TOAD_DOMAIN}`)
+        - traefik.http.routers.alertmanager.entrypoints=websecure
+        - traefik.http.routers.alertmanager.tls=true
+        - traefik.http.routers.alertmanager.tls.certresolver=letsencrypt
+        - traefik.http.routers.alertmanager.tls.options=admin-mtls@file
+        - traefik.http.services.alertmanager.loadbalancer.server.port=9093
+      update_config:
+        order: stop-first
+        failure_action: rollback
+
+  grafana:
+    image: grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
+    environment:
+      TOAD_CONFIG_HASH: ${OBSERVABILITY_CONFIG_HASH}
+      GF_SERVER_DOMAIN: grafana.${TOAD_DOMAIN}
+      GF_SERVER_ROOT_URL: https://grafana.${TOAD_DOMAIN}/
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      GF_PLUGINS_PREINSTALL_AUTO_UPDATE: "false"
+      GF_PLUGINS_PLUGIN_ADMIN_ENABLED: "false"
+      GF_UNIFIED_ALERTING_ENABLED: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - /opt/toad/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - /opt/toad/monitoring/grafana/dashboards:/var/lib/toad-dashboards:ro
+    networks: [monitoring, traefik-public]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.toad.monitoring-state == true
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 192M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.grafana.rule=Host(`grafana.${TOAD_DOMAIN}`)
+        - traefik.http.routers.grafana.entrypoints=websecure
+        - traefik.http.routers.grafana.tls=true
+        - traefik.http.routers.grafana.tls.certresolver=letsencrypt
+        - traefik.http.routers.grafana.tls.options=admin-mtls@file
+        - traefik.http.services.grafana.loadbalancer.server.port=3000
+      update_config:
+        order: stop-first
+        failure_action: rollback
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - /opt/toad/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    networks: [monitoring]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.toad.monitoring-state == true
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /:/host:ro,rslave
+    networks: [monitoring]
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.5@sha256:763aecf1c32c2be8a1a75f9abfc2fc461005c9dbbaa39cb356b354aac1296dbe
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks: [monitoring]
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 192M
+        reservations:
+          memory: 32M
+
+volumes:
+  prometheus-data:
+  alertmanager-data:
+  grafana-data:
+  loki-data:
+  alloy-data:
+
+networks:
+  monitoring:
+    driver: overlay
+  traefik-public:
+    external: true

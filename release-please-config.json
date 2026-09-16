@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "3df1f48ed09488fcd703153f067a4bb06ed92a47",
+  "release-type": "simple",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "package-name": "toad-infra",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "openstackV3/package.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

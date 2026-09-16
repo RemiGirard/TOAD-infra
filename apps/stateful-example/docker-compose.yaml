@@ -1,0 +1,35 @@
+services:
+  web:
+    image: nginx:1.29.1-alpine@sha256:42a516af16b852e33b7682d5ef8acbd5d13fe08fecadc7ed98605ba5e3b26ab8
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - site-data:/usr/share/nginx/html
+    networks: [traefik-public]
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+      placement:
+        constraints:
+          - node.labels.toad.stateful-primary == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.stateful-example.rule=Host(`stateful-example.${TOAD_DOMAIN}`)"
+        - "traefik.http.routers.stateful-example.entrypoints=websecure"
+        - "traefik.http.routers.stateful-example.tls=true"
+        - "traefik.http.routers.stateful-example.tls.certresolver=letsencrypt"
+        - "traefik.http.services.stateful-example.loadbalancer.server.port=80"
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+
+volumes:
+  site-data:
+
+networks:
+  traefik-public:
+    external: true

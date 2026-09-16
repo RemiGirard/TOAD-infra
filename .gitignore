@@ -6,12 +6,16 @@
 # Never commit credentials, keys, passwords, tokens
 **/credentials/*
 !**/credentials/.gitkeep
+**/secrets/*.plain
+**/secrets/*.txt
+backups/
 *.pem
 *.key
 !*.key.pub
 **/.env
 **/.env.*
 !**/.env.example
+router/config.yaml
 
 # -- Python --
 venv/
@@ -43,6 +47,10 @@ Thumbs.db
 # -- Generated files --
 **/inventory.yaml
 !**/inventory.example.yaml
+openstackV3/contexts/
+openstackV3/.toad-context
+openstackV3/pki/
+**/.operation.lock
 
 # -- Logs & Temp --
 *.log

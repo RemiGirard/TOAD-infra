@@ -1,0 +1,89 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Healthy scrape targets",
+      "id": 1,
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "sum(up)", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 18}]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Public endpoints healthy",
+      "id": 2,
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "sum(probe_success{job=\"public-https\"})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 4}]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Firing alerts",
+      "id": 3,
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)", "refId": "A"}],
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Traefik requests / second",
+      "id": 4,
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "sum(rate(traefik_entrypoint_requests_total[5m]))", "refId": "A"}],
+      "fieldConfig": {"defaults": {"decimals": 2, "unit": "reqps"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Node CPU usage",
+      "id": 5,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "targets": [{"expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "{{instance}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"min": 0, "max": 100, "unit": "percent"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Node memory usage",
+      "id": 6,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "targets": [{"expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "{{instance}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"min": 0, "max": 100, "unit": "percent"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Traefik responses by status",
+      "id": 7,
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+      "targets": [{"expr": "sum by (code) (rate(traefik_entrypoint_requests_total[5m]))", "legendFormat": "HTTP {{code}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Public HTTPS probe duration",
+      "id": 8,
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
+      "targets": [{"expr": "probe_duration_seconds{job=\"public-https\"}", "legendFormat": "{{instance}}", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "s"}}
+    },
+    {
+      "type": "logs",
+      "title": "Recent Swarm logs",
+      "id": 9,
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 21},
+      "datasource": {"type": "loki", "uid": "loki"},
+      "targets": [{"expr": "{job=\"docker\"}", "refId": "A"}],
+      "options": {"showTime": true, "showLabels": false, "wrapLogMessage": true, "enableLogDetails": true}
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["toad", "swarm"],
+  "templating": {"list": []},
+  "time": {"from": "now-3h", "to": "now"},
+  "timezone": "browser",
+  "title": "TOAD Overview",
+  "uid": "toad-overview",
+  "version": 1
+}

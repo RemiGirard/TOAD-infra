@@ -40,6 +40,51 @@ export function ask(question: string, defaultValue?: string): Promise<string> {
   });
 }
 
+/** Read a secret from an interactive terminal without echoing it. */
+export function askSecret(question: string): Promise<string> {
+  closeReadline();
+  if (!process.stdin.isTTY || !process.stdout.isTTY || !process.stdin.setRawMode) {
+    return Promise.reject(new Error(
+      'Secret input requires an interactive terminal. Create credentials/password with mode 0600 instead.',
+    ));
+  }
+
+  process.stdout.write(`${question}: `);
+  process.stdin.setRawMode(true);
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
+
+  return new Promise((resolve, reject) => {
+    let value = '';
+    const finish = (): void => {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+      process.stdin.removeListener('data', onData);
+      process.stdout.write('\n');
+    };
+    const onData = (chunk: string): void => {
+      for (const character of chunk) {
+        if (character === '\u0003') {
+          finish();
+          reject(new Error('Secret input cancelled.'));
+          return;
+        }
+        if (character === '\r' || character === '\n') {
+          finish();
+          resolve(value);
+          return;
+        }
+        if (character === '\u007f' || character === '\b') {
+          value = value.slice(0, -1);
+        } else if (character >= ' ') {
+          value += character;
+        }
+      }
+    };
+    process.stdin.on('data', onData);
+  });
+}
+
 export function banner(title: string): void {
   const width = 42;
   const padding = Math.floor((width - title.length - 2) / 2);

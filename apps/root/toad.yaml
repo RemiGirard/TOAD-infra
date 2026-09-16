@@ -1,0 +1,20 @@
+apiVersion: toad.dev/v1
+name: root
+description: Parent domain and wildcard landing service
+stack: root
+compose: docker-compose.yaml
+files:
+  - docker-compose.yaml
+  - index.html
+  - nginx.conf
+services:
+  - landing
+checks:
+  - name: apex
+    url: https://${ROOT_DOMAIN}/
+    status: 200
+  - name: www
+    url: https://www.${ROOT_DOMAIN}/
+    status: 200
+secrets: []
+volumes: []

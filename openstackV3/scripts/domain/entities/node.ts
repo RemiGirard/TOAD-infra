@@ -6,7 +6,7 @@
  * requiring access through a jump host.
  */
 
-export type NodeRole = 'bastion' | 'gateway' | 'manager' | 'worker';
+export type NodeRole = 'node' | 'bastion' | 'gateway' | 'manager' | 'worker';
 
 export interface Node {
   name: string;

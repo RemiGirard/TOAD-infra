@@ -1,0 +1,59 @@
+---
+- name: Deploy a manifest-driven TOAD application
+  hosts: managers[0]
+  become: true
+  vars_files:
+    - "{{ toad_router_config_path | default(playbook_dir ~ '/../../router/config.yaml') }}"
+  vars:
+    remote_dir: "/opt/toad/apps/{{ toad_app_name }}"
+  tasks:
+    - name: Validate application deployment inputs
+      ansible.builtin.assert:
+        that:
+          - toad_app_name is match('^[a-z][a-z0-9-]{0,31}$')
+          - toad_app_stack is match('^[a-z][a-z0-9-]{0,31}$')
+          - toad_app_compose in toad_app_files
+          - toad_app_files | length > 0
+        fail_msg: Invalid manifest-driven application inputs.
+
+    - name: Create application deployment directory
+      ansible.builtin.file:
+        path: "{{ remote_dir }}"
+        state: directory
+        mode: '0750'
+
+    - name: Pin declared local application volumes to the primary stateful node
+      ansible.builtin.command:
+        argv:
+          - docker
+          - node
+          - update
+          - --label-add
+          - toad.stateful-primary=true
+          - "{{ ansible_facts['hostname'] }}"
+      when: toad_app_has_state | default(false) | bool
+      changed_when: false
+
+    - name: Copy only manifest-declared application files
+      ansible.builtin.copy:
+        src: "{{ toad_app_source }}/{{ item }}"
+        dest: "{{ remote_dir }}/{{ item }}"
+        mode: '0640'
+      loop: "{{ toad_app_files }}"
+
+    - name: Validate the rendered Swarm stack
+      ansible.builtin.command:
+        argv: [docker, stack, config, -c, "{{ toad_app_compose }}"]
+        chdir: "{{ remote_dir }}"
+      environment:
+        "{{ {'TOAD_DOMAIN': base_domain, 'ROOT_DOMAIN': root_domain, 'ROOT_DOMAIN_REGEX': root_domain | replace('.', '[.]')} | combine(toad_app_environment | default({})) }}"
+      changed_when: false
+
+    - name: Deploy the application stack
+      ansible.builtin.command:
+        argv: [docker, stack, deploy, --prune, -c, "{{ toad_app_compose }}", "{{ toad_app_stack }}"]
+        chdir: "{{ remote_dir }}"
+      environment:
+        "{{ {'TOAD_DOMAIN': base_domain, 'ROOT_DOMAIN': root_domain, 'ROOT_DOMAIN_REGEX': root_domain | replace('.', '[.]')} | combine(toad_app_environment | default({})) }}"
+      register: app_deploy
+      changed_when: "'Updating service' in app_deploy.stdout or 'Creating service' in app_deploy.stdout"

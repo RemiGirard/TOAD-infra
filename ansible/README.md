@@ -1,46 +1,49 @@
-# Ansible
+# TOAD host configuration
 
-Playbooks for configuring Docker Swarm on provisioned servers.
+Ansible is the thin, idempotent host layer after Heat creates the machines. The
+normal entry point is the TypeScript command from `openstackV3`:
 
-## Setup
+```sh
+pnpm run apply -- toad-prod heat/env/production.yaml
+```
 
-```bash
+For layer-by-layer debugging:
+
+```sh
 python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+venv/bin/pip install -r requirements.lock.txt
+venv/bin/ansible all -i ../openstackV3/inventory.yaml -m ping
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/installDocker.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/hardenHosts.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/initJoinSwarm.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/deployTraefik.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/deployRoot.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/deployMonitoring.yaml
+venv/bin/ansible-playbook -i ../openstackV3/inventory.yaml playbooks/deployHello.yaml
 ```
 
-On subsequent uses:
-```bash
-source venv/bin/activate
-```
+`hardenHosts.yaml` disables password/root SSH login, keeps TCP forwarding for
+the private-manager jump path, installs auditd and unattended security updates,
+prevents unattended reboots, and applies conservative kernel protections that
+do not conflict with Docker forwarding. It runs serially across nodes.
 
-## Inventory
+`deployTraefik.yaml` reads the ignored local Infomaniak DNS token and creates a
+versioned Swarm secret through stdin. `deployRoot.yaml` installs the small
+parent-domain landing stack that requests the apex/wildcard certificate.
 
-Copy and edit the example inventory:
-```bash
-cp inventory.example.yaml inventory.yaml
-# Edit inventory.yaml with your server details
-```
+The inventory is generated from stable Heat outputs. Managers 2 and 3 are
+reached through manager 1 using an explicit `ProxyCommand` and the repository's
+local SSH key. Swarm uses `10.20.0.0/16` in `/24` blocks so its ingress and
+overlay networks cannot collide with the OpenStack `10.0.0.0/24` subnet.
 
-## Playbooks
+The Traefik playbook copies the dynamic TLS policy and only the public admin CA
+certificate to `/opt/toad/traefik`. Client certificates and every private key
+remain on the operator workstation.
 
-Run in order:
-```bash
-# 1. Install Docker on all nodes
-ansible-playbook -i inventory.yaml playbooks/installDocker.yaml
+The monitoring playbook validates its rendered Swarm definition, Prometheus
+rules, and Alertmanager configuration before deploying any service. It copies
+only non-secret configuration to `/opt/toad/monitoring`.
 
-# 2. Initialize Swarm and join workers
-ansible-playbook -i inventory.yaml playbooks/initJoinSwarm.yaml
-
-# 3. (Optional) Deploy private Docker registry with mTLS
-ansible-playbook -i inventory.yaml playbooks/runDockerRepositoryWithCerts.yaml
-```
-
-### Playbook descriptions
-
-| Playbook | Description |
-|----------|-------------|
-| `installDocker.yaml` | Installs Docker Engine on Debian |
-| `initJoinSwarm.yaml` | Initializes Swarm on manager, joins workers |
-| `runDockerRepositoryWithCerts.yaml` | Deploys a private registry with client certificate auth |
+The former experimental registry playbook was removed: it generated private
+keys on a server and bypassed the maintained Traefik ingress policy. Deploy a
+registry as a reviewed manifest-driven application if one is needed.

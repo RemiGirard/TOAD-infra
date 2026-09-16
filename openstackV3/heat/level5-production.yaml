@@ -1,209 +1,151 @@
 heat_template_version: '2018-08-31'
 
 description: |
-  TOAD Level 5: High Availability Docker Swarm
-
-  Architecture:
-  - 1 Bastion node with floating IP (SSH access)
-  - 1 Octavia Load Balancer with floating IP (HTTP/HTTPS)
-  - 2 Gateway nodes running Traefik (behind LB)
-  - 3 Swarm nodes on private network
-  - Total: 6 nodes, 2 floating IPs
-
-  Traffic flow:
-  - HTTP/HTTPS: Internet → LB floating IP → Gateways → Swarm
-  - SSH: Internet → Bastion floating IP → All nodes
-
-  No single point of failure for web traffic.
+  TOAD production Swarm: exactly three manager nodes and an Octavia load
+  balancer. Manager 1 has a restricted floating IP for bootstrap/SSH; Octavia
+  has the public web IP and passes TCP 80/443 to the Swarm routing mesh.
 
 parameters:
   flavor:
     type: string
-    description: Nova flavor for all nodes
+    description: Nova flavor used for all three managers
     constraints:
       - custom_constraint: nova.flavor
 
   image:
     type: string
-    description: Glance image name
+    description: Ubuntu image used by every server
     constraints:
       - custom_constraint: glance.image
 
   keypair_name:
     type: string
-    description: SSH keypair name
+    description: Nova SSH keypair name
     constraints:
       - custom_constraint: nova.keypair
 
   public_network:
     type: string
-    description: Public network for floating IPs
-    default: "ext-floating1"
+    description: External network used only for floating IPs
+    default: ext-floating1
 
   ssh_allowed_cidr:
     type: string
-    description: CIDR allowed for SSH access (restrict to your IP for security)
-    default: "0.0.0.0/0"
-
-  gateway_count:
-    type: number
-    description: Number of gateway/Traefik nodes
-    default: 2
+    description: Public CIDR permitted to reach manager 1 on port 22
+    default: 192.0.2.1/32
     constraints:
-      - range: { min: 2, max: 4 }
+      - allowed_pattern: '^(?:\d{1,3}\.){3}\d{1,3}/(?:[0-9]|[12][0-9]|3[0-2])$'
+        description: Must be an IPv4 CIDR
 
-  swarm_node_count:
-    type: number
-    description: Number of Swarm nodes
-    default: 3
-    constraints:
-      - range: { min: 1, max: 10 }
+  dns_zone_name:
+    type: string
+    description: Delegated DNS zone owned by this stack (must end with a dot)
+    default: toad.remigirard.dev.
+
+  dns_email:
+    type: string
+    description: SOA contact for the delegated DNS zone
+    default: hostmaster@remigirard.dev
+
+  manager1_availability_zone:
+    type: string
+    default: az-1
+  manager2_availability_zone:
+    type: string
+    default: az-2
+  manager3_availability_zone:
+    type: string
+    default: az-3
 
 resources:
-  # === SECURITY GROUPS ===
+  manager_server_group:
+    type: OS::Nova::ServerGroup
+    properties:
+      name:
+        str_replace:
+          template: STACK-managers
+          params:
+            STACK: { get_param: OS::stack_name }
+      policies: [soft-anti-affinity]
 
-  bastion_security_group:
+  ssh_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: Security group for bastion (SSH access point)
+      description: Restricted public SSH entry point
       rules:
-        # SSH (restricted by parameter)
-        - remote_ip_prefix: { get_param: ssh_allowed_cidr }
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 22
           port_range_max: 22
-          direction: ingress
-        # ICMP internal only
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: icmp
-          direction: ingress
-        # Egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: tcp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: udp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: icmp
-          direction: egress
+          remote_ip_prefix: { get_param: ssh_allowed_cidr }
+        - direction: egress
+          ethertype: IPv4
+          remote_ip_prefix: 0.0.0.0/0
 
-  gateway_security_group:
+  manager_security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: Security group for gateway nodes (behind LB)
+      description: Private Swarm control/data plane plus web traffic from Octavia
       rules:
-        # SSH from bastion
-        - remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 22
           port_range_max: 22
-          direction: ingress
-        # HTTP from LB
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 80
           port_range_max: 80
-          direction: ingress
-        # HTTPS from LB
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 443
           port_range_max: 443
-          direction: ingress
-        # ICMP
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: icmp
-          direction: ingress
-        # Egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: tcp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: udp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: icmp
-          direction: egress
-
-  swarm_security_group:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      description: Security group for swarm nodes
-      rules:
-        # SSH from bastion
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: tcp
-          port_range_min: 22
-          port_range_max: 22
-          direction: ingress
-        # HTTP/HTTPS from gateways
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: tcp
-          port_range_min: 80
-          port_range_max: 80
-          direction: ingress
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: tcp
-          port_range_min: 443
-          port_range_max: 443
-          direction: ingress
-        # Docker Swarm management
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 2377
           port_range_max: 2377
-          direction: ingress
-        # Docker Swarm node communication
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: tcp
           port_range_min: 7946
           port_range_max: 7946
-          direction: ingress
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: udp
           port_range_min: 7946
           port_range_max: 7946
-          direction: ingress
-        # Docker overlay network
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: udp
           port_range_min: 4789
           port_range_max: 4789
-          direction: ingress
-        # Docker Registry
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: tcp
-          port_range_min: 5000
-          port_range_max: 5000
-          direction: ingress
-        # Application ports (Traefik backend services)
-        - remote_ip_prefix: 10.0.0.0/24
-          protocol: tcp
-          port_range_min: 8000
-          port_range_max: 9000
-          direction: ingress
-        # ICMP
-        - remote_ip_prefix: 10.0.0.0/24
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: ingress
+          ethertype: IPv4
           protocol: icmp
-          direction: ingress
-        # Egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: tcp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: udp
-          direction: egress
-        - remote_ip_prefix: 0.0.0.0/0
-          protocol: icmp
-          direction: egress
-
-  # === NETWORK ===
+          remote_ip_prefix: 10.0.0.0/24
+        - direction: egress
+          ethertype: IPv4
+          remote_ip_prefix: 0.0.0.0/0
 
   private_network:
     type: OS::Neutron::Net
     properties:
-      name: toad-level5-net
+      name:
+        str_replace:
+          template: STACK-swarm-net
+          params:
+            STACK: { get_param: OS::stack_name }
 
   private_subnet:
     type: OS::Neutron::Subnet
@@ -211,9 +153,7 @@ resources:
       network_id: { get_resource: private_network }
       cidr: 10.0.0.0/24
       gateway_ip: 10.0.0.1
-      dns_nameservers:
-        - 8.8.8.8
-        - 8.8.4.4
+      dns_nameservers: [1.1.1.1, 9.9.9.9]
 
   router:
     type: OS::Neutron::Router
@@ -227,327 +167,253 @@ resources:
       router_id: { get_resource: router }
       subnet_id: { get_resource: private_subnet }
 
-  # === BASTION NODE ===
-
-  bastion_port:
+  manager1_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: private_network }
       security_groups:
-        - { get_resource: bastion_security_group }
-      fixed_ips:
-        - subnet_id: { get_resource: private_subnet }
-          ip_address: 10.0.0.5
-
-  bastion_floating_ip:
-    type: OS::Neutron::FloatingIP
-    depends_on: router_interface
-    properties:
-      floating_network: { get_param: public_network }
-      port_id: { get_resource: bastion_port }
-
-  bastion:
-    type: OS::Nova::Server
-    properties:
-      name: toad-bastion
-      image: { get_param: image }
-      flavor: { get_param: flavor }
-      key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: bastion_port }
-      user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
-      metadata:
-        role: bastion
-
-  # === GATEWAY NODES ===
-
-  gateway1_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: private_network }
-      security_groups:
-        - { get_resource: gateway_security_group }
-      fixed_ips:
-        - subnet_id: { get_resource: private_subnet }
-          ip_address: 10.0.0.10
-
-  gateway1:
-    type: OS::Nova::Server
-    properties:
-      name: toad-gateway-1
-      image: { get_param: image }
-      flavor: { get_param: flavor }
-      key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: gateway1_port }
-      user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
-      metadata:
-        role: gateway
-
-  gateway2_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: private_network }
-      security_groups:
-        - { get_resource: gateway_security_group }
-      fixed_ips:
-        - subnet_id: { get_resource: private_subnet }
-          ip_address: 10.0.0.11
-
-  gateway2:
-    type: OS::Nova::Server
-    properties:
-      name: toad-gateway-2
-      image: { get_param: image }
-      flavor: { get_param: flavor }
-      key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: gateway2_port }
-      user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
-      metadata:
-        role: gateway
-
-  # === SWARM NODES ===
-
-  swarm1_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: private_network }
-      security_groups:
-        - { get_resource: swarm_security_group }
+        - { get_resource: manager_security_group }
+        - { get_resource: ssh_security_group }
       fixed_ips:
         - subnet_id: { get_resource: private_subnet }
           ip_address: 10.0.0.20
 
-  swarm1:
-    type: OS::Nova::Server
+  manager1_floating_ip:
+    type: OS::Neutron::FloatingIP
+    depends_on: router_interface
     properties:
-      name: toad-swarm-1
-      image: { get_param: image }
-      flavor: { get_param: flavor }
-      key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: swarm1_port }
-      user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
-      metadata:
-        role: swarm-manager
+      floating_network: { get_param: public_network }
+      port_id: { get_resource: manager1_port }
 
-  swarm2_port:
+  manager2_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: private_network }
-      security_groups:
-        - { get_resource: swarm_security_group }
+      security_groups: [{ get_resource: manager_security_group }]
       fixed_ips:
         - subnet_id: { get_resource: private_subnet }
           ip_address: 10.0.0.21
 
-  swarm2:
-    type: OS::Nova::Server
-    properties:
-      name: toad-swarm-2
-      image: { get_param: image }
-      flavor: { get_param: flavor }
-      key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: swarm2_port }
-      user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
-      metadata:
-        role: swarm-worker
-
-  swarm3_port:
+  manager3_port:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: private_network }
-      security_groups:
-        - { get_resource: swarm_security_group }
+      security_groups: [{ get_resource: manager_security_group }]
       fixed_ips:
         - subnet_id: { get_resource: private_subnet }
           ip_address: 10.0.0.22
 
-  swarm3:
+  manager1:
     type: OS::Nova::Server
     properties:
-      name: toad-swarm-3
+      name:
+        str_replace:
+          template: STACK-manager-1
+          params:
+            STACK: { get_param: OS::stack_name }
       image: { get_param: image }
       flavor: { get_param: flavor }
       key_name: { get_param: keypair_name }
-      networks:
-        - port: { get_resource: swarm3_port }
+      networks: [{ port: { get_resource: manager1_port } }]
+      availability_zone: { get_param: manager1_availability_zone }
+      scheduler_hints:
+        group: { get_resource: manager_server_group }
+      user_data_format: RAW
       user_data: |
-        #!/bin/bash
-        apt-get update && apt-get upgrade -y
-        apt-get install -y curl wget git jq htop
+        #cloud-config
+        package_update: true
+        packages: [ca-certificates, curl]
       metadata:
-        role: swarm-worker
+        toad_role: swarm-manager
 
-  # === OCTAVIA LOAD BALANCER ===
+  manager2:
+    type: OS::Nova::Server
+    properties:
+      name:
+        str_replace:
+          template: STACK-manager-2
+          params:
+            STACK: { get_param: OS::stack_name }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks: [{ port: { get_resource: manager2_port } }]
+      availability_zone: { get_param: manager2_availability_zone }
+      scheduler_hints:
+        group: { get_resource: manager_server_group }
+      user_data_format: RAW
+      user_data: |
+        #cloud-config
+        package_update: true
+        packages: [ca-certificates, curl]
+      metadata:
+        toad_role: swarm-manager
+
+  manager3:
+    type: OS::Nova::Server
+    properties:
+      name:
+        str_replace:
+          template: STACK-manager-3
+          params:
+            STACK: { get_param: OS::stack_name }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: keypair_name }
+      networks: [{ port: { get_resource: manager3_port } }]
+      availability_zone: { get_param: manager3_availability_zone }
+      scheduler_hints:
+        group: { get_resource: manager_server_group }
+      user_data_format: RAW
+      user_data: |
+        #cloud-config
+        package_update: true
+        packages: [ca-certificates, curl]
+      metadata:
+        toad_role: swarm-manager
 
   loadbalancer:
     type: OS::Octavia::LoadBalancer
     depends_on: router_interface
     properties:
-      name: toad-lb
+      name:
+        str_replace:
+          template: STACK-ingress
+          params:
+            STACK: { get_param: OS::stack_name }
       vip_subnet: { get_resource: private_subnet }
 
-  lb_floating_ip:
+  loadbalancer_floating_ip:
     type: OS::Neutron::FloatingIP
     depends_on: loadbalancer
     properties:
       floating_network: { get_param: public_network }
       port_id: { get_attr: [loadbalancer, vip_port_id] }
 
-  # HTTP Listener
-  listener_http:
+  dns_zone:
+    type: OS::Designate::Zone
+    properties:
+      name: { get_param: dns_zone_name }
+      email: { get_param: dns_email }
+      description: Managed by the TOAD Heat stack
+      type: PRIMARY
+      ttl: 300
+
+  dns_apex_record:
+    type: OS::Designate::RecordSet
+    properties:
+      zone: { get_resource: dns_zone }
+      name: { get_param: dns_zone_name }
+      type: A
+      ttl: 60
+      records: [{ get_attr: [loadbalancer_floating_ip, floating_ip_address] }]
+
+  dns_wildcard_record:
+    type: OS::Designate::RecordSet
+    properties:
+      zone: { get_resource: dns_zone }
+      name:
+        str_replace:
+          template: '*.ZONE'
+          params:
+            ZONE: { get_param: dns_zone_name }
+      type: A
+      ttl: 60
+      records: [{ get_attr: [loadbalancer_floating_ip, floating_ip_address] }]
+
+  http_listener:
     type: OS::Octavia::Listener
     properties:
-      name: toad-listener-http
+      name: toad-http
       loadbalancer: { get_resource: loadbalancer }
-      protocol: HTTP
+      protocol: TCP
       protocol_port: 80
 
-  pool_http:
+  http_pool:
     type: OS::Octavia::Pool
     properties:
-      name: toad-pool-http
-      listener: { get_resource: listener_http }
+      name: toad-http-managers
+      listener: { get_resource: http_listener }
       lb_algorithm: ROUND_ROBIN
-      protocol: HTTP
+      protocol: TCP
 
-  pool_http_member1:
+  http_member1:
     type: OS::Octavia::PoolMember
-    properties:
-      pool: { get_resource: pool_http }
-      address: 10.0.0.10
-      protocol_port: 80
-      subnet: { get_resource: private_subnet }
-
-  pool_http_member2:
+    depends_on: manager1
+    properties: { pool: { get_resource: http_pool }, address: 10.0.0.20, protocol_port: 80, subnet: { get_resource: private_subnet } }
+  http_member2:
     type: OS::Octavia::PoolMember
-    properties:
-      pool: { get_resource: pool_http }
-      address: 10.0.0.11
-      protocol_port: 80
-      subnet: { get_resource: private_subnet }
+    depends_on: manager2
+    properties: { pool: { get_resource: http_pool }, address: 10.0.0.21, protocol_port: 80, subnet: { get_resource: private_subnet } }
+  http_member3:
+    type: OS::Octavia::PoolMember
+    depends_on: manager3
+    properties: { pool: { get_resource: http_pool }, address: 10.0.0.22, protocol_port: 80, subnet: { get_resource: private_subnet } }
 
-  healthmonitor_http:
+  http_healthmonitor:
     type: OS::Octavia::HealthMonitor
     properties:
-      pool: { get_resource: pool_http }
-      type: HTTP
-      delay: 5
-      max_retries: 3
-      timeout: 5
-      http_method: GET
-      url_path: /
-
-  # HTTPS Listener
-  listener_https:
-    type: OS::Octavia::Listener
-    properties:
-      name: toad-listener-https
-      loadbalancer: { get_resource: loadbalancer }
-      protocol: HTTPS
-      protocol_port: 443
-
-  pool_https:
-    type: OS::Octavia::Pool
-    properties:
-      name: toad-pool-https
-      listener: { get_resource: listener_https }
-      lb_algorithm: ROUND_ROBIN
-      protocol: HTTPS
-
-  pool_https_member1:
-    type: OS::Octavia::PoolMember
-    properties:
-      pool: { get_resource: pool_https }
-      address: 10.0.0.10
-      protocol_port: 443
-      subnet: { get_resource: private_subnet }
-
-  pool_https_member2:
-    type: OS::Octavia::PoolMember
-    properties:
-      pool: { get_resource: pool_https }
-      address: 10.0.0.11
-      protocol_port: 443
-      subnet: { get_resource: private_subnet }
-
-  healthmonitor_https:
-    type: OS::Octavia::HealthMonitor
-    properties:
-      pool: { get_resource: pool_https }
+      pool: { get_resource: http_pool }
       type: TCP
-      delay: 5
-      max_retries: 3
+      delay: 10
       timeout: 5
+      max_retries: 3
+
+  https_listener:
+    type: OS::Octavia::Listener
+    properties:
+      name: toad-https
+      loadbalancer: { get_resource: loadbalancer }
+      protocol: TCP
+      protocol_port: 443
+
+  https_pool:
+    type: OS::Octavia::Pool
+    properties:
+      name: toad-https-managers
+      listener: { get_resource: https_listener }
+      lb_algorithm: ROUND_ROBIN
+      protocol: TCP
+
+  https_member1:
+    type: OS::Octavia::PoolMember
+    depends_on: manager1
+    properties: { pool: { get_resource: https_pool }, address: 10.0.0.20, protocol_port: 443, subnet: { get_resource: private_subnet } }
+  https_member2:
+    type: OS::Octavia::PoolMember
+    depends_on: manager2
+    properties: { pool: { get_resource: https_pool }, address: 10.0.0.21, protocol_port: 443, subnet: { get_resource: private_subnet } }
+  https_member3:
+    type: OS::Octavia::PoolMember
+    depends_on: manager3
+    properties: { pool: { get_resource: https_pool }, address: 10.0.0.22, protocol_port: 443, subnet: { get_resource: private_subnet } }
+
+  https_healthmonitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      pool: { get_resource: https_pool }
+      type: TCP
+      delay: 10
+      timeout: 5
+      max_retries: 3
 
 outputs:
-  bastion_floating_ip:
-    description: Bastion public IP (SSH access)
-    value: { get_attr: [bastion_floating_ip, floating_ip_address] }
-
+  ssh_floating_ip:
+    description: Restricted public SSH entry point on manager 1
+    value: { get_attr: [manager1_floating_ip, floating_ip_address] }
   lb_floating_ip:
-    description: Load Balancer public IP (HTTP/HTTPS)
-    value: { get_attr: [lb_floating_ip, floating_ip_address] }
-
-  bastion_private_ip:
-    description: Bastion private IP
-    value: 10.0.0.5
-
-  gateway_private_ips:
-    description: Gateway node private IPs
-    value:
-      - 10.0.0.10
-      - 10.0.0.11
-
+    description: Public HTTP/HTTPS entry point; point application DNS here
+    value: { get_attr: [loadbalancer_floating_ip, floating_ip_address] }
   swarm_private_ips:
-    description: Swarm node private IPs
-    value:
-      - 10.0.0.20
-      - 10.0.0.21
-      - 10.0.0.22
-
-  ssh_bastion:
-    description: SSH to bastion
-    value:
-      str_replace:
-        template: ssh ubuntu@IP
-        params:
-          IP: { get_attr: [bastion_floating_ip, floating_ip_address] }
-
-  ssh_via_bastion:
-    description: SSH to internal nodes via bastion
-    value: "ssh -J ubuntu@<bastion-ip> ubuntu@10.0.0.10"
-
-  web_url:
-    description: Web access URL
-    value:
-      str_replace:
-        template: http://IP
-        params:
-          IP: { get_attr: [lb_floating_ip, floating_ip_address] }
-
+    description: Private IPs of the three Swarm managers
+    value: [10.0.0.20, 10.0.0.21, 10.0.0.22]
+  manager_private_ips:
+    value: [10.0.0.20, 10.0.0.21, 10.0.0.22]
   network_id:
-    description: Private network ID
     value: { get_resource: private_network }
-
   loadbalancer_id:
-    description: Load Balancer ID
     value: { get_resource: loadbalancer }
+  dns_zone_id:
+    value: { get_resource: dns_zone }
+  dns_zone_name:
+    value: { get_param: dns_zone_name }

@@ -1,0 +1,9 @@
+tls:
+  options:
+    admin-mtls:
+      minVersion: VersionTLS12
+      sniStrict: true
+      clientAuth:
+        caFiles:
+          - /etc/traefik/admin-client-ca.crt
+        clientAuthType: RequireAndVerifyClientCert

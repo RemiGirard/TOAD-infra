@@ -35,13 +35,13 @@ async function selectStack(providedName?: string): Promise<string> {
   }
 
   if (stacks.length === 1) {
-    return stacks[0].name;
+    return stacks[0]!.name;
   }
 
   console.log('Available stacks:');
   stacks.forEach((s, i) => console.log(`  ${i + 1}) ${s.name}`));
   const choice = await ask('\nSelect stack', '1');
-  return stacks[parseInt(choice) - 1]?.name || stacks[0].name;
+  return stacks[parseInt(choice) - 1]?.name || stacks[0]!.name;
 }
 
 export async function run(args: string[]): Promise<void> {
@@ -81,15 +81,14 @@ export async function run(args: string[]): Promise<void> {
 
   // Select node
   const choice = await ask('\nSelect node', '1');
-  const selectedNode = nodes[parseInt(choice) - 1] || nodes[0];
+  const selectedNode = nodes[parseInt(choice) - 1] || nodes[0]!;
 
   closeReadline();
 
   // Build SSH command
   const sshArgs: string[] = [
     '-i', SSH_KEY_PATH,
-    '-o', 'StrictHostKeyChecking=no',
-    '-o', 'UserKnownHostsFile=/dev/null',
+    '-o', 'StrictHostKeyChecking=accept-new',
   ];
 
   if (selectedNode.floatingIp) {

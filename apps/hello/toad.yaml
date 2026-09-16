@@ -1,0 +1,19 @@
+apiVersion: toad.dev/v1
+name: hello
+description: Public hello-world and request inspection services
+stack: hello
+compose: docker-compose.yaml
+files:
+  - docker-compose.yaml
+services:
+  - hello
+  - whoami
+checks:
+  - name: hello
+    url: https://hello.${TOAD_DOMAIN}/
+    status: 200
+  - name: whoami
+    url: https://whoami.${TOAD_DOMAIN}/
+    status: 200
+secrets: []
+volumes: []

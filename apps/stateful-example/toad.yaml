@@ -1,0 +1,18 @@
+apiVersion: toad.dev/v1
+name: stateful-example
+description: Opt-in example of a pinned local volume with encrypted backup
+stack: stateful-example
+compose: docker-compose.yaml
+files:
+  - docker-compose.yaml
+services:
+  - web
+checks:
+  - name: stateful-example
+    url: https://stateful-example.${TOAD_DOMAIN}/
+    status: 200
+secrets: []
+volumes:
+  - name: site-data
+    backup: required
+    description: Example web content initialized by the pinned nginx image

@@ -5,12 +5,13 @@
 parameters:
   # Instance flavor (run: openstack flavor list)
   # Small: a1-ram2-disk20-perf1 (1 vCPU, 2GB RAM)
-  # Medium: a2-ram4-disk20-perf1 (2 vCPU, 4GB RAM) - recommended
+  # Medium: a2-ram4-disk20-perf1 (2 vCPU, 4GB RAM)
   # Large: a4-ram8-disk50-perf1 (4 vCPU, 8GB RAM)
-  flavor: "a2-ram4-disk20-perf1"
+  flavor: "a1-ram2-disk20-perf1"
 
-  # Ubuntu image (run: openstack image list)
-  image: "Ubuntu 24.04 LTS Noble Numbat"
+  # Immutable OpenStack image UUID (run: pnpm run discover).
+  # Do not use the mutable display name in a client/reproducible environment.
+  image: "REPLACE_WITH_IMAGE_UUID"
 
   # SSH keypair name (run: openstack keypair list)
   keypair_name: "toad-key"
@@ -18,11 +19,15 @@ parameters:
   # External network for floating IPs
   public_network: "ext-floating1"
 
-  # SSH access restriction (security)
-  # Default: open to all (0.0.0.0/0)
-  # Recommended: restrict to your IP (e.g., "203.0.113.50/32")
-  # Or VPN/office CIDR (e.g., "10.100.0.0/16")
-  # ssh_allowed_cidr: "0.0.0.0/0"
+  # Safe documentation default. The TypeScript apply command replaces this
+  # with the operator workstation's current public IPv4 /32.
+  ssh_allowed_cidr: "192.0.2.1/32"
 
-  # For level4/level5: number of worker nodes (default: 3)
-  # node_count: 3
+  # Delegated child zone managed by OpenStack Designate
+  dns_zone_name: "toad.remigirard.dev."
+  dns_email: "hostmaster@remigirard.dev"
+
+  # Spread the three managers across failure domains
+  manager1_availability_zone: "az-1"
+  manager2_availability_zone: "az-2"
+  manager3_availability_zone: "az-3"
