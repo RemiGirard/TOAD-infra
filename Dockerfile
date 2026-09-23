@@ -1,4 +1,4 @@
-FROM node:22-trixie-slim@sha256:7b8a0c89c54499bee567618f96578e1a12a800f062fbdbfd1fb6a443fa6f6284
+FROM node:25-trixie-slim@sha256:aabbe39553d15ede8a97cc60c9e1a97034ff772afcf696ea42b94e7f5f2ec71b
 
 LABEL org.opencontainers.image.title="TOAD infra" \
       org.opencontainers.image.description="Open infrastructure automation for Infomaniak Public Cloud and Docker Swarm" \
