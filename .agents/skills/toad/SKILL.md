@@ -1,0 +1,14 @@
+---
+name: toad
+description: Prepare an application or platform deployment in TOAD-infra with checks and a concrete plan, without deploying.
+---
+
+# Prepare a TOAD deployment
+
+Use this skill in the TOAD-infra repository. Read the root `AGENTS.md`, `SECURITY.md`, `docs/AGENT-RUNBOOK.md`, and the relevant sections of `README.md`. For a first platform deployment read `openstackV3/SETUP.md`; for a release or production update read `docs/RELEASING.md` and `docs/OPERATIONS.md`.
+
+1. Identify whether the request concerns an application or the platform, the exact TOAD context, and the target application or Heat stack. Set `TOAD_CONTEXT` explicitly for every context-dependent CLI call; never use the active context as an implicit target. If a target is missing, continue with safe local review and ask for the missing name before context-dependent checks.
+2. Review the requested tracked changes and desired state. For an application, inspect its `apps/NAME/toad.yaml` and Compose file and check the image digest, ingress, resources, rollback, and stateful-volume declarations. Before a stateful update, confirm that every required volume has a recent verified encrypted backup stored off-host with its age identity separately protected. If this is unverified, make backup a blocker and give `app backup` as the next separately authorized step, not `app deploy`. For platform work, inspect the relevant tracked Heat, Ansible, and release definitions. Make narrow tracked edits when preparation requires them. Never open or display the protected credentials, production configuration, inventory, or key material named in `AGENTS.md`.
+3. With an explicitly chosen context, run `pnpm run doctor -- --json` from `openstackV3`, then `pnpm run check`. If the context is unknown, run only context-free checks and mark the doctor check blocked. For an application, run `pnpm run app -- validate NAME`; use `app diagnose NAME --json` for an existing deployment when access is available. For the platform, use `pnpm run maintenance -- status --json` and targeted `pnpm run verify -- STACK --json` when the stack is known and reachable. Report only safe diagnostic fields and replica counts; omit IPs and host identifiers unless needed. Distinguish checks that passed from checks blocked by missing access or configuration.
+4. For a production update, confirm that the proposed operator image is a reviewed release pinned by SHA-256 digest, its signature is verified, and staging verification has passed. Report gaps rather than assuming these gates are satisfied.
+5. Give a short deployment brief: context and target, changes prepared, check results, remaining blockers, and the exact next action or deployment command when ready. Stop before `app deploy`, `apply`, `deploy`, backup, or any other live cloud, Swarm, DNS, or state-changing operation. Carry out deployment only when the human separately requests the exact target and operation, following the repository runbook.
