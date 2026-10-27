@@ -11,6 +11,7 @@ interface Endpoint {
   name: string;
   url: string;
   status: number;
+  bodyIncludes?: string;
 }
 
 interface ProbeResult extends Endpoint {
@@ -35,19 +36,29 @@ function endpoints(): Endpoint[] {
 }
 
 async function check(endpoint: Endpoint): Promise<ProbeResult> {
-  const config = readRouterConfig();
+  const needsDomains = /\$\{(?:TOAD_DOMAIN|ROOT_DOMAIN)\}/.test(endpoint.url);
+  const config = needsDomains ? {
+    base_domain: process.env.TOAD_DOMAIN ?? '',
+    root_domain: process.env.ROOT_DOMAIN ?? '',
+  } : { base_domain: '', root_domain: '' };
+  if (needsDomains && ((endpoint.url.includes('${TOAD_DOMAIN}') && !config.base_domain)
+    || (endpoint.url.includes('${ROOT_DOMAIN}') && !config.root_domain))) {
+    Object.assign(config, readRouterConfig());
+  }
   const url = expandAppValue(endpoint.url, config);
   const started = performance.now();
   try {
     const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15_000) });
+    const secure = !response.url || new URL(response.url).protocol === 'https:';
+    const bodyMatches = !endpoint.bodyIncludes || (await response.text()).includes(endpoint.bodyIncludes);
     const durationMs = Math.round(performance.now() - started);
     return {
       ...endpoint,
       url,
-      ok: response.status === endpoint.status,
+      ok: response.status === endpoint.status && secure && bodyMatches,
       actualStatus: response.status,
       durationMs,
-      detail: `HTTP ${response.status}`,
+      detail: `HTTP ${response.status}${!secure ? '; final URL is not HTTPS' : ''}${!bodyMatches ? '; expected body marker missing' : ''}`,
     };
   } catch (cause) {
     return {
@@ -78,7 +89,21 @@ export async function run(args: string[]): Promise<void> {
   const json = args.includes('--json');
   if (!json) banner('TOAD External Public Probe');
   try {
-    const results = await Promise.all(endpoints().map(check));
+    const urlIndex = args.indexOf('--url');
+    const explicitUrl = urlIndex === -1 ? undefined : args[urlIndex + 1];
+    if (urlIndex !== -1 && (!explicitUrl || explicitUrl.startsWith('--'))) throw new Error('--url requires an absolute HTTPS URL.');
+    const expectIndex = args.indexOf('--expect');
+    const expected = expectIndex === -1 ? undefined : args[expectIndex + 1];
+    if (expectIndex !== -1 && (!expected || expected.startsWith('--'))) throw new Error('--expect requires a public response marker.');
+    if (explicitUrl) {
+      const parsed = new URL(explicitUrl);
+      if (parsed.protocol !== 'https:' || parsed.username || parsed.password) {
+        throw new Error('--url requires an HTTPS URL without embedded credentials.');
+      }
+    }
+    const selected = (explicitUrl ? [{ name: 'public-site', url: explicitUrl, status: 200 }] : endpoints())
+      .map((endpoint) => ({ ...endpoint, ...(expected ? { bodyIncludes: expected } : {}) }));
+    const results = await Promise.all(selected.map(check));
     const output = {
       version: 1,
       ok: results.every((result) => result.ok),
@@ -97,7 +122,9 @@ export async function run(args: string[]): Promise<void> {
     }
     if (!output.ok) process.exitCode = 1;
   } catch (cause) {
-    error(cause instanceof Error ? cause.message : String(cause));
+    const message = cause instanceof Error ? cause.message : String(cause);
+    if (json) console.log(JSON.stringify({ version: 1, ok: false, error: message, results: [] }, null, 2));
+    else error(message);
     process.exitCode = 1;
   }
 }

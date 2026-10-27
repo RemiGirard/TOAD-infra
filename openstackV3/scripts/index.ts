@@ -25,6 +25,7 @@ import { run as maintenance } from './presentation/pages/maintenance.js';
 import { run as probe } from './presentation/pages/probe.js';
 import { run as platform } from './presentation/pages/platform.js';
 import { run as context } from './presentation/pages/context.js';
+import { run as backupJob } from './presentation/pages/backup-job.js';
 import { withOperationLock } from './infrastructure/operation-lock.js';
 
 interface Command {
@@ -52,6 +53,7 @@ const commands: Record<string, Command> = {
   probe:        { description: 'Credential-free external HTTPS checks',     handler: probe },
   platform:     { description: 'Encrypted platform backup and restore',     handler: platform },
   context:      { description: 'Manage isolated client operator contexts',  handler: context },
+  'backup-job': { description: 'Verify and send encrypted platform backups offsite', handler: backupJob },
 };
 
 function mutatesState(command: string, args: string[]): boolean {

@@ -112,6 +112,16 @@ describe('application manifest policy', () => {
     assert.throws(() => loadApp('demo', appsDirectory), /exactly one replica.*stateful-primary/s);
   });
 
+  test('missing ciphertext is allowed only for explicit encryption bootstrap', () => {
+    const { appsDirectory } = fixture((manifest, compose) => {
+      manifest.secrets = [{ name: 'api-token', source: 'secrets/api-token.age', environment: 'API_TOKEN_SECRET' }];
+      compose.secrets = { 'api-token': { external: true, name: '${API_TOKEN_SECRET}' } };
+    });
+    assert.throws(() => loadApp('demo', appsDirectory), /Encrypted secret does not exist/);
+    assert.equal(loadApp('demo', appsDirectory, { allowMissingSecretFiles: true }).manifest.secrets.length, 1);
+    assert.throws(() => loadApp('demo', appsDirectory), /Encrypted secret does not exist/);
+  });
+
   test('accepts the constrained single-node state contract', () => {
     const { appsDirectory } = fixture((manifest, compose) => {
       manifest.volumes = [{ name: 'data', backup: 'required', description: 'Test data' }];

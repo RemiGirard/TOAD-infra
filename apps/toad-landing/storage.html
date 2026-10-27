@@ -1,0 +1,95 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stateful storage — TOAD</title><meta name="description" content="TOAD: Stateful storage. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/storage.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html" aria-current="page">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / STATEFUL STORAGE</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/STATEFUL-STORAGE.md">Markdown source ↗</a></div><h1 id="stateful-storage-profiles">Stateful storage profiles</h1>
+<p>Swarm scheduling and storage durability are different concerns. A replica can
+be rescheduled automatically, but its data is available only if the replacement
+node can reach the same storage or restore a backup.</p>
+<h2 id="decision-table">Decision table</h2>
+<table>
+<thead>
+<tr>
+<th>Profile</th>
+<th>Suitable for</th>
+<th>Node loss</th>
+<th>Availability</th>
+<th>Complexity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Local pinned volume + encrypted backup</td>
+<td>Small sites, caches, low-change internal tools</td>
+<td>Restore latest archive to a replacement node</td>
+<td>Single service instance; recovery downtime</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Cinder block volume + app-consistent backup</td>
+<td>Important single-writer filesystems and databases</td>
+<td>Reattach the surviving volume or restore its backup</td>
+<td>Storage survives VM replacement; service still has attach/failover time</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Object storage</td>
+<td>Uploads, documents, media, artifacts, backup archives</td>
+<td>Application reconnects to the object endpoint</td>
+<td>Decoupled from Swarm nodes</td>
+<td>Medium; application must support object APIs</td>
+</tr>
+<tr>
+<td>External database</td>
+<td>Business-critical relational data</td>
+<td>Database topology handles persistence/failover</td>
+<td>Independent of Swarm application nodes</td>
+<td>Medium to high; another service to operate or purchase</td>
+</tr>
+<tr>
+<td>Shared filesystem</td>
+<td>Legacy applications requiring a shared POSIX tree</td>
+<td>Depends on shared-filesystem backend</td>
+<td>Multiple nodes can mount the same namespace</td>
+<td>High; locking, latency, and failure semantics require testing</td>
+</tr>
+<tr>
+<td>Self-hosted distributed storage</td>
+<td>Large dedicated clusters with storage expertise</td>
+<td>Replication across storage nodes</td>
+<td>Potentially high</td>
+<td>Very high; not appropriate for three minimal managers</td>
+</tr>
+</tbody></table>
+<h2 id="recommended-tiers">Recommended tiers</h2>
+<h3 id="tier-0-stateless">Tier 0: stateless</h3>
+<p>Keep all durable data outside the container. Run multiple replicas freely.
+This remains TOAD&#39;s preferred application shape.</p>
+<h3 id="tier-1-simple-recoverable-state">Tier 1: simple recoverable state</h3>
+<p>Use the existing local-volume contract: one replica, an explicit node label,
+resource limits, encrypted backups, and a tested restore. It is inexpensive and
+honest about downtime. Choose it when the declared RPO/RTO permits rebuilding a
+node and streaming an archive back.</p>
+<h3 id="tier-2-durable-single-writer-state">Tier 2: durable single-writer state</h3>
+<p>Use an OpenStack Cinder volume managed by Heat, format and mount it by stable
+volume ID, constrain the Swarm service to its attached node, and retain a
+separate application-consistent backup. Cinder removes dependence on a VM&#39;s
+local filesystem, but it does not make a single-writer service magically
+active-active. Failover still requires fencing, detach/attach, mount, and health
+verification. Snapshots are useful, but should not be the only backup copy.</p>
+<h3 id="tier-3-highly-available-business-state">Tier 3: highly available business state</h3>
+<p>Move state outside the three minimal managers: use a dedicated database
+topology or service and object storage for blobs. Keep the Swarm tier disposable.
+This costs more but is the clearest boundary for client data with strict RPO/RTO.</p>
+<h2 id="planned-implementation-order">Planned implementation order</h2>
+<ol>
+<li>Add a manifest field such as <code>persistence.profile</code> with <code>local</code>, <code>cinder</code>,
+<code>object</code>, or <code>external</code> rather than guessing from Compose.</li>
+<li>Implement Cinder as a separate Heat-backed profile with volume ID, filesystem,
+mount point, node constraint, backup policy, and explicit detach/attach guards.</li>
+<li>Add application-specific backup hooks so databases can quiesce or emit a
+logical backup instead of archiving live files.</li>
+<li>Exercise node-loss and fresh-cluster restoration on a disposable stack.</li>
+<li>Promote a profile to supported only after documenting measured RPO/RTO and
+failure behavior.</li>
+</ol>
+<p>Do not install Ceph, Longhorn, or another distributed storage control plane on
+the existing three small Swarm managers merely to remove a documented restore
+step. That would combine quorum, compute, and storage failures in the same
+minimal nodes and materially increase the maintenance burden.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

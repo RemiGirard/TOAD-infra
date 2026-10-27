@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offsite backup job — TOAD</title><meta name="description" content="TOAD: Offsite backup job. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/backups.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html" aria-current="page">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / OFFSITE BACKUP JOB</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/BACKUP-AUTOMATION.md">Markdown source ↗</a></div><h1 id="offsite-backup-and-notifications">Offsite backup and notifications</h1>
+<p>The backup job is prepared, not automatically enabled. Its destination and
+notification endpoint must belong to the intended client. No offsite destination
+or webhook was configured in the reviewed operator checkout on 2026-10-27.
+Related application deployment records also reference local encrypted archives;
+they do not establish an independent storage destination or alert receiver.</p>
+<h2 id="configure-the-operator-host">Configure the operator host</h2>
+<p>Use an independent, always-on operator host with the intended TOAD context,
+Node.js, installed operator dependencies, age, OpenSSH, tar, and rclone.
+Do not copy a client&#39;s runtime state into a shared client context. The job
+calls the configured operator CLI, so its existing SSH access mode is retained.</p>
+<p>Copy <code>ops/backup-policy.example.json</code> to a protected operator location. Set an
+explicit context (or <code>legacy</code> for the existing repository-local context), an
+encrypted-output directory, an rclone configuration, an independent-storage
+remote, and an HTTPS JSON-webhook file. Keep the rclone and webhook files mode
+0600 and out of Git. Configure rclone using its own secret input workflow.</p>
+<pre><code class="language-sh">pnpm run backup-job -- plan --policy /etc/toad/backup-policy.json
+pnpm run backup-job -- notify-test --policy /etc/toad/backup-policy.json
+</code></pre>
+<p>The test sends a small delivery-test event to the configured endpoint. Confirm
+receipt at the intended destination before enabling the schedule. A generic
+webhook must accept JSON; provider-specific email/chat formats need a compatible
+receiver or adapter.</p>
+<h2 id="run-and-verify">Run and verify</h2>
+<pre><code class="language-sh">pnpm run backup-job -- run --policy /etc/toad/backup-policy.json --accept-service-interruptions
+</code></pre>
+<p>The job requires three ready managers and working offsite access before capture.
+It briefly quiesces each platform service, captures age-encrypted archives,
+checks local hashes/decryption/archive structure, transfers only ciphertext and
+its index, and downloads the remote objects for comparison. It sends a success
+or failure event and retains local results. Overlapping jobs are refused. No
+remote or local retention deletion is performed.</p>
+<p>This covers platform datasets. Application databases need their own consistent
+backup method and schedule; a live volume tar is not a database-consistency
+guarantee. A copy/check result does not prove fresh-cluster service recovery.</p>
+<h2 id="schedule-after-the-first-verified-run">Schedule after the first verified run</h2>
+<p><code>ops/toad-backup.service</code> and <code>.timer</code> are Linux systemd examples. Adjust the
+operator user, Node path, working directory, and protected policy path. Install
+and enable them only on the intended operator host after reviewing the daily
+03:00 UTC maintenance window and verifying a complete run. Do not put the only
+offsite job inside the same Swarm failure domain. A sleeping laptop is not a
+reliable scheduled-backup host.</p>
+<p>The timer does not run a missed job at host startup. The service deliberately
+has no forced runtime/stop timeout: a stop request lets an in-progress capture
+finish and restore service replicas before exiting. Keep its <code>KillMode=mixed</code>
+and signal handling together; forced termination or loss of the operator host
+during capture still requires checking and restoring the affected service.</p>
+<p>Document storage retention, access policy, the independent age-identity escrow,
+RPO/RTO objectives, and the person receiving alerts. Exercise the separate
+<a href="/recovery.html">recovery drill</a> before claiming application recovery.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

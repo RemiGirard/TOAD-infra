@@ -39,6 +39,7 @@ const sourceOnlyYamlFiles = [
   '../.github/workflows/probe.yaml',
   '../.github/workflows/release.yaml',
   '../.github/workflows/release-please.yaml',
+  '../.github/workflows/starter-image.yaml',
 ];
 
 const availableYamlFiles = [

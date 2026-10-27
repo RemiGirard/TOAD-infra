@@ -126,7 +126,7 @@ export function expandAppValue(value: string, config: RouterConfig): string {
     .replaceAll('${ROOT_DOMAIN}', config.root_domain);
 }
 
-export function loadApp(name: string, appsDirectory = APPS_DIR): LoadedApp {
+export function loadApp(name: string, appsDirectory = APPS_DIR, options: { allowMissingSecretFiles?: boolean } = {}): LoadedApp {
   if (!APP_NAME.test(name)) throw new Error(`Invalid app name "${name}". Use lowercase letters, numbers, and hyphens.`);
   const directory = join(appsDirectory, name);
   const manifestPath = join(directory, 'toad.yaml');
@@ -177,7 +177,7 @@ export function loadApp(name: string, appsDirectory = APPS_DIR): LoadedApp {
       if (!APP_NAME.test(secretName)) errors.push(`secrets[${index}].name is invalid.`);
       if (!safeRelativeFile(source) || !source.endsWith('.age')) errors.push(`secrets[${index}].source must be a safe .age path.`);
       if (!/^[A-Z][A-Z0-9_]*_SECRET$/.test(environment)) errors.push(`secrets[${index}].environment must be uppercase and end in _SECRET.`);
-      if (source && !existsSync(join(directory, source))) errors.push(`Encrypted secret does not exist: ${source}.`);
+      if (source && !options.allowMissingSecretFiles && !existsSync(join(directory, source))) errors.push(`Encrypted secret does not exist: ${source}.`);
       if (secretName && source && environment) secrets.push({ name: secretName, source, environment });
     }
     if (new Set(secrets.map((secret) => secret.name)).size !== secrets.length) errors.push('Secret names must be unique.');

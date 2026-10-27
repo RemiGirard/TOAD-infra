@@ -1,0 +1,33 @@
+services:
+  toad-demo:
+    image: registry.toad.remigirard.dev/toad-demo:launch-20261027-v2@sha256:732b610c68781e0baca1858a01b29a8d41894718af0731b357fa4ec124f5d3d6
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik-public
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 16M
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.toad-demo.rule=Host(`toad.remigirard.dev`) &&
+          PathPrefix(`/starter/`)
+        - traefik.http.routers.toad-demo.priority=200
+        - traefik.http.routers.toad-demo.entrypoints=websecure
+        - traefik.http.routers.toad-demo.tls=true
+        - traefik.http.routers.toad-demo.tls.certresolver=infomaniak
+        - traefik.http.routers.toad-demo.middlewares=toad-demo-prefix
+        - traefik.http.middlewares.toad-demo-prefix.stripprefix.prefixes=/starter
+        - traefik.http.services.toad-demo.loadbalancer.server.port=3000
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+        monitor: 2m
+networks:
+  traefik-public:
+    external: true

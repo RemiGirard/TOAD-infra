@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cost worksheet — TOAD</title><meta name="description" content="TOAD: Cost worksheet. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/costs.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html" aria-current="page">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / COST WORKSHEET</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/COSTS.md">Markdown source ↗</a></div><h1 id="cost-worksheet">Cost worksheet</h1>
+<p>TOAD has no hosted-service subscription. You pay providers directly. These
+illustrative estimates were checked against
+<a href="https://www.infomaniak.com/en/hosting/public-cloud/prices">Infomaniak public pricing</a>
+on 2026-10-27. They are resource estimates, not a quotation or measured invoice.</p>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th align="right">One-manager evaluation</th>
+<th align="right">Three-manager production</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4 vCPU / 8 GB / 50 GB instance, illustrative CHF 16.10/month</td>
+<td align="right">1 × 16.10</td>
+<td align="right">3 × 16.10</td>
+</tr>
+<tr>
+<td>Reserved IPv4, CHF 0.00457/hour × 730 hours</td>
+<td align="right">1 × 3.34</td>
+<td align="right">2 × 3.34</td>
+</tr>
+<tr>
+<td>Standard load balancer, CHF 0.0137/hour × 730 hours</td>
+<td align="right">—</td>
+<td align="right">10.00</td>
+</tr>
+<tr>
+<td>Illustrative resource subtotal</td>
+<td align="right"><strong>CHF 19.44/month</strong></td>
+<td align="right"><strong>CHF 64.98/month</strong></td>
+</tr>
+</tbody></table>
+<p>The instance price is the provider&#39;s comparison example. Confirm the actual
+flavor, disk tier, region, and capacity before creating resources. Production
+uses one SSH bootstrap IP and one load-balancer IP. Smaller flavors can cost
+less but must fit the workloads, platform services, and resource reservations.</p>
+<p>Add domain/DNS charges, registry storage, offsite backup storage and requests,
+extra volumes/snapshots, any chargeable traffic, taxes, and operator time.
+This is not a capacity or availability guarantee.</p>
+<p>For a short experiment, multiply actual hourly instance and reserved-IPv4
+rates by the running/reservation time, then add storage and enabled services.
+Use the provider calculator and account quotas before deployment. The local
+Node trial creates no cloud resources. Delete an experiment only after
+reviewing its resources and explicitly approving the exact stack name.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

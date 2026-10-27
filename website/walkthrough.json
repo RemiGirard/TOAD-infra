@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "recordedOn": "2026-10-27",
+  "description": "Selected results from an actual deployment; playback does not execute commands.",
+  "steps": [
+    {
+      "title": "Publish an exact image",
+      "command": "pnpm run app -- publish toad-demo --image REGISTRY/toad-demo:launch-20261027",
+      "result": "Published and pinned registry.toad.remigirard.dev/toad-demo:launch-20261027@sha256:4be4acff7b410aa7b8828bd69099a5cf55f67443d7e1939a6074819506f7dd00"
+    },
+    {
+      "title": "Deploy and diagnose",
+      "command": "pnpm run app -- validate toad-demo\npnpm run app -- deploy toad-demo\npnpm run app -- diagnose toad-demo --json",
+      "recordedAt": "2026-10-27T19:30:34.753Z",
+      "result": "{\n  \"ok\": true,\n  \"replicas\": \"2/2\",\n  \"httpsChecks\": [\n    {\n      \"name\": \"starter\",\n      \"ok\": true,\n      \"actualStatus\": 200\n    },\n    {\n      \"name\": \"api-health\",\n      \"ok\": true,\n      \"actualStatus\": 200\n    }\n  ]\n}"
+    },
+    {
+      "title": "Open the live frontend and API",
+      "command": "GET https://toad.remigirard.dev/starter/api/info",
+      "recordedAt": "2026-10-27T19:38:11.937Z",
+      "result": "{\n  \"message\": \"Your app. Your infrastructure.\",\n  \"version\": \"1.0.0\",\n  \"uptimeSeconds\": 494,\n  \"runtime\": \"Node.js 22.23.2\"\n}"
+    },
+    {
+      "title": "Ship version two",
+      "command": "pnpm run app -- publish toad-demo --image REGISTRY/toad-demo:launch-20261027-v2\npnpm run app -- deploy toad-demo",
+      "recordedAt": "2026-10-27T19:39:52.497Z",
+      "result": "{\n  \"message\": \"Version two, running on TOAD.\",\n  \"version\": \"1.1.0\",\n  \"uptimeSeconds\": 28,\n  \"runtime\": \"Node.js 22.23.2\"\n}"
+    },
+    {
+      "title": "Detect a failed update",
+      "command": "Deploy a deliberately failing health check on the demo app only.\npnpm run app -- diagnose toad-demo --json",
+      "recordedAt": "2026-10-27T19:42:15.549Z",
+      "result": "{\n  \"failedTasks\": 0,\n  \"updateState\": \"rollback_completed\",\n  \"hints\": []\n}"
+    },
+    {
+      "title": "Recover automatically",
+      "command": "Swarm update_config.failure_action: rollback",
+      "recordedAt": "2026-10-27T19:42:15.549Z",
+      "result": "{\n  \"automaticRollbackObserved\": true,\n  \"replicas\": \"2/2\",\n  \"httpsChecks\": [\n    {\n      \"name\": \"starter\",\n      \"ok\": true,\n      \"actualStatus\": 200\n    },\n    {\n      \"name\": \"api-health\",\n      \"ok\": true,\n      \"actualStatus\": 200\n    }\n  ],\n  \"restoredVersion\": \"1.1.0\"\n}"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+apiVersion: toad.dev/v1
+name: toad-demo
+description: Live frontend + Node API demonstration for the TOAD project
+stack: toad-demo
+compose: docker-compose.yaml
+files:
+  - docker-compose.yaml
+services:
+  - toad-demo
+checks:
+  - name: starter
+    url: https://toad.remigirard.dev/starter/
+    status: 200
+  - name: api-health
+    url: https://toad.remigirard.dev/starter/api/health
+    status: 200
+secrets: []
+volumes: []

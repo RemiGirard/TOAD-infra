@@ -9,7 +9,7 @@ import { ensureAgeIdentity, managerSshArgs } from './app-secrets.js';
 import { ACTIVE_CONTEXT, APP_AGE_IDENTITY_PATH, ROOT_DIR, STATE_DIR } from './paths.js';
 import { runProgram } from './shell.js';
 
-const ARCHIVE_IMAGE = 'alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1';
+export const ARCHIVE_IMAGE = 'alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1';
 export const BACKUPS_DIR = process.env.TOAD_BACKUP_DIR
   ? resolve(process.env.TOAD_BACKUP_DIR)
   : ACTIVE_CONTEXT ? resolve(STATE_DIR, 'backups') : resolve(ROOT_DIR, '..', 'backups');

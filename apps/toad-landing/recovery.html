@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recovery — TOAD</title><meta name="description" content="TOAD: Recovery. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/recovery.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html" aria-current="page">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / RECOVERY</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DISASTER-RECOVERY.md">Markdown source ↗</a></div><h1 id="disaster-recovery-proof">Disaster-recovery proof</h1>
+<p>TOAD treats reproducible infrastructure, credentials, and workload data as
+three separate recovery inputs. Heat plus Ansible rebuild the infrastructure;
+the encrypted operator escrow restores identities and tokens; application and
+platform archives restore state. A Swarm Raft snapshot is optional acceleration,
+not the primary recovery mechanism.</p>
+<pre><code class="language-mermaid">flowchart LR
+    desired[&quot;Git&lt;br/&gt;Heat, Ansible, app manifests&quot;] --&gt; rebuild[&quot;Fresh infrastructure&quot;]
+    escrow[&quot;Operator escrow&lt;br/&gt;cloud, DNS, SSH, age, mTLS&quot;] --&gt; rebuild
+    archives[&quot;Encrypted application&lt;br/&gt;and platform backups&quot;] --&gt; restore[&quot;Restore exact datasets&quot;]
+    rebuild --&gt; restore
+    restore --&gt; proof[&quot;Production verifier&lt;br/&gt;plus data assertions&quot;]
+</code></pre>
+<h2 id="what-proved-means">What “proved” means</h2>
+<p>A backup is not proved merely because a command produced a file. Evidence must
+cover four progressively stronger claims:</p>
+<ol>
+<li><strong>Integrity:</strong> the encrypted file still matches the recorded SHA-256.</li>
+<li><strong>Decryptability:</strong> the escrowed age identity can decrypt it.</li>
+<li><strong>Archive validity:</strong> the decrypted tar stream can be enumerated without
+writing its contents to disk.</li>
+<li><strong>Service recovery:</strong> a fresh, isolated cluster serves the restored data and
+passes application-specific checks.</li>
+</ol>
+<p>The first three are safe to automate on every backup:</p>
+<pre><code class="language-sh">cd openstackV3
+pnpm run platform -- backup --yes
+pnpm run platform -- verify --from ../backups/platform/TIMESTAMP/index.json --json
+</code></pre>
+<p>The verification command is offline and non-destructive. It checks the index,
+prevents archive path traversal, recalculates every encrypted checksum, decrypts
+each stream, and asks <code>tar</code> to inspect its structure. It never restores a volume.</p>
+<h2 id="disposable-recovery-drill">Disposable recovery drill</h2>
+<p>Run the service-recovery proof quarterly and before claiming a new backup path
+is production-ready. It must use a named disposable context, a dedicated Heat
+stack, an isolated DNS zone, and either a separate OpenStack project or clearly
+prefixed resources. Never reuse the production root domain.</p>
+<p>The drill is:</p>
+<pre><code class="language-mermaid">flowchart TD
+    select[&quot;Select backup and objectives&quot;] --&gt; context[&quot;Create disposable context&quot;]
+    context --&gt; build[&quot;Apply a fresh isolated stack&quot;]
+    build --&gt; empty[&quot;Verify empty platform&quot;]
+    empty --&gt; restore[&quot;Restore one exact dataset&quot;]
+    restore --&gt; tests[&quot;Run platform and application checks&quot;]
+    tests --&gt; evidence[&quot;Record hashes, versions, replicas, RPO and RTO&quot;]
+    evidence --&gt; destroy[&quot;Destroy the named drill stack after approval&quot;]
+</code></pre>
+<ol>
+<li>Record the target RPO and RTO and the exact backup index being tested.</li>
+<li>Create and select a context dedicated to the drill.</li>
+<li>Rebuild three nodes, Swarm, Traefik, and the application manifests using the
+ordinary <code>apply</code> path.</li>
+<li>Verify the empty cluster before introducing recovered data.</li>
+<li>Restore one exact dataset while its owning service is stopped.</li>
+<li>Run the normal production verifier plus application-specific assertions.
+For a database this includes logical queries, not merely an HTTP 200.</li>
+<li>Record timestamps, archive hashes, version identifiers, replica counts, and
+any manual action. Do not record credentials or decrypted content.</li>
+<li>Destroy only the explicitly named drill stack after human authorization.</li>
+</ol>
+<p>The live <code>toad-prod</code> stack is not a valid drill target. Restoring over it proves
+that production can be damaged, not that disaster recovery works.</p>
+<h2 id="recovery-objectives">Recovery objectives</h2>
+<p>Each client profile should declare:</p>
+<ul>
+<li><strong>RPO:</strong> maximum acceptable age of recovered data;</li>
+<li><strong>RTO:</strong> maximum acceptable time until service is usable;</li>
+<li>backup schedule and retention;</li>
+<li>archive destination and independent failure domain;</li>
+<li>application-consistency method;</li>
+<li>responsible person and escalation path.</li>
+</ul>
+<p>TOAD&#39;s volume tar stream is appropriate for services that can be quiesced. A
+database should normally use its logical or physical backup protocol (for
+example a PostgreSQL dump or WAL workflow), then encrypt that output. Copying a
+live database volume is not automatically application-consistent.</p>
+<h2 id="optional-cold-raft-backup">Optional cold Raft backup</h2>
+<p>A cold backup of <code>/var/lib/docker/swarm</code> can preserve Swarm control-plane state,
+but it requires stopping Docker and preserving the unlock key and compatible
+Docker version. It is therefore a secondary recovery option. TOAD should add it
+only after a disposable restore has demonstrated the complete stopped-manager,
+version-compatibility, and quorum procedure. Manifests plus a clean Swarm rebuild
+remain easier to audit and more portable.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

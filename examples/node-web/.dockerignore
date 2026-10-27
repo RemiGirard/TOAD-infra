@@ -1,0 +1,5 @@
+**
+!Dockerfile
+!server.mjs
+!public/
+!public/**

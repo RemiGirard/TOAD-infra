@@ -1,6 +1,6 @@
 /** Generic lifecycle commands for manifest-driven Swarm applications. */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { stringify as stringifyYaml } from 'yaml';
 import { ask, banner, closeReadline, error, success } from '../../infrastructure/cli.js';
@@ -16,6 +16,7 @@ import { INVENTORY_PATH, ROOT_DIR, ROUTER_CONFIG_PATH } from '../../infrastructu
 import { runProgram, runProgramStream } from '../../infrastructure/shell.js';
 import { deployAppSecrets, encryptAppSecret, ensureAgeIdentity, managerSshArgs } from '../../infrastructure/app-secrets.js';
 import { backupVolume, restoreVolume } from '../../infrastructure/app-backup.js';
+import { publishAppImage } from '../../infrastructure/app-image.js';
 
 const ANSIBLE_DIR = resolve(ROOT_DIR, '..', 'ansible');
 const INVENTORY = INVENTORY_PATH;
@@ -28,6 +29,9 @@ function help(): void {
 Commands:
   list                         List manifest-driven applications
   create <app>                 Scaffold a safe Traefik application
+    --template node-web        Include a working frontend + Node API source
+  publish <app> --image REGISTRY/OWNER/APP:TAG [--service SERVICE]
+                               Build allow-listed source, push, pin its digest
   validate [app|--all]         Validate manifests and Compose policies
   deploy <app>                 Copy, deploy, and verify an application
   verify <app>                 Check declared HTTPS endpoints
@@ -70,11 +74,12 @@ function serviceName(stack: string, service: string): string {
   return `${stack}_${service}`;
 }
 
-function create(name: string | undefined): void {
+function create(name: string | undefined, template?: string): void {
   if (!name || !/^[a-z][a-z0-9-]{0,31}$/.test(name)) {
     throw new Error('Provide an app name using lowercase letters, numbers, and hyphens.');
   }
   const directory = join(APPS_DIR, name);
+  if (template && template !== 'node-web') throw new Error('Available template: node-web.');
   if (existsSync(directory)) throw new Error(`${directory} already exists.`);
   mkdirSync(directory, { recursive: false });
   const manifest = {
@@ -85,7 +90,10 @@ function create(name: string | undefined): void {
     compose: 'docker-compose.yaml',
     files: ['docker-compose.yaml'],
     services: [name],
-    checks: [{ name: name, url: `https://${name}.\${TOAD_DOMAIN}/`, status: 200 }],
+    checks: [
+      { name: name, url: `https://${name}.\${TOAD_DOMAIN}/`, status: 200 },
+      ...(template ? [{ name: 'api-health', url: `https://${name}.\${TOAD_DOMAIN}/api/health`, status: 200 }] : []),
+    ],
     secrets: [],
     volumes: [],
   };
@@ -112,6 +120,7 @@ function create(name: string | undefined): void {
         parallelism: 1
         order: start-first
         failure_action: rollback
+        monitor: 2m
 
 networks:
   traefik-public:
@@ -119,8 +128,18 @@ networks:
 `;
   writeFileSync(join(directory, 'toad.yaml'), stringifyYaml(manifest), { mode: 0o640 });
   writeFileSync(join(directory, 'docker-compose.yaml'), compose, { mode: 0o640 });
+  if (template === 'node-web') {
+    cpSync(resolve(ROOT_DIR, '..', 'examples', 'node-web'), join(directory, 'source'), { recursive: true });
+    writeFileSync(join(directory, 'build.yaml'), stringifyYaml({
+      version: 1,
+      port: 3000,
+      files: ['Dockerfile', 'server.mjs', 'public/index.html', 'public/style.css', 'public/app.mjs'],
+    }), { mode: 0o640 });
+  }
   success(`Created ${directory}`);
-  console.log(`Next: edit the image and labels, then run pnpm run app -- validate ${name}`);
+  console.log(template
+    ? `Next: edit source/, then run pnpm run app -- publish ${name} --image ghcr.io/YOUR-OWNER/${name}:v1. The current Compose image is only a routing placeholder.`
+    : `Next: edit the image and labels, then run pnpm run app -- validate ${name}`);
 }
 
 function validate(names: string[]): void {
@@ -403,7 +422,8 @@ function secret(args: string[]): void {
     if (!appName || !secretName || !source) {
       throw new Error('Usage: pnpm run app -- secret encrypt <app> <name> --from-file <path>');
     }
-    const { manifest } = loadApp(appName);
+    // Encryption bootstraps declared ciphertext. Deployment/validation still require every file.
+    const { manifest } = loadApp(appName, APPS_DIR, { allowMissingSecretFiles: true });
     const spec = manifest.secrets.find((candidate) => candidate.name === secretName);
     if (!spec) throw new Error(`Secret "${secretName}" is not declared in ${appName}/toad.yaml.`);
     const destination = encryptAppSecret(appName, spec, resolve(source));
@@ -470,10 +490,27 @@ async function restore(args: string[]): Promise<void> {
 
 export async function run(args: string[]): Promise<void> {
   const command = args[0];
-  const positional = args.slice(1).filter((arg) => !arg.startsWith('--'));
+  const positional: string[] = [];
+  const valuedOptions = new Set(['--template', '--image', '--service', '--platform', '--output', '--from', '--from-file']);
+  for (let index = 1; index < args.length; index += 1) {
+    const arg = args[index]!;
+    if (valuedOptions.has(arg)) { index += 1; continue; }
+    if (!arg.startsWith('--')) positional.push(arg);
+    else if (command === 'create' || command === 'publish') throw new Error(`Unknown option: ${arg}`);
+  }
   const json = args.includes('--json') && (command === 'status' || command === 'diagnose');
   if (!json) banner('TOAD Application Lifecycle');
   try {
+    const option = (flag: string): string | undefined => {
+      const index = args.indexOf(flag);
+      if (index === -1) return undefined;
+      const value = args[index + 1];
+      if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value.`);
+      return value;
+    };
+    if ((command === 'create' || command === 'publish') && positional.length > 1) {
+      throw new Error('Provide exactly one application name.');
+    }
     switch (command) {
       case 'list':
         for (const name of listAppNames()) {
@@ -481,7 +518,20 @@ export async function run(args: string[]): Promise<void> {
           console.log(`${name.padEnd(18)} ${manifest.description}`);
         }
         break;
-      case 'create': create(positional[0]); break;
+      case 'create': create(positional[0], option('--template')); break;
+      case 'publish': {
+        const name = positional[0];
+        const image = option('--image');
+        if (!name || !image) throw new Error('Usage: app publish NAME --image REGISTRY/OWNER/APP:TAG');
+        const service = option('--service');
+        const platform = option('--platform');
+        const pinned = await publishAppImage(name, image, {
+          ...(service ? { service } : {}), ...(platform ? { platform } : {}),
+        });
+        success(`Published and pinned ${pinned}`);
+        console.log(`Next: pnpm run app -- validate ${name}, then pnpm run app -- deploy ${name}`);
+        break;
+      }
       case 'validate': validate(args.slice(1)); break;
       case 'deploy': await deploy(positional[0]); break;
       case 'verify': await verify(positional[0]); break;

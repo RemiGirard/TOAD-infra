@@ -1,5 +1,8 @@
 .git
 .github
+.agents
+.codex
+.aws
 **/credentials
 **/credentials/**
 **/pki

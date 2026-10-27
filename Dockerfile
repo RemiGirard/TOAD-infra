@@ -9,14 +9,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TOAD_STATE_DIR=/state
 ENV TOAD_BACKUP_DIR=/backups
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends age ca-certificates openssh-client python3 python3-pip python3-venv \
+    && apt-get install --yes --no-install-recommends age ca-certificates openssh-client python3 python3-pip python3-venv rclone \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable
 
 WORKDIR /opt/toad
 
 COPY openstackV3/package.json openstackV3/pnpm-lock.yaml openstackV3/pnpm-workspace.yaml ./openstackV3/
-RUN pnpm --dir openstackV3 install --frozen-lockfile
+WORKDIR /opt/toad/openstackV3
+RUN pnpm install --frozen-lockfile
+WORKDIR /opt/toad
 
 COPY ansible/requirements.lock.txt ./ansible/requirements.lock.txt
 RUN python3 -m venv ansible/venv \

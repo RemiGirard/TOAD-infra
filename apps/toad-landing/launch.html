@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Validation record — TOAD</title><meta name="description" content="TOAD: Validation record. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/launch.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html" aria-current="page">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / VALIDATION RECORD</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/LAUNCH-READINESS.md">Markdown source ↗</a></div><h1 id="launch-validation-record">Launch validation record</h1>
+<p>Updated 2026-10-27. This page separates implementation, local checks, recorded
+production acceptance, and outstanding live work. No outside-user onboarding
+or adoption study has been performed.</p>
+<h2 id="implemented">Implemented</h2>
+<ul>
+<li>Frontend + Node API starter and cloud-free trial.</li>
+<li>Allow-listed source publication with a returned immutable image digest.</li>
+<li>First-app, update, rollback, encrypted-secret, and CI recipes.</li>
+<li>Separate evaluation/production paths and a dated cost worksheet.</li>
+<li>Public project site with versioned documentation and an illustrative workflow.</li>
+<li>Explicit-URL external probe, response marker, and final HTTPS verification.</li>
+<li>Offsite backup job with local verification, immutable transfer, remote
+download verification, failure notification, and a systemd timer example.</li>
+</ul>
+<p>The backup job is not scheduled yet: the operator must choose an independent
+storage destination, notification endpoint, and always-on operator host. See
+<a href="/backups.html">backup automation</a>.</p>
+<h2 id="recorded-production-evidence">Recorded production evidence</h2>
+<p>The <a href="/operations.html#acceptance-record">operations acceptance record</a> describes
+the September 2026 Infomaniak destroy/rebuild, three-manager quorum, public TLS,
+monitoring, and Loki volume backup/restore. These are historical results, not
+a claim that all services are healthy now.</p>
+<h2 id="new-validation">New validation</h2>
+<p>Verified on 2026-10-27:</p>
+<ul>
+<li>Main checkout: TypeScript, 30 YAML files, five manifests, and 35 unit tests passed.</li>
+<li>Configured operator checkout: its required check passed, including 33 tests.</li>
+<li>Starter container built for linux/amd64, ran as <code>node</code>, and reported healthy.</li>
+<li>Three Swarm managers were ready and reachable.</li>
+<li><code>toad-landing</code>: 2/2 replicas; site and first-app guide HTTPS checks returned 200.</li>
+<li><code>toad-demo</code>: 2/2 replicas; frontend and API HTTPS checks returned 200.</li>
+<li>Published version 1.1.0 through the new source/image workflow. A deliberately
+failing health-check update on this demo reached <code>rollback_completed</code>; the
+known-good manifest was restored and redeployed.</li>
+<li>The external site probe passed with the TOAD-specific body marker over HTTPS.</li>
+<li>Chrome verified the live site and starter, documentation, and the cost
+calculator; the landing layout was also checked at 390 CSS pixels.</li>
+</ul>
+<p>These results do not establish fresh-cluster recovery or outside-user onboarding.</p>
+<h2 id="broader-platform-verification-is-incomplete">Broader platform verification is incomplete</h2>
+<p>The full read-only verifier passed 21 checks but could not complete five admin
+and monitoring checks because the operator mTLS certificate/key bundle is absent.
+No existing bundle was found in the bounded local deployment/worktree search.
+Recover the original operator bundle from escrow and verify its CA against the
+deployed public client CA. If that cannot be recovered, replacing the trusted
+client CA is a separate exact-target authorization; it invalidates existing
+admin client identities. No CA was generated or rotated during this launch.</p>
+<p>The tracked CLI, workflows, and guides are the source of truth for this launch.
+The scheduled GitHub probe checks the public project URL and requires its
+TOAD-specific response marker. Consult GitHub Actions for its latest run result.</p>
+<h2 id="remaining-recovery-gate">Remaining recovery gate</h2>
+<p>Review the <a href="/drill-plan.html">concrete drill plan</a>, then run the
+<a href="/recovery.html">disposable recovery drill</a> with an isolated
+context, stack, project/zone, and exact dataset approved by the operator.
+Record a real application data assertion, measured RPO/RTO, offsite backup
+verification, and a test notification to the intended operator destination.</p>
+<p>The live production stack is not a recovery-drill target. Destruction,
+volume restore, CA rotation, node reboot, and parent-DNS changes need exact
+target authorization. A published landing page does not satisfy this gate.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

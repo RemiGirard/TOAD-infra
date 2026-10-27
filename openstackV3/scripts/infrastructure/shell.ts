@@ -14,6 +14,7 @@ interface ProcessOptions {
   env?: NodeJS.ProcessEnv | undefined;
   displayCommand?: string | undefined;
   spinner?: string | undefined;
+  detached?: boolean | undefined;
 }
 
 function printable(program: string, args: readonly string[]): string {
@@ -123,6 +124,7 @@ export function runProgramAsync(
     const child = spawn(program, args, {
       cwd: options.cwd,
       env: options.env,
+      detached: options.detached ?? false,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '';

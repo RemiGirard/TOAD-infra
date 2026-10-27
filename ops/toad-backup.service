@@ -1,0 +1,15 @@
+[Unit]
+Description=TOAD encrypted platform backup and offsite verification
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=toad-operator
+WorkingDirectory=/opt/toad/openstackV3
+ExecStart=/usr/bin/node --import tsx scripts/index.ts backup-job run --policy /etc/toad/backup-policy.json --accept-service-interruptions
+UMask=0077
+NoNewPrivileges=true
+KillMode=mixed
+TimeoutStartSec=infinity
+TimeoutStopSec=infinity

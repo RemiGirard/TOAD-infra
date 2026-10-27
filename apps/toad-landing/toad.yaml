@@ -1,0 +1,42 @@
+apiVersion: toad.dev/v1
+name: toad-landing
+description: Public TOAD project site and versioned documentation
+stack: toad-landing
+compose: docker-compose.yaml
+files:
+  - docker-compose.yaml
+  - index.html
+  - style.css
+  - app.mjs
+  - toad.svg
+  - starter.png
+  - walkthrough.json
+  - walkthrough.css
+  - quickstart.html
+  - first-app.html
+  - evaluation.html
+  - deployment.html
+  - costs.html
+  - operations.html
+  - recovery.html
+  - launch.html
+  - backups.html
+  - drill-plan.html
+  - agents.html
+  - storage.html
+  - security.html
+  - license.html
+  - robots.txt
+  - sitemap.xml
+  - nginx.conf
+services:
+  - web
+checks:
+  - name: project-site
+    url: https://toad.remigirard.dev/
+    status: 200
+  - name: first-app-guide
+    url: https://toad.remigirard.dev/first-app.html
+    status: 200
+secrets: []
+volumes: []

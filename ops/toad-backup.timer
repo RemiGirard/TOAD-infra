@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily TOAD platform backup window
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+RandomizedDelaySec=15m
+Persistent=false
+Unit=toad-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "operatorDirectory": "/opt/toad/openstackV3",
+  "context": "customer-prod",
+  "outputDirectory": "/var/lib/toad/backups/jobs",
+  "rcloneConfig": "/etc/toad/private/rclone.conf",
+  "remote": "offsite:toad-platform/customer-prod",
+  "notificationFile": "/etc/toad/private/monitoring-webhook-url"
+}

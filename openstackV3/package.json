@@ -9,6 +9,7 @@
     "cli": "tsx scripts/index.ts",
     "check": "tsc --noEmit && tsx scripts/validate.ts && tsx --test tests/**/*.test.ts",
     "check:ansible": "tsx scripts/check-ansible.ts",
+    "site:build": "tsx scripts/site-build.ts",
     "commitlint": "tsx scripts/conventional-commit.ts",
     "validate": "tsx scripts/validate.ts",
     "doctor": "tsx scripts/index.ts doctor",
@@ -21,6 +22,7 @@
     "maintenance": "tsx scripts/index.ts maintenance",
     "probe": "tsx scripts/index.ts probe",
     "platform": "tsx scripts/index.ts platform",
+    "backup-job": "tsx scripts/index.ts backup-job",
     "context": "tsx scripts/index.ts context",
     "setup": "tsx scripts/index.ts setup",
     "discover": "tsx scripts/index.ts discover",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "marked": "18.1.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   },
