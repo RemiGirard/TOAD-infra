@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Production setup — TOAD</title><meta name="description" content="TOAD: Production setup. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/deployment.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html" aria-current="page">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / PRODUCTION SETUP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DEPLOYMENT.md">Markdown source ↗</a></div><h1 id="toad-infra">TOAD infra</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Production setup — TOAD</title><meta name="description" content="TOAD: Production setup. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/deployment.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/architecture.html">Visual architecture</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html" aria-current="page">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / PRODUCTION SETUP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DEPLOYMENT.md">Markdown source ↗</a></div><h1 id="toad-infra">TOAD infra</h1>
 <p>TOAD deploys a small, production-shaped Docker Swarm platform on Infomaniak
 Public Cloud. It uses OpenStack Heat for cloud resources, Ansible for host
 configuration, Traefik for automatic HTTPS routing, and a TypeScript CLI for
@@ -12,7 +12,7 @@ mTLS-protected admin interfaces.</p>
 delegated child domain you want TOAD to manage.</p>
 </blockquote>
 <h2 id="what-gets-deployed">What gets deployed</h2>
-<pre><code class="language-mermaid">flowchart LR
+<figure class="doc-diagram diagram-desktop-1400 diagram-mobile-900"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-deployment-1-mobile.svg"><img src="/diagram-deployment-1.svg" alt="Public traffic through Octavia and Swarm to Traefik, applications, and protected admin services" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Public traffic through Octavia and Swarm to Traefik, applications, and protected admin services.</span><a href="/diagram-deployment-1.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     user[&quot;Public users&quot;] --&gt; parentDns[&quot;Parent DNS&lt;br/&gt;example.com&quot;]
     parentDns --&gt; lb[&quot;Octavia load balancer&lt;br/&gt;ports 80 and 443&quot;]
     lb --&gt; m1[&quot;Swarm manager 1&quot;]
@@ -24,8 +24,7 @@ delegated child domain you want TOAD to manage.</p>
     traefik --&gt; apps[&quot;Application stacks&quot;]
     traefik --&gt; monitoring[&quot;Grafana · Prometheus&lt;br/&gt;Alertmanager&quot;]
     operator[&quot;Operator or support agent&quot;] --&gt;|&quot;mTLS client certificate&quot;| traefik
-    designate[&quot;OpenStack Designate&lt;br/&gt;platform.example.com&quot;] --&gt; parentDns
-</code></pre>
+    designate[&quot;OpenStack Designate&lt;br/&gt;platform.example.com&quot;] --&gt; parentDns</code></pre></details></figure>
 <table>
 <thead>
 <tr>
@@ -96,7 +95,7 @@ service user rather than an OpenStack application credential.</p>
 </tr>
 </tbody></table>
 <h2 id="deployment-flow">Deployment flow</h2>
-<pre><code class="language-mermaid">sequenceDiagram
+<figure class="doc-diagram diagram-desktop-1200 diagram-mobile-1200 sequence"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><img src="/diagram-deployment-2.svg" alt="The operator CLI provisions Heat resources, configures hosts, deploys Swarm, updates DNS, and verifies the platform" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>The operator CLI provisions Heat resources, configures hosts, deploys Swarm, updates DNS, and verifies the platform.</span><a href="/diagram-deployment-2.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>sequenceDiagram
     actor Operator
     participant CLI as TOAD TypeScript CLI
     participant Heat as OpenStack Heat
@@ -113,8 +112,7 @@ service user rather than an OpenStack application credential.</p>
     CLI-&gt;&gt;Swarm: initialize managers and deploy stacks
     CLI-&gt;&gt;DNS: synchronize parent apex and wildcard
     CLI-&gt;&gt;Verify: test quorum, replicas, DNS, TLS, mTLS, monitoring
-    Verify--&gt;&gt;Operator: machine-readable result
-</code></pre>
+    Verify--&gt;&gt;Operator: machine-readable result</code></pre></details></figure>
 <p>The first deployment has one manual DNS delegation step. Every later <code>apply</code>
 is an idempotent create-or-update operation.</p>
 <h2 id="1-get-the-project-and-validate-your-workstation">1. Get the project and validate your workstation</h2>
@@ -172,7 +170,7 @@ base_domain: platform.example.com
 root_domain: example.com
 </code></pre>
 <p>TOAD owns the following DNS records once deployed:</p>
-<pre><code class="language-mermaid">flowchart TD
+<figure class="doc-diagram diagram-desktop-600 diagram-mobile-600"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><img src="/diagram-deployment-3.svg" alt="Parent and delegated child DNS zones point to Octavia; unrelated parent records are preserved" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Parent and delegated child DNS zones point to Octavia; unrelated parent records are preserved.</span><a href="/diagram-deployment-3.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart TD
     parent[&quot;Infomaniak parent zone&lt;br/&gt;example.com&quot;]
     child[&quot;Designate child zone&lt;br/&gt;platform.example.com&quot;]
     lb[&quot;Octavia public IP&quot;]
@@ -182,8 +180,7 @@ root_domain: example.com
     child --&gt;|&quot;A: @ and *&quot;| lb
 
     note[&quot;TOAD does not change parent MX, TXT, CAA,&lt;br/&gt;or unrelated records&quot;]
-    parent --- note
-</code></pre>
+    parent --- note</code></pre></details></figure>
 <p>The parent <code>@</code> and <code>*</code> records will point to TOAD. Use a dedicated domain if
 that is not appropriate for an existing website. The child <code>NS</code> delegation is
 manual and deliberately survives stack deletion.</p>
@@ -222,13 +219,12 @@ delegated. This does not require rebuilding anything.</p>
 for DNS propagation and rerun the same apply command:</p>
 <pre><code class="language-sh">pnpm run apply -- toad-prod heat/env/production.yaml
 </code></pre>
-<pre><code class="language-mermaid">flowchart LR
+<figure class="doc-diagram diagram-desktop-1300 diagram-mobile-0"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-deployment-4-mobile.svg"><img src="/diagram-deployment-4.svg" alt="First apply, one-time child DNS delegation, and subsequent declarative apply runs" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>First apply, one-time child DNS delegation, and subsequent declarative apply runs.</span><a href="/diagram-deployment-4.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     first[&quot;First apply&quot;] --&gt; zone[&quot;Designate zone exists&quot;]
     zone --&gt; delegate[&quot;Add child NS records once&quot;]
     delegate --&gt; second[&quot;Rerun apply&quot;]
     second --&gt; green[&quot;All acceptance checks pass&quot;]
-    green --&gt; later[&quot;Future changes: rerun apply&quot;]
-</code></pre>
+    green --&gt; later[&quot;Future changes: rerun apply&quot;]</code></pre></details></figure>
 <h2 id="7-verify-the-installation">7. Verify the installation</h2>
 <pre><code class="language-sh">pnpm run verify -- toad-prod --json
 </code></pre>
@@ -322,13 +318,12 @@ back up the CA key securely and never copy it to a server.</p>
 <p>There is no shared dashboard password or JWT service to maintain. The browser
 presents the client certificate during the TLS handshake.</p>
 <h2 id="deploy-an-application">Deploy an application</h2>
-<pre><code class="language-mermaid">flowchart LR
+<figure class="doc-diagram diagram-desktop-1200 diagram-mobile-0"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-deployment-5-mobile.svg"><img src="/diagram-deployment-5.svg" alt="Application validation, deployment, convergence or rollback, and JSON diagnosis" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Application validation, deployment, convergence or rollback, and JSON diagnosis.</span><a href="/diagram-deployment-5.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     create[&quot;app create&quot;] --&gt; edit[&quot;Edit manifest and Compose&quot;]
     edit --&gt; validate[&quot;app validate&quot;]
     validate --&gt; deploy[&quot;app deploy&quot;]
     deploy --&gt; swarm[&quot;Swarm converges or rolls back&quot;]
-    swarm --&gt; diagnose[&quot;app diagnose --json&quot;]
-</code></pre>
+    swarm --&gt; diagnose[&quot;app diagnose --json&quot;]</code></pre></details></figure>
 <p>Create a safe starter application:</p>
 <pre><code class="language-sh">pnpm run app -- create my-service
 # Edit ../apps/my-service/toad.yaml and docker-compose.yaml
@@ -373,14 +368,13 @@ pnpm run platform -- verify --from /secure/platform-backup/index.json --json
 <p>The archives are streamed off the manager and encrypted with age. Copy them
 and the age identity to separate protected storage. Restores replace one exact
 volume and require explicit confirmation.</p>
-<pre><code class="language-mermaid">flowchart LR
+<figure class="doc-diagram diagram-desktop-900 diagram-mobile-700"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-deployment-6-mobile.svg"><img src="/diagram-deployment-6.svg" alt="Git, operator identities, and encrypted backups are separate inputs to platform recovery" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Git, operator identities, and encrypted backups are separate inputs to platform recovery.</span><a href="/diagram-deployment-6.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     git[&quot;Git repository&lt;br/&gt;desired state&quot;] --&gt; apply[&quot;apply&quot;]
     secrets[&quot;Encrypted secrets&lt;br/&gt;and operator identities&quot;] --&gt; apply
     backups[&quot;Encrypted volume backups&quot;] --&gt; restore[&quot;guarded restore&quot;]
     apply --&gt; rebuilt[&quot;Rebuilt Swarm platform&quot;]
     restore --&gt; rebuilt
-    rebuilt --&gt; verify[&quot;verify --json&quot;]
-</code></pre>
+    rebuilt --&gt; verify[&quot;verify --json&quot;]</code></pre></details></figure>
 <p>Read <a href="/operations.html">operations and recovery</a>,
 <a href="/storage.html">stateful storage profiles</a>, and the
 <a href="/recovery.html">disaster-recovery drill</a> before restoring or

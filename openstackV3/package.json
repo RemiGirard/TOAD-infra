@@ -31,7 +31,8 @@
     "status": "tsx scripts/index.ts status",
     "ssh": "tsx scripts/index.ts ssh",
     "inventory": "tsx scripts/index.ts inventory",
-    "os": "tsx scripts/index.ts os"
+    "os": "tsx scripts/index.ts os",
+    "site:diagrams": "tsx scripts/site-diagrams.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

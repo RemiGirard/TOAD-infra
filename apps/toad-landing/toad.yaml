@@ -12,8 +12,31 @@ files:
   - starter.png
   - walkthrough.json
   - walkthrough.css
+  - diagrams.css
+  - delivery.svg
+  - delivery-mobile.svg
+  - platform.svg
+  - platform-mobile.svg
+  - diagram-deployment-1.svg
+  - diagram-deployment-1-mobile.svg
+  - diagram-deployment-2.svg
+  - diagram-deployment-3.svg
+  - diagram-deployment-4.svg
+  - diagram-deployment-4-mobile.svg
+  - diagram-deployment-5.svg
+  - diagram-deployment-5-mobile.svg
+  - diagram-deployment-6.svg
+  - diagram-deployment-6-mobile.svg
+  - diagram-operations-1.svg
+  - diagram-operations-2.svg
+  - diagram-operations-3.svg
+  - diagram-operations-3-mobile.svg
+  - diagram-recovery-1.svg
+  - diagram-recovery-1-mobile.svg
+  - diagram-recovery-2.svg
   - quickstart.html
   - first-app.html
+  - architecture.html
   - evaluation.html
   - deployment.html
   - costs.html

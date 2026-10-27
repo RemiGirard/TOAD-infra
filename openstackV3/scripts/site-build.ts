@@ -6,6 +6,7 @@ import { marked } from 'marked';
 import { stringify } from 'yaml';
 import { ROOT_DIR } from './infrastructure/paths.js';
 import { loadApp } from './infrastructure/app-manifest.js';
+import { diagramSources, digest } from './site-diagrams.js';
 
 const root = resolve(ROOT_DIR, '..');
 const source = join(root, 'website');
@@ -13,6 +14,7 @@ const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const pages = [
   ['QUICKSTART', 'quickstart', 'Try locally'], ['FIRST-APP', 'first-app', 'First app'],
+  ['ARCHITECTURE', 'architecture', 'Visual architecture'],
   ['EVALUATION', 'evaluation', 'Cloud evaluation'], ['DEPLOYMENT', 'deployment', 'Production setup'],
   ['COSTS', 'costs', 'Cost worksheet'], ['OPERATIONS', 'operations', 'Operations'],
   ['DISASTER-RECOVERY', 'recovery', 'Recovery'], ['LAUNCH-READINESS', 'launch', 'Validation record'],
@@ -21,6 +23,33 @@ const pages = [
   ['AGENT-RUNBOOK', 'agents', 'Agent runbook'], ['STATEFUL-STORAGE', 'storage', 'Stateful storage'],
   ['../SECURITY', 'security', 'Security'], ['../LICENSE', 'license', 'License'],
 ] as const;
+const diagramRecords = JSON.parse(readFileSync(join(source, 'diagrams.json'), 'utf8')) as Array<{
+  file: string; sourceHash: string; svgHash: string; mobile?: { file: string; svgHash: string };
+}>;
+const diagrams = new Map<string, { file: string; description: string; mobile?: string; layout: string }>();
+const diagramAssets: string[] = [];
+const definitions = diagramSources();
+if (diagramRecords.length !== definitions.length) throw new Error('Refresh the reviewed public diagram cache.');
+for (const definition of definitions) {
+  const record = diagramRecords.find((entry) => entry.file === definition.file);
+  if (!record || record.sourceHash !== digest(definition.text)) throw new Error(`Stale diagram: ${definition.file}. Run site:diagrams.`);
+  const expectedMobile = /^flowchart LR\b/m.test(definition.text) ? definition.file.replace('.svg', '-mobile.svg') : undefined;
+  if (record.mobile?.file !== expectedMobile) throw new Error(`Invalid mobile layout: ${definition.file}.`);
+  for (const asset of [{ file: definition.file, svgHash: record.svgHash }, ...(record.mobile ? [record.mobile] : [])]) {
+    if (digest(readFileSync(join(source, asset.file))) !== asset.svgHash) throw new Error(`Changed diagram: ${asset.file}. Run site:diagrams.`);
+    diagramAssets.push(asset.file);
+  }
+  function readableSize(file: string) {
+    const viewBox = readFileSync(join(source, file), 'utf8').match(/viewBox="([^"]+)"/);
+    const width = Number(viewBox?.[1]?.split(/\s+/)[2]);
+    if (!Number.isFinite(width) || width <= 0 || width > 2000) throw new Error(`Review SVG dimensions: ${file}.`);
+    return width <= 350 ? 0 : Math.ceil(width * .8 / 100) * 100;
+  }
+  const desktopSize = readableSize(definition.file);
+  const mobileSize = readableSize(expectedMobile ?? definition.file);
+  diagrams.set(record.sourceHash, { file: definition.file, description: definition.description,
+    layout: `diagram-desktop-${desktopSize} diagram-mobile-${mobileSize}`, ...(expectedMobile ? { mobile: expectedMobile } : {}) });
+}
 const escape = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 const pagePaths = new Map(pages.map(([name, slug]) => [resolve(root, 'docs', `${name}${name === '../LICENSE' ? '' : '.md'}`), `/${slug}.html`]));
 function href(value: string, document: string): string {
@@ -36,6 +65,18 @@ for (const [name, slug, label] of pages) {
   let markdown = readFileSync(path, 'utf8');
   const renderer = new marked.Renderer();
   renderer.html = ({ text }) => escape(text);
+  const renderCode = renderer.code;
+  renderer.code = function (token) {
+    if (token.lang !== 'mermaid') return renderCode.call(this, token);
+    const diagram = diagrams.get(digest(token.text.trim()));
+    if (!diagram) throw new Error(`Unreviewed Mermaid diagram in ${name}.`);
+    return `<figure class="doc-diagram ${diagram.layout}${token.text.startsWith('sequenceDiagram') ? ' sequence' : ''}"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture>${diagram.mobile ? `<source media="(max-width:760px)" srcset="/${diagram.mobile}">` : ''}<img src="/${diagram.file}" alt="${escape(diagram.description)}" loading="lazy"></picture></div>${diagram.layout ? '<p class="diagram-hint">Scroll sideways to explore the diagram.</p>' : ''}<figcaption><span>${escape(diagram.description)}.</span><a href="/${diagram.file}">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>${escape(token.text)}</code></pre></details></figure>\n`;
+  };
+  renderer.image = ({ href: target, text: description }) => {
+    const illustration = ['delivery', 'platform'].find((asset) => target === `../website/${asset}.svg`);
+    if (illustration) return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${illustration === 'delivery' ? 864 : 890}"><img src="/${illustration}.svg" width="1120" height="${illustration === 'delivery' ? 258 : 318}" alt="${escape(description)}" loading="lazy"></picture></span>`;
+    return `<img src="${escape(href(target, `${name}.md`))}" alt="${escape(description)}" loading="lazy">`;
+  };
   renderer.link = function ({ href: target, tokens }) { return `<a href="${escape(href(target, `${name}.md`))}">${this.parser.parseInline(tokens)}</a>`; };
   renderer.heading = function ({ tokens, depth }) {
     const content = this.parser.parseInline(tokens);
@@ -45,10 +86,11 @@ for (const [name, slug, label] of pages) {
   if (name === '../LICENSE') markdown = `# GNU Affero General Public License\n\n\`\`\`text\n${markdown}\n\`\`\``;
   const body = marked.parse(markdown, { renderer, gfm: true, async: false });
   const navigation = pages.map(([, target, title]) => `<a href="/${target}.html"${target === slug ? ' aria-current="page"' : ''}>${title}</a>`).join('');
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>`;
   writeFileSync(join(output, `${slug}.html`), html);
 }
-const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css'];
+const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
+  'diagrams.css', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   copyFileSync(join(source, asset), join(output, asset));

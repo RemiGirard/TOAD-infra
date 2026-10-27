@@ -1,0 +1,45 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Visual architecture — TOAD</title><meta name="description" content="TOAD: Visual architecture. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/architecture.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/architecture.html" aria-current="page">Visual architecture</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / VISUAL ARCHITECTURE</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/ARCHITECTURE.md">Markdown source ↗</a></div><h1 id="see-how-toad-fits-together">See how TOAD fits together</h1>
+<p>Follow the application from your editor to a public URL, then look beneath it
+at the cloud platform. These are two different workflows: shipping an app to
+an existing platform does not provision new cloud resources.</p>
+<h2 id="from-source-to-https">From source to HTTPS</h2>
+<p><span class="illustration"><picture><source media="(max-width:760px)" srcset="/delivery-mobile.svg" width="360" height="864"><img src="/delivery.svg" width="1120" height="258" alt="Application delivery: edit your source, publish an immutable image, validate the manifest, deploy through Swarm, and check HTTPS" loading="lazy"></picture></span></p>
+<ol>
+<li><strong>Create and edit.</strong> Start with the frontend and Node API template. Run it
+locally before paying for cloud resources.</li>
+<li><strong>Publish.</strong> Build only the files declared in <code>build.yaml</code>, push to your
+registry, and pin the returned image digest in Compose.</li>
+<li><strong>Validate.</strong> Check the manifest, file allow-list, image digests, memory
+limits, security settings, and rollback policy.</li>
+<li><strong>Deploy.</strong> Swarm rolls out the desired service state. The update policy
+requests rollback when a rollout fails its checks.</li>
+<li><strong>Diagnose.</strong> Inspect running replicas, failed tasks, and public HTTPS
+checks. A successful rollout still needs application-specific validation.</li>
+</ol>
+<p><a href="/quickstart.html">Try locally</a> · <a href="/first-app.html">Follow the complete first-app recipe</a></p>
+<h2 id="four-tools-four-jobs">Four tools, four jobs</h2>
+<p><span class="illustration"><picture><source media="(max-width:760px)" srcset="/platform-mobile.svg" width="360" height="890"><img src="/platform.svg" width="1120" height="318" alt="The TOAD platform: Heat provisions cloud resources, Ansible configures hosts, Docker Swarm runs services, and Traefik routes HTTPS" loading="lazy"></picture></span></p>
+<p>Git stores desired state; the TypeScript CLI coordinates the tools and reports
+what happened. Credentials stay in the selected operator context, outside the
+public source and operator image.</p>
+<p>The maintained production profile uses three Swarm managers behind an Octavia
+load balancer. Traefik runs <strong>one replica</strong> with a pinned local certificate
+store. Three managers preserve control-plane quorum after one manager loss;
+they do not remove the ingress or local-storage availability limits.</p>
+<p>The <a href="/deployment.html#what-gets-deployed">production request-routing diagram</a>
+shows public users, DNS, Octavia, the managers, Traefik, application stacks,
+and the separate mTLS requirement for admin interfaces. Public app routes need
+their own authentication when their data or actions require it.</p>
+<h2 id="observe-update-recover">Observe, update, recover</h2>
+<p>The <a href="/operations.html">operations diagrams</a> cover the health investigation loop,
+deployment states, and encrypted volume capture. Stateless apps can run
+multiple replicas; local stateful volumes remain attached to one node and need
+an explicit backup and recovery policy.</p>
+<p>The <a href="/recovery.html">recovery diagrams</a> show the three independent inputs:
+desired state in Git, operator escrow, and encrypted data archives. Offsite
+storage must be configured separately. The fresh-cluster recovery drill remains
+pending, so these diagrams describe the procedure, not a measured recovery-time
+or data-loss guarantee.</p>
+<p><a href="/storage.html">Choose a storage profile</a> ·
+<a href="/launch.html">Read the validation record</a></p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

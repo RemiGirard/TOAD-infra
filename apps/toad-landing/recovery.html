@@ -1,16 +1,15 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recovery — TOAD</title><meta name="description" content="TOAD: Recovery. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/recovery.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html" aria-current="page">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / RECOVERY</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DISASTER-RECOVERY.md">Markdown source ↗</a></div><h1 id="disaster-recovery-proof">Disaster-recovery proof</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recovery — TOAD</title><meta name="description" content="TOAD: Recovery. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/recovery.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/architecture.html">Visual architecture</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html" aria-current="page">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / RECOVERY</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DISASTER-RECOVERY.md">Markdown source ↗</a></div><h1 id="disaster-recovery-proof">Disaster-recovery proof</h1>
 <p>TOAD treats reproducible infrastructure, credentials, and workload data as
 three separate recovery inputs. Heat plus Ansible rebuild the infrastructure;
 the encrypted operator escrow restores identities and tokens; application and
 platform archives restore state. A Swarm Raft snapshot is optional acceleration,
 not the primary recovery mechanism.</p>
-<pre><code class="language-mermaid">flowchart LR
+<figure class="doc-diagram diagram-desktop-900 diagram-mobile-600"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-recovery-1-mobile.svg"><img src="/diagram-recovery-1.svg" alt="Rebuild infrastructure from Git and operator escrow, restore encrypted datasets, then verify data and services" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Rebuild infrastructure from Git and operator escrow, restore encrypted datasets, then verify data and services.</span><a href="/diagram-recovery-1.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     desired[&quot;Git&lt;br/&gt;Heat, Ansible, app manifests&quot;] --&gt; rebuild[&quot;Fresh infrastructure&quot;]
     escrow[&quot;Operator escrow&lt;br/&gt;cloud, DNS, SSH, age, mTLS&quot;] --&gt; rebuild
     archives[&quot;Encrypted application&lt;br/&gt;and platform backups&quot;] --&gt; restore[&quot;Restore exact datasets&quot;]
     rebuild --&gt; restore
-    restore --&gt; proof[&quot;Production verifier&lt;br/&gt;plus data assertions&quot;]
-</code></pre>
+    restore --&gt; proof[&quot;Production verifier&lt;br/&gt;plus data assertions&quot;]</code></pre></details></figure>
 <h2 id="what-proved-means">What “proved” means</h2>
 <p>A backup is not proved merely because a command produced a file. Evidence must
 cover four progressively stronger claims:</p>
@@ -36,15 +35,14 @@ is production-ready. It must use a named disposable context, a dedicated Heat
 stack, an isolated DNS zone, and either a separate OpenStack project or clearly
 prefixed resources. Never reuse the production root domain.</p>
 <p>The drill is:</p>
-<pre><code class="language-mermaid">flowchart TD
+<figure class="doc-diagram diagram-desktop-0 diagram-mobile-0"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><img src="/diagram-recovery-2.svg" alt="Proposed isolated recovery drill from objectives and a fresh stack through restore, evidence, and approved cleanup" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>Proposed isolated recovery drill from objectives and a fresh stack through restore, evidence, and approved cleanup.</span><a href="/diagram-recovery-2.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart TD
     select[&quot;Select backup and objectives&quot;] --&gt; context[&quot;Create disposable context&quot;]
     context --&gt; build[&quot;Apply a fresh isolated stack&quot;]
     build --&gt; empty[&quot;Verify empty platform&quot;]
     empty --&gt; restore[&quot;Restore one exact dataset&quot;]
     restore --&gt; tests[&quot;Run platform and application checks&quot;]
     tests --&gt; evidence[&quot;Record hashes, versions, replicas, RPO and RTO&quot;]
-    evidence --&gt; destroy[&quot;Destroy the named drill stack after approval&quot;]
-</code></pre>
+    evidence --&gt; destroy[&quot;Destroy the named drill stack after approval&quot;]</code></pre></details></figure>
 <ol>
 <li>Record the target RPO and RTO and the exact backup index being tested.</li>
 <li>Create and select a context dedicated to the drill.</li>
