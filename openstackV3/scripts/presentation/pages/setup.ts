@@ -8,13 +8,13 @@
  * 3. Prompts for password and saves to credentials/password
  * 4. Tests the OpenStack connection
  * 5. Generates SSH keypair and uploads to OpenStack
- * 6. Updates heat/env/example.yaml with keypair name
+ * 6. Shows the selected context's configuration and production apply steps
  *
  * Usage: pnpm run setup
  */
 
 import { chmodSync, existsSync, writeFileSync, readFileSync, mkdirSync } from 'fs';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { banner, ask, askSecret, success, error, info, closeReadline } from '../../infrastructure/cli.js';
 import { runProgram } from '../../infrastructure/shell.js';
 import {
@@ -24,12 +24,14 @@ import {
   VENV_DIR,
   SSH_KEY_PATH,
   SSH_KEY_PUB_PATH,
+  PRODUCTION_ENV_PATH,
+  ROUTER_CONFIG_PATH,
 } from '../../infrastructure/paths.js';
+import { ensureCloudKeypair } from '../../infrastructure/cloud-keypair.js';
 import {
   cloudsYamlExists,
   passwordExists,
   findCloudsYaml,
-  getDefaultCloud,
   usesApplicationCredential,
   usesInlinePassword,
 } from '../../infrastructure/credentials.js';
@@ -68,10 +70,10 @@ async function setupCredentials(): Promise<void> {
 
   // Check for clouds.yaml
   if (!cloudsYamlExists()) {
-    error('No clouds.yaml found in credentials/');
+    error(`No clouds.yaml found in ${relative(ROOT_DIR, CREDENTIALS_DIR)}/`);
     console.log('\n   Download it from Infomaniak dashboard:');
     console.log('   Public Cloud > Users > Download OpenStack RC file (clouds.yaml)');
-    console.log('   Then copy it to: credentials/\n');
+    console.log(`   Then save it to: ${relative(ROOT_DIR, CREDENTIALS_DIR)}/clouds.yaml\n`);
     closeReadline();
     process.exit(1);
   }
@@ -100,7 +102,7 @@ async function setupCredentials(): Promise<void> {
   const password = await askSecret('   Enter the dedicated OpenStack service-user password');
   if (!password) throw new Error('Password cannot be empty.');
   writeFileSync(PASSWORD_FILE, password + '\n', { mode: 0o600 });
-  info('Password saved to credentials/password');
+  info('Password saved privately in the selected operator context');
 }
 
 async function setupSSHKey(): Promise<void> {
@@ -111,40 +113,16 @@ async function setupSSHKey(): Promise<void> {
   }
 
   if (!sshKeyExists()) {
-    info('Generating new SSH keypair in credentials/...');
+    info('Generating a new SSH keypair in the selected operator context...');
     runProgram('ssh-keygen', ['-t', 'ed25519', '-f', SSH_KEY_PATH, '-N', '', '-C', 'toad-infra'], { showOutput: false });
     info('SSH keypair generated');
   } else {
     info('SSH keypair already exists');
   }
 
-  try {
-    openstack(['keypair', 'show', 'toad-key'], { showOutput: false });
-    info('Keypair "toad-key" exists in OpenStack');
-  } catch {
-    info('Uploading keypair to OpenStack...');
-    try {
-      openstack(['keypair', 'create', '--public-key', SSH_KEY_PUB_PATH, 'toad-key']);
-      info('Keypair uploaded to OpenStack');
-    } catch (e: unknown) {
-      error(`Failed to upload keypair: ${e instanceof Error ? e.message : e}`);
-    }
-  }
-}
-
-async function updateEnvFile(): Promise<void> {
-  console.log('\nUpdating environment file...');
-
-  const envPath = join(ROOT_DIR, 'heat', 'env', 'example.yaml');
-  let content = readFileSync(envPath, 'utf-8');
-
-  if (!content.includes('keypair_name: "toad-key"')) {
-    content = content.replace(/keypair_name: "[^"]*"/, 'keypair_name: "toad-key"');
-    writeFileSync(envPath, content);
-    info('Updated heat/env/example.yaml with keypair_name');
-  } else {
-    info('heat/env/example.yaml already configured');
-  }
+  const result = ensureCloudKeypair('toad-key', SSH_KEY_PUB_PATH, readFileSync(SSH_KEY_PUB_PATH, 'utf8'),
+    (args) => openstack(args, { showCommand: false, showOutput: false }));
+  info(result === 'created' ? 'Uploaded and verified the SSH keypair' : 'Verified the existing cloud keypair matches this context');
 }
 
 export async function run(_args: string[]): Promise<void> {
@@ -162,26 +140,18 @@ export async function run(_args: string[]): Promise<void> {
   info('Connection successful');
 
   await setupSSHKey();
-  await updateEnvFile();
 
   success('Setup complete!\n');
   console.log('Next steps:');
-  console.log('  pnpm run discover   # See available resources');
-  console.log('  pnpm run deploy     # Deploy infrastructure');
-  console.log('  pnpm run status     # Check stack status');
-  console.log('  pnpm run ssh        # SSH to nodes');
-  console.log('  pnpm run destroy    # Delete stack\n');
-
-  const cloudsFile = findCloudsYaml()!;
-  const cloudName = getDefaultCloud()!;
-  console.log('Run OpenStack CLI directly:');
-  console.log('  source openstack_cli/bin/activate');
-  console.log(`  export OS_CLIENT_CONFIG_FILE=${cloudsFile}`);
-  console.log(`  export OS_CLOUD=${cloudName}`);
-  if (!usesApplicationCredential() && !usesInlinePassword()) {
-    console.log('  export OS_PASSWORD=$(cat credentials/password)');
-  }
-  console.log('  openstack stack list\n');
+  console.log('  pnpm run discover   # Choose cloud resources');
+  console.log(`  Configure ${relative(ROOT_DIR, PRODUCTION_ENV_PATH)} and ${relative(ROOT_DIR, ROUTER_CONFIG_PATH)}`);
+  console.log('  pnpm run dns-token  # Store the restricted DNS token');
+  console.log('  pnpm run check');
+  console.log('  pnpm run apply -- YOUR-STACK  # Provision and configure the platform');
+  console.log('  pnpm run verify -- YOUR-STACK --json');
+  console.log('  Then follow ../docs/FIRST-APP.md to publish and deploy your app.');
+  console.log('  First deployment and DNS delegation: ../docs/QUICKSTART.md\n');
+  console.log('  Inspect cloud resources through: pnpm run os -- stack list\n');
 
   closeReadline();
 }

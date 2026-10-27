@@ -2,8 +2,18 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { ipv4HostCidr } from '../scripts/infrastructure/operator-access.js';
 import { runProgram } from '../scripts/infrastructure/shell.js';
+import { assertAdminCaForApply } from '../scripts/infrastructure/admin-pki.js';
+import { ADMIN_CA_CERT_PATH, ADMIN_CA_KEY_PATH } from '../scripts/infrastructure/paths.js';
 
 describe('operator safety helpers', () => {
+  it('refuses to initialize replacement admin trust for an existing stack', () => {
+    for (const present of [new Set<string>(), new Set([ADMIN_CA_CERT_PATH]), new Set([ADMIN_CA_KEY_PATH])]) {
+      assert.throws(() => assertAdminCaForApply(true, (path) => present.has(String(path))), /Restore the original operator PKI/);
+    }
+    assert.doesNotThrow(() => assertAdminCaForApply(true, () => true));
+    assert.doesNotThrow(() => assertAdminCaForApply(false, () => false));
+  });
+
   it('normalizes only IPv4 host CIDRs', () => {
     assert.equal(ipv4HostCidr(' 192.0.2.10\n'), '192.0.2.10/32');
     for (const address of ['example.com', '2001:db8::1', '192.0.2.999', '192.0.2.1/24']) {

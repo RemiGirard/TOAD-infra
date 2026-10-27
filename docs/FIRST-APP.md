@@ -1,8 +1,8 @@
 # From source to your first live app
 
 This guide deploys a frontend and a Node HTTP API as one stateless service.
-It assumes an already configured TOAD platform. Without one, start with the
-[local trial](QUICKSTART.md), then [provision production](DEPLOYMENT.md).
+Start after [provisioning and verifying your cloud platform](QUICKSTART.md).
+An optional [local preview](LOCAL-STARTER.md) lets you explore the sample app.
 Commands run in `openstackV3` unless a step says otherwise.
 
 ## 1. Check your workstation and target

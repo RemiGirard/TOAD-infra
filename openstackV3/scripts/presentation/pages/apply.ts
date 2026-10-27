@@ -1,13 +1,13 @@
 /** Apply the complete production stack: Heat, inventory, Docker, Swarm, and ingress. */
 
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { banner, error, success } from '../../infrastructure/cli.js';
-import { CREDENTIALS_DIR, INVENTORY_PATH, PRODUCTION_ENV_PATH, ROOT_DIR, ROUTER_CONFIG_PATH } from '../../infrastructure/paths.js';
+import { CREDENTIALS_DIR, INFOMANIAK_DNS_TOKEN_PATH, INVENTORY_PATH, PRODUCTION_ENV_PATH, ROOT_DIR, ROUTER_CONFIG_PATH, SSH_KEY_PATH } from '../../infrastructure/paths.js';
 import { credentialsExist } from '../../infrastructure/credentials.js';
 import { openstack, openstackStream } from '../../infrastructure/openstack.js';
 import { runProgram, runProgramStream } from '../../infrastructure/shell.js';
-import { ensureAdminPki } from '../../infrastructure/admin-pki.js';
+import { assertAdminCaForApply, ensureAdminPki } from '../../infrastructure/admin-pki.js';
 import { discoverOperatorCidr } from '../../infrastructure/operator-access.js';
 import { run as generateInventory } from './inventory.js';
 import { run as verify } from './verify.js';
@@ -60,17 +60,23 @@ export async function run(args: string[]): Promise<void> {
   const templatePath = join(ROOT_DIR, TEMPLATE);
 
   try {
-    requireFile(envPath, 'Copy heat/env/example.yaml and customize it first.');
+    requireFile(envPath, 'Create an operator context and customize its generated production environment first. See ../docs/QUICKSTART.md.');
     if (!credentialsExist()) throw new Error('OpenStack credentials are incomplete. Run pnpm run setup first.');
     requireFile(ROUTER_CONFIG_PATH, 'Create a context or copy router/config.example.yaml and set your domain/email.');
-    ensureAdminPki();
+    requireFile(SSH_KEY_PATH, 'Run pnpm run setup in the selected context before provisioning.');
+    requireFile(INFOMANIAK_DNS_TOKEN_PATH, 'Run pnpm run dns-token before provisioning.');
+    const dnsToken = statSync(INFOMANIAK_DNS_TOKEN_PATH);
+    if (!dnsToken.isFile() || dnsToken.size === 0 || (dnsToken.mode & 0o077)) throw new Error('The DNS token must be a nonempty private file (mode 0600). Run pnpm run dns-token.');
 
     openstack(['orchestration', 'template', 'validate', '-t', templatePath, '-e', envPath], {
       showOutput: false,
     });
 
     const operation = stackExists(stackName) ? 'update' : 'create';
+    assertAdminCaForApply(operation === 'update');
+    ensureAdminPki();
     const operatorCidr = await discoverOperatorCidr();
+    setupAnsible();
     const code = await openstackStream([
       'stack', operation,
       '-t', templatePath,
@@ -82,7 +88,6 @@ export async function run(args: string[]): Promise<void> {
     if (code !== 0) throw new Error(`Heat stack ${operation} failed with exit code ${code}`);
 
     await generateInventory([stackName]);
-    setupAnsible();
     for (const playbook of [
       'installDocker.yaml',
       'hardenHosts.yaml',

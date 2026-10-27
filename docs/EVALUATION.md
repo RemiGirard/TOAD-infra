@@ -1,8 +1,8 @@
 # Evaluate before committing to production
 
-Start with the [local starter](QUICKSTART.md). It needs Node.js, creates no
-cloud resources, and lets you change frontend and API before configuring
-credentials. This evaluates the example app, not cloud provisioning.
+The normal TOAD workflow is [cloud setup, then app deployment](QUICKSTART.md).
+For an optional preview of the example frontend/API, use the
+[local starter](LOCAL-STARTER.md); it creates no cloud resources.
 
 ## One-manager cloud experiment
 

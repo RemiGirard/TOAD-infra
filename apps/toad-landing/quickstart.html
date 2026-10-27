@@ -1,22 +1,86 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Try locally — TOAD</title><meta name="description" content="TOAD: Try locally. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Try locally</a><a href="/first-app.html">First app</a><a href="/architecture.html">Visual architecture</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / TRY LOCALLY</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="try-the-first-app-starter-locally">Try the first-app starter locally</h1>
-<p>This runs the example application, not a cloud platform. You need Node.js 22
-and Git. No account, payment details, registry, or credentials are required.</p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Get started — TOAD</title><meta name="description" content="TOAD: Get started. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / GET STARTED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="get-started-cloud-first-then-your-app">Get started: cloud first, then your app</h1>
+<p>TOAD first creates and configures your cloud platform. You then publish and
+deploy applications onto it. Provision the platform once; repeat the app
+workflow for each app and update.</p>
+<p>Already operate a verified TOAD platform? Go to <a href="/first-app.html">First app</a>.
+For an optional frontend/API preview, <a href="/local-starter.html">run the example locally</a>.</p>
+<h2 id="1-prepare-your-operator-context">1. Prepare your operator context</h2>
+<p>You need Node.js 22, pnpm, Git, Python 3 with <code>venv</code>, OpenSSH, OpenSSL 3 with
+its legacy provider (for browser certificate bundles), Docker with Buildx,
+and <code>age</code>. You also need an Infomaniak Public Cloud project, a dedicated
+service user with a password, and a domain hosted in Infomaniak DNS.
+Review the <a href="/costs.html">cost worksheet</a> before creating billable resources.</p>
 <pre><code class="language-sh">git clone https://github.com/RemiGirard/TOAD-infra.git
-cd TOAD-infra
-HOST=127.0.0.1 node examples/node-web/server.mjs
+cd TOAD-infra/openstackV3
+pnpm install --frozen-lockfile
+pnpm run doctor -- --json
+pnpm run context -- create my-cloud --use
 </code></pre>
-<p>Open <a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a>. The page calls <code>/api/info</code>; use <strong>Check the API</strong> to
-make another request. <code>/api/health</code> returns <code>{&quot;ok&quot;:true}</code>.</p>
-<p>Edit <code>examples/node-web/public/index.html</code> or <code>public/style.css</code> and reload.
-Change <code>server.mjs</code>, restart with Ctrl+C, and reload to try an API change.
-There is no install step because the app uses Node&#39;s standard library.</p>
-<p>To try its production container:</p>
-<pre><code class="language-sh">docker build --tag toad-starter:local examples/node-web
-docker run --rm --name toad-starter --publish 127.0.0.1:3000:3000 toad-starter:local
+<p>The context command creates isolated configuration templates and selects them.
+Use a different name for each client or cloud environment. From <code>openstackV3</code>:</p>
+<ul>
+<li>Save the service user&#39;s downloaded cloud configuration at
+<code>contexts/my-cloud/credentials/clouds.yaml</code>.</li>
+<li>Run <code>pnpm run setup</code> to install the OpenStack CLI, authenticate, and verify
+that the cloud SSH keypair matches your local key. A missing password is
+requested without echoing it.</li>
+<li>Run <code>pnpm run discover</code>, then fill in
+<code>contexts/my-cloud/heat/production.yaml</code> with your resource choices.</li>
+<li>Set your domains and certificate email in
+<code>contexts/my-cloud/router/config.yaml</code>.</li>
+<li>Run <code>pnpm run dns-token</code> to store a restricted <code>dns:read</code> / <code>dns:write</code> token.</li>
+</ul>
+<p>Keep credential values in the ignored context files. The
+<a href="/deployment.html#2-create-the-cloud-service-user">production setup guide</a>
+explains account permissions, configuration fields, and DNS ownership.</p>
+<h2 id="2-provision-and-verify-the-platform">2. Provision and verify the platform</h2>
+<p>The maintained production profile creates three managers, an Octavia load
+balancer, networking, and a delegated DNS zone. Ansible configures Docker Swarm,
+Traefik HTTPS, monitoring, and the platform test services.</p>
+<pre><code class="language-sh">pnpm run context -- current --json
+pnpm run check
+pnpm run doctor -- --cloud
+pnpm run apply -- my-cloud
 </code></pre>
-<p>The container runs as the unprivileged <code>node</code> user and has a health check.
-Stop it with Ctrl+C. Neither path provisions cloud resources or joins a Swarm.</p>
-<p>Next, use <a href="/first-app.html">First app</a> to create a separate application directory,
-publish an immutable image, and deploy to your platform. To create the
-platform first, read <a href="/evaluation.html">Evaluation</a> or <a href="/deployment.html">Production</a>.</p>
+<p>Review the selected context, domain ownership, and target stack before <code>apply</code>:
+it creates or updates billable resources and the parent apex/wildcard DNS
+records. Omitting an environment argument selects this context&#39;s configuration.
+Keep using the same stack name for this cloud.</p>
+<p>On the first run, verification may stop while the child DNS zone awaits manual
+delegation. Read its nameservers:</p>
+<pre><code class="language-sh">pnpm run os -- recordset list YOUR-PLATFORM-DOMAIN.
+</code></pre>
+<p>Create the matching child <code>NS</code> records in your parent DNS zone, using the
+<a href="/deployment.html#6-delegate-the-platform-child-zone-once">one-time delegation instructions</a>.
+Keep the existing stack and rerun:</p>
+<pre><code class="language-sh">pnpm run apply -- my-cloud
+pnpm run verify -- my-cloud --json
+</code></pre>
+<p>Continue when verification passes. The lower-level <code>deploy</code> command creates
+Heat resources only; it does not replace this platform setup.</p>
+<h2 id="3-publish-and-deploy-your-app">3. Publish and deploy your app</h2>
+<p>Authenticate Docker to a registry you control. For the simplest first
+deployment, make the image publicly pullable; private images require pull
+authentication on the Swarm nodes.</p>
+<pre><code class="language-sh">pnpm run app -- create my-app --template node-web
+# Edit ../apps/my-app/source/ and its build allow-list.
+pnpm run app -- publish my-app --image ghcr.io/YOUR-OWNER/my-app:v1
+pnpm run check
+pnpm run app -- validate my-app
+pnpm run app -- deploy my-app
+pnpm run app -- diagnose my-app --json
+</code></pre>
+<p>Publishing pins the registry image digest in Compose. Deployment updates the
+app on the existing platform. Open <code>https://my-app.YOUR-PLATFORM-DOMAIN/</code> and
+check its page and API. The <a href="/first-app.html">first-app guide</a> covers the registry,
+customization, secrets, updates, and rollback.</p>
+<h2 id="4-operate-and-update">4. Operate and update</h2>
+<pre><code class="language-sh">pnpm run app -- diagnose my-app --json
+pnpm run maintenance -- status --json
+</code></pre>
+<p>For an app update, publish a new version, validate, deploy, and diagnose again.
+Run <code>apply</code> when changing the platform configuration. Follow
+<a href="/operations.html">operations</a> and <a href="/recovery.html">recovery</a> for stateful
+data and backups. Complete backup and restore validation before relying on
+the platform for important data.</p>
 </main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

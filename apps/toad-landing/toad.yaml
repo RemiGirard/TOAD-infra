@@ -13,6 +13,8 @@ files:
   - walkthrough.json
   - walkthrough.css
   - diagrams.css
+  - journey.svg
+  - journey-mobile.svg
   - delivery.svg
   - delivery-mobile.svg
   - platform.svg
@@ -35,10 +37,11 @@ files:
   - diagram-recovery-1-mobile.svg
   - diagram-recovery-2.svg
   - quickstart.html
+  - deployment.html
   - first-app.html
   - architecture.html
+  - local-starter.html
   - evaluation.html
-  - deployment.html
   - costs.html
   - operations.html
   - recovery.html

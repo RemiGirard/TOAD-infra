@@ -52,7 +52,7 @@ Secret commands:
 }
 
 function requireRuntime(): void {
-  if (!existsSync(INVENTORY)) throw new Error('inventory.yaml is missing. Run pnpm run inventory <stack-name>.');
+  if (!existsSync(INVENTORY)) throw new Error('No platform inventory in the selected context. Provision and configure the cloud with pnpm run apply -- YOUR-STACK before deploying apps. See ../docs/QUICKSTART.md.');
   if (!existsSync(ANSIBLE) || !existsSync(ANSIBLE_PLAYBOOK)) {
     throw new Error('The Ansible runtime is missing. Run pnpm run apply once or install ansible/requirements.lock.txt.');
   }

@@ -1,4 +1,4 @@
-let profile = 'evaluation';
+let profile = 'production';
 const price = document.querySelector('#node-price');
 const total = document.querySelector('#cost-total');
 const breakdown = document.querySelector('#cost-breakdown');

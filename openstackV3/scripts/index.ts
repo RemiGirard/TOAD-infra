@@ -36,7 +36,7 @@ interface Command {
 const commands: Record<string, Command> = {
   setup:     { description: 'Initial setup (venv, credentials, SSH key)', handler: setup },
   discover:  { description: 'Show available OpenStack resources',         handler: discover },
-  deploy:    { description: 'Deploy a Heat stack',                        handler: deploy },
+  deploy:    { description: 'Advanced: Heat resources only (no platform configuration)', handler: deploy },
   destroy:   { description: 'Delete a Heat stack',                        handler: destroy },
   status:    { description: 'Show infrastructure status',                 handler: status },
   ssh:       { description: 'SSH to a stack node',                        handler: ssh },
@@ -48,7 +48,7 @@ const commands: Record<string, Command> = {
   'admin-pki': { description: 'Issue an admin mTLS client certificate',   handler: adminPki },
   dns:        { description: 'Synchronize Infomaniak parent DNS',         handler: dns },
   'dns-token': { description: 'Securely store the Infomaniak DNS token',  handler: dnsToken },
-  app:          { description: 'Create, deploy, inspect, and roll back apps', handler: app },
+  app:          { description: 'Publish and deploy apps to an existing platform', handler: app },
   maintenance:  { description: 'Quorum-aware Swarm node maintenance',       handler: maintenance },
   probe:        { description: 'Credential-free external HTTPS checks',     handler: probe },
   platform:     { description: 'Encrypted platform backup and restore',     handler: platform },
@@ -66,9 +66,28 @@ function mutatesState(command: string, args: string[]): boolean {
   return false;
 }
 
-function showHelp(): void {
+const usage: Record<string, string> = {
+  setup: 'pnpm run setup\n  Prepare the selected operator context; then configure its Heat/router files, store the DNS token, and run apply.',
+  apply: 'pnpm run apply -- STACK [ENV]\n  Provision and configure the production cloud, then verify it.\n  Omit ENV to use the selected context\'s production configuration. Creates billable resources and updates platform DNS.',
+  deploy: 'pnpm run deploy -- [1|5] [STACK] [ENV]\n  Advanced Heat-only command; does not configure Docker, Swarm, or HTTPS.\n  For a usable app platform, follow ../docs/QUICKSTART.md and run apply.',
+  app: 'pnpm run app -- <command> NAME [options]\n\n  After cloud apply and verification:\n  pnpm run app -- create my-app --template node-web\n  pnpm run app -- publish my-app --image ghcr.io/YOUR-OWNER/my-app:v1\n  pnpm run app -- validate my-app\n  pnpm run app -- deploy my-app\n  pnpm run app -- diagnose my-app --json\n\n  Also: status, verify, logs, rollback, backup, restore, remove, secret.\n  Complete app workflow: ../docs/FIRST-APP.md',
+  context: 'pnpm run context -- create NAME --use\n  Scaffold and select isolated cloud configuration and operator state.\n  Also: current [--json], list [--json], use NAME, clear.',
+};
+
+function showHelp(name?: string): void {
+  if (name && commands[name]) {
+    console.log(`TOAD / ${name}: ${commands[name].description}\n`);
+    console.log(usage[name] ?? `pnpm run ${name} -- <arguments>\nSee README.md and ../docs/AGENT-RUNBOOK.md for command details.`);
+    return;
+  }
   console.log('TOAD - OpenStack Infrastructure CLI\n');
   console.log('Usage: pnpm run cli <command> [args...]\n');
+  console.log('Start here: cloud first, then applications.');
+  console.log('  1. context create NAME --use; add that cloud\'s credentials');
+  console.log('  2. setup; discover; configure the context; dns-token');
+  console.log('  3. check; apply STACK; complete DNS delegation; verify STACK --json');
+  console.log('  4. app create / publish / validate / deploy / diagnose');
+  console.log('  Guided commands: ../docs/QUICKSTART.md\n');
   console.log('Commands:');
 
   const maxLen = Math.max(...Object.keys(commands).map(k => k.length));
@@ -82,7 +101,7 @@ async function main(): Promise<void> {
   const args = process.argv.slice(3).filter(arg => arg !== '--');
 
   if (!input || input === 'help' || input === '--help' || input === '-h') {
-    showHelp();
+    showHelp(input === 'help' ? args[0] : undefined);
     process.exit(0);
   }
 
@@ -92,6 +111,12 @@ async function main(): Promise<void> {
     console.error(`Unknown command: ${input}`);
     console.error('Run with --help to see available commands');
     process.exit(1);
+  }
+
+  // Help must never enter a mutating handler or acquire an operator lock.
+  if (args.includes('--help') || args.includes('-h')) {
+    showHelp(input);
+    return;
   }
 
   if (mutatesState(input, args)) {

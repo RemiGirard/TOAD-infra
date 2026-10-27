@@ -9,6 +9,9 @@ This guide follows the normal production path: three Swarm managers, an
 Octavia load balancer, delegated DNS, automatic certificates, monitoring, and
 mTLS-protected admin interfaces.
 
+For the shorter cloud-to-app journey, start with [Get started](QUICKSTART.md).
+This detailed guide uses an isolated context named `toad-prod`.
+
 > All domain names in this documentation are placeholders. Replace
 > `example.com` with a domain you control and `platform.example.com` with the
 > delegated child domain you want TOAD to manage.
@@ -49,7 +52,8 @@ You need:
 - a dedicated project service user with a password;
 - a domain hosted in Infomaniak DNS;
 - an Infomaniak API token limited to `dns:read` and `dns:write`;
-- Node.js 22, pnpm, Python 3 with `venv`, OpenSSH, and Docker;
+- Node.js 22, pnpm, Python 3 with `venv`, OpenSSH, OpenSSL 3 with its legacy
+  provider for browser certificate bundles, and Docker;
 - `age` and `age-keygen` when using encrypted secrets or backups.
 
 Do not use a personal Infomaniak password. Heat creates a Keystone trust, so
@@ -99,6 +103,8 @@ cd TOAD-infra/openstackV3
 pnpm install --frozen-lockfile
 pnpm run check
 pnpm run doctor -- --json
+pnpm run context -- create toad-prod --use
+pnpm run context -- current --json
 ```
 
 The doctor reports missing prerequisites without printing credential contents.
@@ -114,12 +120,12 @@ Network, Orchestration, Load Balancing, and DNS.
 Download its `clouds.yaml` and save it as:
 
 ```text
-openstackV3/credentials/clouds.yaml
+openstackV3/contexts/toad-prod/credentials/clouds.yaml
 ```
 
 Do not commit the `credentials/` directory. If `clouds.yaml` does not contain
 the password, `pnpm run setup` asks for it without echoing and stores it in the
-ignored `credentials/password` file with mode `0600`.
+ignored context `credentials/password` file with mode `0600`.
 
 Initialize the project-local OpenStack CLI and SSH key:
 
@@ -137,11 +143,11 @@ availability zones, and quota. Use an image UUID, not a mutable image name.
 From `openstackV3`:
 
 ```sh
-cp heat/env/example.yaml heat/env/production.yaml
-cp ../router/config.example.yaml ../router/config.yaml
+pnpm run context -- current --json
+# The context command has already created the Heat and router templates.
 ```
 
-Edit `heat/env/production.yaml`:
+Edit `contexts/toad-prod/heat/production.yaml`:
 
 ```yaml
 parameters:
@@ -161,7 +167,7 @@ The `apply` command replaces the documentation SSH CIDR with the operator
 workstation's current public IPv4 `/32`. It never intentionally opens SSH to
 `0.0.0.0/0`.
 
-Edit `router/config.yaml`:
+Edit `contexts/toad-prod/router/config.yaml`:
 
 ```yaml
 letsencrypt_email: admin@example.com
@@ -207,8 +213,15 @@ it as a versioned Docker secret, never as a Compose label or environment file.
 ```sh
 pnpm run check
 pnpm run doctor -- --cloud
-pnpm run apply -- toad-prod heat/env/production.yaml
+pnpm run apply -- toad-prod
 ```
+
+`apply` reads the selected context's production environment automatically.
+Existing legacy installations can keep their existing paths; the same command
+uses their legacy environment when no named context is selected. An explicit
+environment argument overrides that default, so use it only deliberately.
+For an existing stack, restore its original admin CA into the selected
+operator context before applying; missing CA files stop the update.
 
 `apply` performs the entire reconciliation:
 
@@ -238,7 +251,7 @@ In the Infomaniak DNS zone for `example.com`, create `NS` records named
 for DNS propagation and rerun the same apply command:
 
 ```sh
-pnpm run apply -- toad-prod heat/env/production.yaml
+pnpm run apply -- toad-prod
 ```
 
 ```mermaid
@@ -294,7 +307,7 @@ state with ad-hoc `docker service update` or manual cloud-console changes.
 The first apply creates an initial browser bundle under:
 
 ```text
-openstackV3/credentials/admin-pki/operator.p12
+openstackV3/contexts/toad-prod/credentials/admin-pki/operator.p12
 ```
 
 Import it into the operator's browser or operating-system certificate store

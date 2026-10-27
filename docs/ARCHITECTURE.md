@@ -1,25 +1,11 @@
 # See how TOAD fits together
 
-Follow the application from your editor to a public URL, then look beneath it
-at the cloud platform. These are two different workflows: shipping an app to
-an existing platform does not provision new cloud resources.
+First provision and verify your cloud platform. Then publish and deploy apps
+onto it. Platform provisioning and application releases are separate workflows.
 
-## From source to HTTPS
+![Cloud-first TOAD workflow: prepare an operator context, apply and verify the cloud, then publish and deploy applications](../website/journey.svg)
 
-![Application delivery: edit your source, publish an immutable image, validate the manifest, deploy through Swarm, and check HTTPS](../website/delivery.svg)
-
-1. **Create and edit.** Start with the frontend and Node API template. Run it
-   locally before paying for cloud resources.
-2. **Publish.** Build only the files declared in `build.yaml`, push to your
-   registry, and pin the returned image digest in Compose.
-3. **Validate.** Check the manifest, file allow-list, image digests, memory
-   limits, security settings, and rollback policy.
-4. **Deploy.** Swarm rolls out the desired service state. The update policy
-   requests rollback when a rollout fails its checks.
-5. **Diagnose.** Inspect running replicas, failed tasks, and public HTTPS
-   checks. A successful rollout still needs application-specific validation.
-
-[Try locally](QUICKSTART.md) · [Follow the complete first-app recipe](FIRST-APP.md)
+[Follow the cloud-first getting-started guide](QUICKSTART.md).
 
 ## Four tools, four jobs
 
@@ -38,6 +24,23 @@ The [production request-routing diagram](DEPLOYMENT.md#what-gets-deployed)
 shows public users, DNS, Octavia, the managers, Traefik, application stacks,
 and the separate mTLS requirement for admin interfaces. Public app routes need
 their own authentication when their data or actions require it.
+
+## From source to HTTPS
+
+![Application delivery: edit your source, publish an immutable image, validate the manifest, deploy through Swarm, and check HTTPS](../website/delivery.svg)
+
+1. **Create and edit.** Start with the frontend and Node API template. Run it
+   locally before paying for cloud resources.
+2. **Publish.** Build only the files declared in `build.yaml`, push to your
+   registry, and pin the returned image digest in Compose.
+3. **Validate.** Check the manifest, file allow-list, image digests, memory
+   limits, security settings, and rollback policy.
+4. **Deploy.** Swarm rolls out the desired service state. The update policy
+   requests rollback when a rollout fails its checks.
+5. **Diagnose.** Inspect running replicas, failed tasks, and public HTTPS
+   checks. A successful rollout still needs application-specific validation.
+
+[Optional local preview](LOCAL-STARTER.md) · [Follow the complete first-app recipe](FIRST-APP.md)
 
 ## Observe, update, recover
 

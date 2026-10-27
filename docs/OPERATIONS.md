@@ -36,7 +36,7 @@ Token rotation:
 
 1. Create a new token with `dns:read` and `dns:write`.
 2. Replace `openstackV3/credentials/infomaniak-dns-token` and keep mode `0600`.
-3. Run `pnpm run apply -- toad-prod heat/env/production.yaml`.
+3. Run `pnpm run apply -- toad-prod`.
 4. After verification, revoke the old token in Infomaniak Manager.
 
 For a DNS-only repair, run `pnpm run dns -- toad-prod`. `pnpm run verify --

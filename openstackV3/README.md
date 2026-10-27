@@ -5,7 +5,7 @@ OpenStack clients installed in a project-local Python virtual environment. It
 does not use Terraform and does not install global Python packages.
 
 For a first deployment, follow the guided
-[Infomaniak deployment checklist](SETUP.md). The CLI is organized around this
+[cloud-first getting-started guide](../docs/QUICKSTART.md). The CLI is organized around this
 safe loop:
 
 ```mermaid
@@ -21,11 +21,20 @@ flowchart LR
 
 ```sh
 pnpm install --frozen-lockfile
-cp heat/env/example.yaml heat/env/production.yaml
+pnpm run context -- create my-cloud --use
+# Add this cloud's credentials and configure the generated context files.
 pnpm run setup
 pnpm run doctor -- --cloud
 pnpm run discover
+pnpm run dns-token
+pnpm run check
+pnpm run apply -- my-cloud
+# First run: complete child DNS delegation, then rerun apply.
+pnpm run verify -- my-cloud --json
 ```
+
+Omit the optional environment argument to use the selected context's Heat file.
+After verification, follow [First app](../docs/FIRST-APP.md).
 
 The production environment file is intentionally ignored because it contains
 operator- and client-specific values such as the SSH source CIDR. Credentials,
@@ -35,12 +44,13 @@ the generated SSH key, and `inventory.yaml` are also ignored.
 
 | Command | Purpose |
 |---|---|
-| `pnpm run apply -- STACK ENV` | Create/update Heat, configure Swarm, deploy, verify |
+| `pnpm run apply -- STACK [ENV]` | Create/update Heat, configure Swarm, deploy, verify |
 | `pnpm run verify -- STACK --json` | Read-only machine-readable production checks |
 | `pnpm run doctor -- --json` | Diagnose local prerequisites without cloud access |
 | `pnpm run doctor -- --cloud` | Diagnose and authenticate to the project |
 | `pnpm run admin-pki -- issue NAME [DAYS]` | Issue an admin mTLS client identity |
-| `pnpm run app -- create NAME` | Scaffold a manifest-driven Swarm service |
+| `pnpm run app -- create NAME --template node-web` | Scaffold the frontend/API app on an existing platform |
+| `pnpm run app -- publish NAME --image REGISTRY/IMAGE:TAG` | Build allow-listed source, push, and pin the digest |
 | `pnpm run app -- deploy NAME` | Validate, deploy, show status, and check HTTPS |
 | `pnpm run app -- status NAME` | Show the application's current replicas |
 | `pnpm run app -- diagnose NAME --json` | Return structured health, checks, task failures, and hints |

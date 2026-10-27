@@ -25,8 +25,10 @@ The starter demo is a separate `toad-demo` app routed at `/starter/`.
 
 ## Diagrams
 
-The landing page and visual architecture guide use the original responsive
-`delivery{,-mobile}.svg` and `platform{,-mobile}.svg` illustrations. Their
+The landing page starts with the cloud-first `journey{,-mobile}.svg` overview.
+The visual architecture guide then separates `platform{,-mobile}.svg` from
+`delivery{,-mobile}.svg` for releases onto an existing platform. All have
+responsive layouts. Their
 structure follows the deployment and TOAD diagrams in the L’Heure des Comptes
 portfolio case study; the wording and colors are specific to this site.
 

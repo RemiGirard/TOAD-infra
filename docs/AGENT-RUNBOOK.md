@@ -65,7 +65,7 @@ Never improvise a second simultaneous manager outage.
 The complete reconcile path is:
 
 ```sh
-pnpm run apply -- toad-prod heat/env/production.yaml
+pnpm run apply -- toad-prod
 ```
 
 It may create or update billable cloud resources and DNS, so confirm the stack

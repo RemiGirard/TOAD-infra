@@ -138,6 +138,12 @@ export function issueClientCertificate(
   return paths;
 }
 
+export function assertAdminCaForApply(existingStack: boolean, fileExists = existsSync): void {
+  if (existingStack && (!fileExists(ADMIN_CA_KEY_PATH) || !fileExists(ADMIN_CA_CERT_PATH))) {
+    throw new Error('This stack already exists, but its admin CA is missing or incomplete. Restore the original operator PKI from escrow before apply. Replacing a trusted CA requires explicit authorization.');
+  }
+}
+
 export function ensureAdminPki(): ClientCertificatePaths {
   return issueClientCertificate(ADMIN_OPERATOR_NAME);
 }

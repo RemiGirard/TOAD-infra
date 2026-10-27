@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Production setup — TOAD</title><meta name="description" content="TOAD: Production setup. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/deployment.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Try locally</a><a href="/first-app.html">First app</a><a href="/architecture.html">Visual architecture</a><a href="/evaluation.html">Cloud evaluation</a><a href="/deployment.html" aria-current="page">Production setup</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / PRODUCTION SETUP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DEPLOYMENT.md">Markdown source ↗</a></div><h1 id="toad-infra">TOAD infra</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cloud setup — TOAD</title><meta name="description" content="TOAD: Cloud setup. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/deployment.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html" aria-current="page">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / CLOUD SETUP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/DEPLOYMENT.md">Markdown source ↗</a></div><h1 id="toad-infra">TOAD infra</h1>
 <p>TOAD deploys a small, production-shaped Docker Swarm platform on Infomaniak
 Public Cloud. It uses OpenStack Heat for cloud resources, Ansible for host
 configuration, Traefik for automatic HTTPS routing, and a TypeScript CLI for
@@ -6,6 +6,8 @@ the complete lifecycle. Terraform is intentionally not used.</p>
 <p>This guide follows the normal production path: three Swarm managers, an
 Octavia load balancer, delegated DNS, automatic certificates, monitoring, and
 mTLS-protected admin interfaces.</p>
+<p>For the shorter cloud-to-app journey, start with <a href="/quickstart.html">Get started</a>.
+This detailed guide uses an isolated context named <code>toad-prod</code>.</p>
 <blockquote>
 <p>All domain names in this documentation are placeholders. Replace
 <code>example.com</code> with a domain you control and <code>platform.example.com</code> with the
@@ -58,7 +60,8 @@ networks, floating IPs, and one Octavia load balancer;</li>
 <li>a dedicated project service user with a password;</li>
 <li>a domain hosted in Infomaniak DNS;</li>
 <li>an Infomaniak API token limited to <code>dns:read</code> and <code>dns:write</code>;</li>
-<li>Node.js 22, pnpm, Python 3 with <code>venv</code>, OpenSSH, and Docker;</li>
+<li>Node.js 22, pnpm, Python 3 with <code>venv</code>, OpenSSH, OpenSSL 3 with its legacy
+provider for browser certificate bundles, and Docker;</li>
 <li><code>age</code> and <code>age-keygen</code> when using encrypted secrets or backups.</li>
 </ul>
 <p>Do not use a personal Infomaniak password. Heat creates a Keystone trust, so
@@ -121,6 +124,8 @@ cd TOAD-infra/openstackV3
 pnpm install --frozen-lockfile
 pnpm run check
 pnpm run doctor -- --json
+pnpm run context -- create toad-prod --use
+pnpm run context -- current --json
 </code></pre>
 <p>The doctor reports missing prerequisites without printing credential contents.
 Resolve failures before continuing. A missing host <code>age</code> binary is acceptable
@@ -130,11 +135,11 @@ only if all secret and backup operations will run through the operator image.</p
 to this deployment, and give it the project roles required for Compute,
 Network, Orchestration, Load Balancing, and DNS.</p>
 <p>Download its <code>clouds.yaml</code> and save it as:</p>
-<pre><code class="language-text">openstackV3/credentials/clouds.yaml
+<pre><code class="language-text">openstackV3/contexts/toad-prod/credentials/clouds.yaml
 </code></pre>
 <p>Do not commit the <code>credentials/</code> directory. If <code>clouds.yaml</code> does not contain
 the password, <code>pnpm run setup</code> asks for it without echoing and stores it in the
-ignored <code>credentials/password</code> file with mode <code>0600</code>.</p>
+ignored context <code>credentials/password</code> file with mode <code>0600</code>.</p>
 <p>Initialize the project-local OpenStack CLI and SSH key:</p>
 <pre><code class="language-sh">pnpm run setup
 pnpm run doctor -- --cloud
@@ -144,10 +149,10 @@ pnpm run discover
 availability zones, and quota. Use an image UUID, not a mutable image name.</p>
 <h2 id="3-configure-the-deployment">3. Configure the deployment</h2>
 <p>From <code>openstackV3</code>:</p>
-<pre><code class="language-sh">cp heat/env/example.yaml heat/env/production.yaml
-cp ../router/config.example.yaml ../router/config.yaml
+<pre><code class="language-sh">pnpm run context -- current --json
+# The context command has already created the Heat and router templates.
 </code></pre>
-<p>Edit <code>heat/env/production.yaml</code>:</p>
+<p>Edit <code>contexts/toad-prod/heat/production.yaml</code>:</p>
 <pre><code class="language-yaml">parameters:
   flavor: &quot;YOUR_FLAVOR&quot;
   image: &quot;YOUR_IMMUTABLE_IMAGE_UUID&quot;
@@ -163,7 +168,7 @@ cp ../router/config.example.yaml ../router/config.yaml
 <p>The <code>apply</code> command replaces the documentation SSH CIDR with the operator
 workstation&#39;s current public IPv4 <code>/32</code>. It never intentionally opens SSH to
 <code>0.0.0.0/0</code>.</p>
-<p>Edit <code>router/config.yaml</code>:</p>
+<p>Edit <code>contexts/toad-prod/router/config.yaml</code>:</p>
 <pre><code class="language-yaml">letsencrypt_email: admin@example.com
 traefik_log_level: INFO
 base_domain: platform.example.com
@@ -194,8 +199,14 @@ it as a versioned Docker secret, never as a Compose label or environment file.</
 <h2 id="5-deploy">5. Deploy</h2>
 <pre><code class="language-sh">pnpm run check
 pnpm run doctor -- --cloud
-pnpm run apply -- toad-prod heat/env/production.yaml
+pnpm run apply -- toad-prod
 </code></pre>
+<p><code>apply</code> reads the selected context&#39;s production environment automatically.
+Existing legacy installations can keep their existing paths; the same command
+uses their legacy environment when no named context is selected. An explicit
+environment argument overrides that default, so use it only deliberately.
+For an existing stack, restore its original admin CA into the selected
+operator context before applying; missing CA files stop the update.</p>
 <p><code>apply</code> performs the entire reconciliation:</p>
 <ol>
 <li>validates the Heat template and local inputs;</li>
@@ -217,7 +228,7 @@ delegated. This does not require rebuilding anything.</p>
 <p>In the Infomaniak DNS zone for <code>example.com</code>, create <code>NS</code> records named
 <code>platform</code> using the authoritative nameservers shown by Designate. Then wait
 for DNS propagation and rerun the same apply command:</p>
-<pre><code class="language-sh">pnpm run apply -- toad-prod heat/env/production.yaml
+<pre><code class="language-sh">pnpm run apply -- toad-prod
 </code></pre>
 <figure class="doc-diagram diagram-desktop-1300 diagram-mobile-0"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture><source media="(max-width:760px)" srcset="/diagram-deployment-4-mobile.svg"><img src="/diagram-deployment-4.svg" alt="First apply, one-time child DNS delegation, and subsequent declarative apply runs" loading="lazy"></picture></div><p class="diagram-hint">Scroll sideways to explore the diagram.</p><figcaption><span>First apply, one-time child DNS delegation, and subsequent declarative apply runs.</span><a href="/diagram-deployment-4.svg">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>flowchart LR
     first[&quot;First apply&quot;] --&gt; zone[&quot;Designate zone exists&quot;]
@@ -307,7 +318,7 @@ diagnostic so the repository remains the source of truth:</p>
 state with ad-hoc <code>docker service update</code> or manual cloud-console changes.</p>
 <h2 id="8-import-the-admin-certificate">8. Import the admin certificate</h2>
 <p>The first apply creates an initial browser bundle under:</p>
-<pre><code class="language-text">openstackV3/credentials/admin-pki/operator.p12
+<pre><code class="language-text">openstackV3/contexts/toad-prod/credentials/admin-pki/operator.p12
 </code></pre>
 <p>Import it into the operator&#39;s browser or operating-system certificate store
 using the password stored beside it. These files are private operator state;

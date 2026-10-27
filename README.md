@@ -9,47 +9,57 @@ diagnosis, updates, and recovery. Its JSON diagnostics work well with an AI
 coding assistant; manifests keep deployment reproducible and reviewable.
 
 [Project site](https://toad.remigirard.dev) ·
-[Try it locally](docs/QUICKSTART.md) · [Deploy your first app](docs/FIRST-APP.md) ·
-[Provision production](docs/DEPLOYMENT.md)
+[Get started](docs/QUICKSTART.md) · [Cloud setup details](docs/DEPLOYMENT.md) ·
+[Deploy an app](docs/FIRST-APP.md)
 
-## Start with your app
+## 1. Provision your cloud platform
 
-Try the frontend + Node API starter without a cloud account or Docker:
+Start with [Get started](docs/QUICKSTART.md). Create an isolated operator
+context, add your Infomaniak credentials, choose resources, configure domains,
+and store the restricted DNS token. Then, from `openstackV3`:
 
 ~~~sh
-git clone https://github.com/RemiGirard/TOAD-infra.git
-cd TOAD-infra
-HOST=127.0.0.1 node examples/node-web/server.mjs
-# Open http://127.0.0.1:3000
+pnpm run context -- current --json
+pnpm run check
+pnpm run doctor -- --cloud
+pnpm run apply -- my-cloud
+# On first deployment, complete the documented child DNS delegation and rerun apply.
+pnpm run verify -- my-cloud --json
 ~~~
 
-When a TOAD platform is available, scaffold and publish your own copy:
+`apply` provisions and configures the cloud, Docker Swarm, HTTPS, and
+monitoring. It uses the selected context's environment by default. It creates
+billable resources and updates the configured parent apex/wildcard DNS.
+Review [costs](docs/COSTS.md) and [DNS ownership](docs/DEPLOYMENT.md) first.
+
+## 2. Publish and deploy your app
+
+After platform verification passes, authenticate Docker to your registry,
+create an app, and customize its source:
 
 ~~~sh
-cd openstackV3
-pnpm install --frozen-lockfile
-pnpm run doctor -- --json
 pnpm run app -- create my-app --template node-web
-# Authenticate Docker to your registry using its credential manager.
 pnpm run app -- publish my-app --image ghcr.io/YOUR-OWNER/my-app:v1
+pnpm run check
 pnpm run app -- validate my-app
 pnpm run app -- deploy my-app
 pnpm run app -- diagnose my-app --json
 ~~~
 
-Publishing builds only the source files declared in build.yaml, pushes the
-image, and pins the returned SHA-256 digest in Compose. It does not deploy.
-See the [complete recipe](docs/FIRST-APP.md) for registry access, secrets,
-updates, rollback, and CI.
+Publishing builds only allow-listed source and pins the returned image digest
+in Compose. Deploying runs the app on your existing platform. Repeat this app
+workflow for updates; use `apply` for platform changes. See the
+[complete app recipe](docs/FIRST-APP.md) for registry access, secrets, and rollback.
 
 ## Choose your starting point
 
 | You want to… | Start here | Requirements |
 |---|---|---|
-| Try the example on your machine | [Local quickstart](docs/QUICKSTART.md) | Node.js 22; no cloud spend |
-| Ship an app to an existing platform | [First app](docs/FIRST-APP.md) | Docker, registry and operator access |
-| Explore one cloud manager | [Evaluation](docs/EVALUATION.md) | Infomaniak account; billable resources |
-| Run the maintained production topology | [Deployment](docs/DEPLOYMENT.md) | Three managers, load balancer and domain |
+| Create a cloud platform and ship your first app | [Get started](docs/QUICKSTART.md) | Infomaniak project, domain and operator tooling |
+| Ship an app to an existing verified platform | [First app](docs/FIRST-APP.md) | Docker, registry and operator access |
+| Understand the architecture | [Visual guide](docs/ARCHITECTURE.md) | No account required |
+| Preview the example frontend and API locally | [Optional local starter](docs/LOCAL-STARTER.md) | Node.js 22; no cloud spend |
+| Explore a one-VM Heat profile | [Evaluation](docs/EVALUATION.md) | Billable resources; not the complete platform |
 
 ## What TOAD handles
 
