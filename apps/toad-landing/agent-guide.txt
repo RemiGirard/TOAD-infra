@@ -1,6 +1,8 @@
 TOAD: infrastructure and application delivery for humans and coding agents.
 Source and operating contract: https://github.com/RemiGirard/TOAD-infra
 Start from your app repository: https://toad.remigirard.dev/agent-prompt.txt
+Read-only health check: https://toad.remigirard.dev/agent-health-prompt.txt
+Read-only release investigation: https://toad.remigirard.dev/agent-debug-prompt.txt
 Canonical workflow: https://toad.remigirard.dev/agents.html
 Observability and private visual view: https://toad.remigirard.dev/observability.html
 Cloud-first setup: https://toad.remigirard.dev/quickstart.html

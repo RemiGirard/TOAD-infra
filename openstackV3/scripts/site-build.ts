@@ -91,14 +91,17 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt'];
+  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {
-    const html = readFileSync(join(source, asset), 'utf8');
-    const slot = '<!-- TOAD_AGENT_PROMPT -->';
-    if (html.split(slot).length !== 2) throw new Error('The homepage must contain exactly one starter-prompt slot.');
-    writeFileSync(join(output, asset), html.replace(slot, () => escape(readFileSync(join(source, 'agent-prompt.txt'), 'utf8').trim())));
+    let html = readFileSync(join(source, asset), 'utf8');
+    for (const [marker, file] of [['TOAD_AGENT_PROMPT', 'agent-prompt.txt'], ['TOAD_HEALTH_PROMPT', 'agent-health-prompt.txt'], ['TOAD_DEBUG_PROMPT', 'agent-debug-prompt.txt']] as const) {
+      const slot = `<!-- ${marker} -->`;
+      if (html.split(slot).length !== 2) throw new Error(`The homepage must contain exactly one ${marker} slot.`);
+      html = html.replace(slot, () => escape(readFileSync(join(source, file), 'utf8').trim()));
+    }
+    writeFileSync(join(output, asset), html);
   } else copyFileSync(join(source, asset), join(output, asset));
 }
 writeFileSync(join(output, 'robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://toad.remigirard.dev/sitemap.xml\n');

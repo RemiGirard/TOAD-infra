@@ -19,6 +19,21 @@ new Infomaniak platform. You do not need to invent app or context names before
 starting the conversation. Keep application source in your existing repository;
 the [first-app guide](FIRST-APP.md) covers adding TOAD metadata there.
 
+## Give your agent a concrete job
+
+Use the agent's terminal and file access to your local TOAD checkout and
+operator context. Keep credentials in that environment. The same CLI and
+private operation view provide evidence for you and your assistant.
+
+| Your goal | Copyable prompt | Expected result |
+|---|---|---|
+| Put the app online | [Deployment](../website/agent-prompt.txt) | Inspect the app, review setup and costs, then verify the approved deployment. |
+| Check an existing deployment | [Health check](../website/agent-health-prompt.txt) | A read-only report on images, replicas, HTTPS and evidence freshness. |
+| Understand a failed release | [Debugging](../website/agent-debug-prompt.txt) | Read-only investigation, supporting evidence and a proposed fix for review. |
+
+The health and debugging prompts do not authorize production changes. A
+passing endpoint or recovered old image does not prove a new release shipped.
+
 ## Discover commands and make the target explicit
 
 ```sh

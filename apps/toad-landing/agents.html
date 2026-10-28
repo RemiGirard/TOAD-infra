@@ -14,6 +14,36 @@ setup where available, and explain the requirements and costs if you need a
 new Infomaniak platform. You do not need to invent app or context names before
 starting the conversation. Keep application source in your existing repository;
 the <a href="/first-app.html">first-app guide</a> covers adding TOAD metadata there.</p>
+<h2 id="give-your-agent-a-concrete-job">Give your agent a concrete job</h2>
+<p>Use the agent&#39;s terminal and file access to your local TOAD checkout and
+operator context. Keep credentials in that environment. The same CLI and
+private operation view provide evidence for you and your assistant.</p>
+<table>
+<thead>
+<tr>
+<th>Your goal</th>
+<th>Copyable prompt</th>
+<th>Expected result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Put the app online</td>
+<td><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/website/agent-prompt.txt">Deployment</a></td>
+<td>Inspect the app, review setup and costs, then verify the approved deployment.</td>
+</tr>
+<tr>
+<td>Check an existing deployment</td>
+<td><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/website/agent-health-prompt.txt">Health check</a></td>
+<td>A read-only report on images, replicas, HTTPS and evidence freshness.</td>
+</tr>
+<tr>
+<td>Understand a failed release</td>
+<td><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/website/agent-debug-prompt.txt">Debugging</a></td>
+<td>Read-only investigation, supporting evidence and a proposed fix for review.</td>
+</tr>
+</tbody></table>
+<p>The health and debugging prompts do not authorize production changes. A
+passing endpoint or recovered old image does not prove a new release shipped.</p>
 <h2 id="discover-commands-and-make-the-target-explicit">Discover commands and make the target explicit</h2>
 <pre><code class="language-sh">pnpm run capabilities -- --json
 pnpm run doctor -- --for app-deploy --context my-cloud --json

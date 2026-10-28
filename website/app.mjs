@@ -128,3 +128,24 @@ if (duet) {
   duet.querySelector('[data-copy-command]').addEventListener('click', () => copy(beats[current].command, 'Command copied.'));
   show(0);
 }
+
+document.querySelector('[data-review-deploy-prompt]')?.addEventListener('click', () => {
+  document.querySelector('[data-agent-prompt]').closest('details').open = true;
+});
+
+for (const button of document.querySelectorAll('[data-copy-agent-task]')) {
+  button.addEventListener('click', async () => {
+    document.dispatchEvent(new CustomEvent('toad:playback', { detail: 'copy-task' }));
+    const prompt = document.getElementById(button.dataset.copyAgentTask);
+    const feedback = button.closest('.agent-task').querySelector('.agent-task-feedback');
+    for (const status of document.querySelectorAll('.agent-task-feedback')) status.textContent = '';
+    try {
+      await navigator.clipboard.writeText(prompt.textContent.trim());
+      feedback.textContent = 'Full TOAD-infra prompt copied.';
+    } catch {
+      prompt.closest('details').open = true;
+      prompt.focus();
+      feedback.textContent = 'Select the full prompt now shown to copy it.';
+    }
+  });
+}

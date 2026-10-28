@@ -67,6 +67,11 @@ costs before making changes. No app or context placeholders need filling in.
 Expand **Read the full prompt** to review exactly what will be copied.
 The canonical text lives in `agent-prompt.txt`; the build escapes and embeds it
 in the homepage and publishes the same plain-text file for direct use.
+The agent section also offers health-check and failed-release investigation
+prompts, backed by `agent-health-prompt.txt` and `agent-debug-prompt.txt`.
+Their full text is reviewable. Copying uses the embedded text and makes no
+network request.
+These two prompts are read-only; they do not authorize deployment or recovery.
 Commands use
 the repository's `./toad` launcher after workstation, context and app setup.
 `node toad.mjs` remains equivalent on platforms without executable symlinks.
@@ -89,3 +94,17 @@ starting another player pauses the current one. Reduced-motion preferences
 remove decorative animations while preserving the steps and controls. These
 stories use illustrative data only; the separate recorded walkthrough keeps
 its original evidence and dates.
+
+## Agent content references
+
+Reviewed 28 October 2026. The copy is original; these official pages informed
+the organization of the content:
+
+- [Render for Agents](https://render.com/agents) and
+  [coding-agent docs](https://render.com/docs/llm-support): a short starting
+  request, followed by deployment, debugging and health-check examples.
+- [Railway for Agents](https://docs.railway.com/agents): explain how the agent
+  gets platform access and distinguish the available interfaces. TOAD's
+  current examples use its local CLI and operator context.
+- [Vercel Agent Resources](https://vercel.com/docs/agent-resources): provide
+  task workflows and direct machine-readable context alongside human docs.

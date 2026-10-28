@@ -2,6 +2,35 @@
 .agent-section>p:not(.eyebrow) { max-width: 760px; font-size: 14px; color: #627257; }
 .agent-evidence-guide { border-bottom: 1px solid #c8d3bb; padding: 22px 0; margin-bottom: 22px; }
 .agent-evidence-guide summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #4b633e; }
+.agent-onboarding { margin-top: 32px; scroll-margin-top: 32px; }
+.agent-start-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 0; margin: 0 0 28px; list-style: none; }
+.agent-start-steps li { display: flex; gap: 12px; border-top: 1px solid #bdcbb0; padding-top: 16px; }
+.agent-start-steps li>span { color: #526c3d; font: 11px/1.8 ui-monospace, monospace; }
+.agent-start-steps h3 { font-size: 15px; margin: 0 0 7px; }
+.agent-start-steps p { color: #5b6f4f; font-size: 12px; line-height: 1.7; margin: 0; max-width: 270px; }
+.agent-task-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.agent-task { border: 1px solid #bdcbb0; border-radius: 10px; background: #f9faf1; padding: 24px 22px 14px; min-width: 0; display: flex; flex-direction: column; }
+.agent-task-label { color: #5e744d; font: 9px/1.6 ui-monospace, monospace; letter-spacing: .8px; }
+.agent-task h3 { font-size: 21px; line-height: 1.3; letter-spacing: -.7px; margin: 13px 0 0; }
+.agent-task blockquote { font-size: 15px; line-height: 1.65; color: #354d31; margin: 16px 0; min-height: 100px; }
+.agent-task>p { font-size: 12px; line-height: 1.7; color: #5b6f4f; margin: 0 0 18px; }
+.agent-task-details { margin: auto 0 14px; font-size: 11px; color: #435e37; }
+.agent-task-details summary { cursor: pointer; }
+.agent-task-details pre { max-height: 230px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 0; padding: 13px; border: 1px solid #bdcbb0; border-radius: 5px; background: #edf2e2; color: #2f492c; font: 11px/1.8 ui-monospace, monospace; }
+.agent-task-details pre:focus-visible { outline: 3px solid #6a8d30; outline-offset: 3px; }
+.agent-task-actions button { width: 100%; border: 1px solid #314f30; border-radius: 5px; background: #2d492e; color: #f2f6e6; padding: 12px 10px; min-height: 44px; font: 600 12px/1.5 system-ui, sans-serif; }
+.agent-task-actions button:hover { background: #416236; }
+.agent-task-feedback { display: block; min-height: 20px; margin-top: 9px; color: #47633b; font-size: 10px; line-height: 1.6; }
+.agent-access { color: #5b6f4f; font-size: 12px; line-height: 1.8; max-width: 850px; margin: 20px 0 38px; }
+.agent-access a { white-space: nowrap; }
+@media(max-width:760px) {
+  .agent-start-steps { grid-template-columns: 1fr; gap: 14px; }
+  .agent-start-steps li { padding-top: 13px; }
+  .agent-start-steps p { max-width: none; }
+  .agent-task-grid { grid-template-columns: 1fr; gap: 14px; }
+  .agent-task { padding: 22px 20px 12px; }
+  .agent-task blockquote { min-height: 0; }
+}
 .agent-session {
   margin-top: 32px;
   border: 1px solid #b7c5a6;

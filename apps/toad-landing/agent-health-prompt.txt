@@ -1,0 +1,8 @@
+Check the health of this app on my existing TOAD-infra platform:
+https://github.com/RemiGirard/TOAD-infra
+
+Read TOAD's AGENTS.md, README.md, SECURITY.md and docs/AGENT-RUNBOOK.md. Inspect this repository's TOAD metadata and existing operator setup. Identify the app and context; ask me if the target is ambiguous. If setup is missing, explain what is needed instead of creating a new platform.
+
+Use read-only TOAD diagnostics and a fresh observation. Report the intended and running image match, ready replicas, HTTPS checks, manager quorum and available monitoring evidence. Include the observation time and explain any failed, missing or expired checks in plain language. A healthy old release does not prove the requested release shipped.
+
+Keep credentials and raw service logs in the local operator environment. Do not edit application source, manifests or operator configuration; do not build or publish images, deploy, restart, roll back or change infrastructure. Explain the evidence and recommend the smallest next step for review.
