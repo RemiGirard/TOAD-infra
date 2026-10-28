@@ -2,6 +2,7 @@ version: 1
 port: 3000
 files:
   - Dockerfile
+  - LICENSE
   - server.mjs
   - public/index.html
   - public/style.css

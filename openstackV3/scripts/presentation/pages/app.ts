@@ -170,7 +170,7 @@ networks:
     writeFileSync(join(directory, 'build.yaml'), stringifyYaml({
       version: 1,
       port: 3000,
-      files: ['Dockerfile', 'server.mjs', 'public/index.html', 'public/style.css', 'public/app.mjs'],
+      files: ['Dockerfile', 'LICENSE', 'server.mjs', 'public/index.html', 'public/style.css', 'public/app.mjs'],
     }), { mode: 0o640 });
   }
   if (!quiet) {

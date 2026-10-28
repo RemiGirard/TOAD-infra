@@ -19,6 +19,6 @@
 - [ ] Add a guarded web/Tauri operator UI powered by the JSON CLI
 - [ ] Add optional step-ca enrollment and revocation for larger admin teams
 - [ ] Design Kubernetes as a separate provider after the Swarm path is stable
-- [x] License the project under GNU AGPL-3.0-or-later
+- [x] License the current project under MIT (previously AGPL-3.0-or-later)
 - [x] Add Conventional Commit validation and automated SemVer release pull requests
 - [x] Add isolated client contexts and per-context mutation locking

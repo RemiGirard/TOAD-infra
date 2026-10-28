@@ -149,7 +149,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-a85d8e69fd00669c
+    name: toad-web-0-e8dac4fd1b125191
     file: ./index.html
   asset-1:
     name: toad-web-1-ad4df2bf1f7df745
@@ -254,55 +254,55 @@ configs:
     name: toad-web-34-785a55dfbcd81bf6
     file: ./diagram-recovery-2.svg
   asset-35:
-    name: toad-web-35-cd3936d4cce49646
+    name: toad-web-35-99d3fb1ebe71fa15
     file: ./quickstart.html
   asset-36:
-    name: toad-web-36-567f41a4cfea4498
+    name: toad-web-36-31a8aa596485648e
     file: ./deployment.html
   asset-37:
-    name: toad-web-37-4a62b18ac228e6a9
+    name: toad-web-37-234c0cecac2b52bd
     file: ./first-app.html
   asset-38:
-    name: toad-web-38-1b0c035edad1d9f5
+    name: toad-web-38-6e96e35a1ca14912
     file: ./observability.html
   asset-39:
-    name: toad-web-39-801e915fb69a96df
+    name: toad-web-39-28d4fbe5a91a64c6
     file: ./architecture.html
   asset-40:
-    name: toad-web-40-066d5450e6039fff
+    name: toad-web-40-1eef97ec815bf860
     file: ./local-starter.html
   asset-41:
-    name: toad-web-41-590ccfafa305d1aa
+    name: toad-web-41-80e77bbc08a2907b
     file: ./evaluation.html
   asset-42:
-    name: toad-web-42-7891291a6d5672dd
+    name: toad-web-42-90d0d97f08775836
     file: ./costs.html
   asset-43:
-    name: toad-web-43-ce0bc23b8f51ee3e
+    name: toad-web-43-5c1ab12e897f9498
     file: ./operations.html
   asset-44:
-    name: toad-web-44-4c11f1a6e74a7b68
+    name: toad-web-44-1c9288e3147c0893
     file: ./recovery.html
   asset-45:
-    name: toad-web-45-c80a56653086fc4b
+    name: toad-web-45-6fd57c4cc5953a79
     file: ./launch.html
   asset-46:
-    name: toad-web-46-65e5bd02952d3da4
+    name: toad-web-46-3078e2acc5d27575
     file: ./backups.html
   asset-47:
-    name: toad-web-47-5034937bf0578544
+    name: toad-web-47-a32798105a587b2d
     file: ./drill-plan.html
   asset-48:
-    name: toad-web-48-da162880b695052d
+    name: toad-web-48-749692fbe464f6c4
     file: ./agents.html
   asset-49:
-    name: toad-web-49-490fc7dc00e8ab22
+    name: toad-web-49-2ccdd3df4bb6ebac
     file: ./storage.html
   asset-50:
-    name: toad-web-50-38ed0b1eade12ea6
+    name: toad-web-50-5e6aeb0e5f012acc
     file: ./security.html
   asset-51:
-    name: toad-web-51-8064ec0ac01de79a
+    name: toad-web-51-e6b9a536701c2985
     file: ./license.html
   asset-52:
     name: toad-web-52-72e05da304522bb6

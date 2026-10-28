@@ -5,9 +5,16 @@ contracts in Compose plus `toad.yaml`, and operator behavior in TypeScript.
 Avoid adding a second source of truth or committing generated credentials,
 inventories, environment files, backups, or browser certificates.
 
-By submitting a contribution, you certify that you have the right to provide
-it and agree that it is licensed under the project's
-GNU AGPL-3.0-or-later license. No additional contributor agreement is required.
+By submitting a contribution intended for inclusion in TOAD, you certify that
+you have the right to provide it under the project's [MIT license](LICENSE)
+and agree to those terms. You retain your copyright; no copyright assignment
+or additional contributor agreement is required.
+
+Identify third-party material and its license in your pull request, preserve
+its copyright and permission notices, and confirm that its terms allow the
+proposed use and distribution. Do not assume that publicly available code can
+be relicensed. See [licensing scope](LICENSING.md) for earlier revisions and
+separately licensed components.
 
 Before opening a pull request:
 

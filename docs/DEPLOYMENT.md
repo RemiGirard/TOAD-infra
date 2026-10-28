@@ -453,8 +453,8 @@ remain. Review the exact stack resources before deletion.
 
 ## License
 
-TOAD is free software under the
-[GNU Affero General Public License, version 3 or later](../LICENSE)
-(`AGPL-3.0-or-later`). You may use, study, modify, and redistribute it under
-those terms. Modified versions offered as network services must provide their
-corresponding source as required by AGPL section 13.
+TOAD is available under the [MIT license](../LICENSE) (`MIT`), including for
+commercial and proprietary reuse. Preserve the copyright and permission notice
+in copies or substantial portions of the software. See
+[licensing scope](../LICENSING.md) for earlier revisions and separately
+licensed components.

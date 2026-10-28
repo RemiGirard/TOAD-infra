@@ -3,7 +3,7 @@ FROM node:22-trixie-slim@sha256:7b8a0c89c54499bee567618f96578e1a12a800f062fbdbfd
 LABEL org.opencontainers.image.title="TOAD infra" \
       org.opencontainers.image.description="Open infrastructure automation for Infomaniak Public Cloud and Docker Swarm" \
       org.opencontainers.image.source="https://github.com/RemiGirard/TOAD-infra" \
-      org.opencontainers.image.licenses="AGPL-3.0-or-later"
+      org.opencontainers.image.licenses="MIT"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TOAD_STATE_DIR=/state

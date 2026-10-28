@@ -1,5 +1,7 @@
 FROM node:22-trixie-slim@sha256:7b8a0c89c54499bee567618f96578e1a12a800f062fbdbfd1fb6a443fa6f6284
+LABEL org.opencontainers.image.licenses="MIT"
 WORKDIR /app
+COPY --chown=node:node LICENSE ./LICENSE
 COPY --chown=node:node server.mjs ./server.mjs
 COPY --chown=node:node public ./public
 USER node

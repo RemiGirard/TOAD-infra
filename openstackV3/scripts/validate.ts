@@ -52,8 +52,8 @@ function read(relativePath: string): string {
 }
 
 const packageMetadata = JSON.parse(read('package.json')) as { license?: string; version?: string };
-if (packageMetadata.license !== 'AGPL-3.0-or-later') {
-  throw new Error('package.json must declare the AGPL-3.0-or-later SPDX license identifier.');
+if (packageMetadata.license !== 'MIT') {
+  throw new Error('package.json must declare the MIT SPDX license identifier.');
 }
 
 const releaseVersion = read('../version.txt').trim();
@@ -79,8 +79,8 @@ if (existsSync(releaseAutomationPath)) {
 }
 
 const license = read('../LICENSE');
-for (const required of ['GNU AFFERO GENERAL PUBLIC LICENSE', 'Version 3, 19 November 2007', 'END OF TERMS AND CONDITIONS']) {
-  if (!license.includes(required)) throw new Error(`LICENSE is missing canonical AGPLv3 text: ${required}`);
+for (const required of ['MIT License', 'Permission is hereby granted, free of charge', 'The above copyright notice and this permission notice', 'THE SOFTWARE IS PROVIDED "AS IS"']) {
+  if (!license.includes(required)) throw new Error(`LICENSE is missing canonical MIT text: ${required}`);
 }
 
 for (const file of availableYamlFiles) {

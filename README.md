@@ -93,7 +93,7 @@ Designate, Traefik, Prometheus, Grafana, Alertmanager, Loki, and Alloy.
 
 ## Costs and expectations
 
-TOAD is AGPL-3.0-or-later software. You pay cloud and registry providers directly.
+TOAD is MIT-licensed software. You pay cloud and registry providers directly.
 The [cost worksheet](docs/COSTS.md) separates evaluation and production
 resources, includes dated estimates, and links to current provider prices.
 
@@ -125,4 +125,7 @@ recovery drill is still pending; it is not presented as completed.
 | website/ | Public project site and documentation build |
 | docs/ | Deployment, app delivery, operations, and recovery |
 
-TOAD is licensed under [GNU AGPL version 3 or later](LICENSE).
+TOAD is licensed under the [MIT license](LICENSE), allowing commercial and
+proprietary reuse while requiring preservation of its copyright and permission
+notice. See [licensing scope](LICENSING.md) for earlier revisions and
+separately licensed components.
