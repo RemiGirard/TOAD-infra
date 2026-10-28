@@ -2,8 +2,9 @@
 
 Source lives here; documentation comes from the explicit list in
 `openstackV3/scripts/site-build.ts`. No operator configuration or credentials
-are read by the build. Only reviewed, tracked Markdown is rendered. Raw HTML
-is escaped, and the deployed site has a restrictive Content Security Policy.
+are read by the build. Only reviewed, tracked Markdown and explicitly named
+teaching fragments are rendered. Other raw Markdown HTML is escaped, and the
+deployed site has a restrictive Content Security Policy.
 
 ```sh
 cd openstackV3
@@ -24,6 +25,16 @@ through the intended existing operator context using the normal app lifecycle.
 The starter demo is a separate `toad-demo` app routed at `/starter/`.
 
 ## Diagrams
+
+The quickstart and complete Infomaniak example embed the reviewed HTML teaching
+diagrams in `lessons/` using exact `TOAD_LESSON` comments. The build accepts
+only the named fragments in those two documents; all other raw Markdown HTML
+remains escaped. `lessons.css` lays them out for desktop and mobile, and
+`lessons.mjs` lets readers follow a browser request through DNS, HTTPS and the
+app. Playback starts on request and pauses when the page is hidden. Nothing
+connects to a cloud. Without JavaScript, the complete route and inline diagrams
+remain visible. Keep the Markdown's surrounding explanations useful on GitHub,
+where the visual comments do not render.
 
 The homepage's `learn.css` / `learn.mjs` teaching map introduces domains,
 DNS, cloud servers, load balancing, TLS, containers and persistent data before

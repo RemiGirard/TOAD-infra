@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Infomaniak example — TOAD</title><meta name="description" content="TOAD: Infomaniak example. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/infomaniak.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html" aria-current="page">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / INFOMANIAK EXAMPLE</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/INFOMANIAK-EXAMPLE.md">Markdown source ↗</a></div><h1 id="a-complete-infomaniak-example-from-account-to-monitored-app">A complete Infomaniak example: from account to monitored app</h1>
-<p>We will put a small app named <strong>hello</strong> at <strong><a href="https://hello.platform.example.com">https://hello.platform.example.com</a></strong>.
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Infomaniak example — TOAD</title><meta name="description" content="TOAD: Infomaniak example. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/infomaniak.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"><link rel="stylesheet" href="/lessons.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html" aria-current="page">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / INFOMANIAK EXAMPLE</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/INFOMANIAK-EXAMPLE.md">Markdown source ↗</a></div><h1 id="a-complete-infomaniak-example-from-account-to-monitored-app">A complete Infomaniak example: from account to monitored app</h1>
+<p>We will put a small app named <strong>my-app</strong> at <strong><code>https://my-app.platform.example.com</code></strong>.
 You will see where its name, IP addresses, servers, HTTPS and running copies
 come from, then open the same monitoring interface shown on TOAD&#39;s site.</p>
 <p>This recipe follows <strong>TOAD&#39;s current complete three-manager workflow</strong>.
@@ -11,7 +11,35 @@ expecting it to create one server.</p>
 <code>example.com</code>, <code>198.51.100.0/24</code>, <code>203.0.113.0/24</code> and <code>2001:db8::/32</code> are
 documentation values, not deployed resources. Commands run in <code>openstackV3</code>.</p>
 <h2 id="1-decide-what-you-are-building">1. Decide what you are building</h2>
-<p><span class="illustration"><picture><source media="(max-width:760px)" srcset="/app-map-mobile.svg" width="360" height="1100"><img src="/app-map.svg" width="1120" height="470" alt="DNS returns the public entry address; HTTPS passes through Octavia to Traefik and the hello app. Stored data is a separate choice." loading="lazy"></picture></span></p>
+<section class="lesson visit-lesson" data-visit aria-label="Follow a visit to your app">
+  <div class="lesson-top"><span class="lesson-label">THE RESULT YOU ARE BUILDING</span><span class="lesson-example">Interactive example · no cloud access</span></div>
+  <div class="lesson-address"><span>https://</span><strong>my-app.platform.example.com</strong><span>/</span></div>
+  <p class="lesson-intro">A link is a name. Your app runs on a computer. Here is how the browser gets from one to the other.</p>
+  <div class="visit-lookup">
+    <div class="visit-card" data-visit-part="browser"><span class="lesson-label">ON YOUR VISITOR’S DEVICE</span><strong>The browser</strong><span>Opens the app’s name</span></div>
+    <div class="visit-lookup-arrow"><span>asks for an address</span><b aria-hidden="true">⇄</b><span>receives the IP</span></div>
+    <div class="visit-card" data-visit-part="dns"><span class="lesson-label">DNS · THE NAME LOOKUP</span><strong>Name → IP address</strong><code>198.51.100.30</code></div>
+  </div>
+  <p class="visit-connection"><span aria-hidden="true">↓</span> The browser connects to this IP over HTTPS, on port 443</p>
+  <div class="visit-cloud"><span class="lesson-label">IN YOUR INFOMANIAK PROJECT · THE CURRENT TOAD PLATFORM</span>
+    <div class="visit-route">
+      <div class="visit-card" data-visit-part="entry"><span class="lesson-number">01</span><strong>Public entrance</strong><span>Octavia forwards the encrypted connection</span><code>198.51.100.30</code></div>
+      <span class="visit-route-arrow" aria-hidden="true">→</span>
+      <div class="visit-card" data-visit-part="https"><span class="lesson-number">02</span><strong>HTTPS gateway</strong><span>Traefik proves your domain with a certificate, then selects my-app</span><small>Browser encryption ends here · TLS, often called SSL</small></div>
+      <span class="visit-route-arrow" aria-hidden="true">→</span>
+      <div class="visit-card" data-visit-part="app"><span class="lesson-number">03</span><strong>Your running app</strong><span>A container answers on internal port 3000</span><small>The response goes back to the browser</small></div>
+    </div>
+    <p class="lesson-footnote">These services run across the three-server Swarm platform. This is a route model, not a map of where each app copy is placed.</p>
+  </div>
+  <div class="visit-controls" hidden data-visit-controls>
+    <div class="visit-stages" role="group" aria-label="Steps in a web visit">
+      <button type="button" data-visit-step="0" aria-pressed="true">1. Name</button><button type="button" data-visit-step="1" aria-pressed="false">2. Address</button><button type="button" data-visit-step="2" aria-pressed="false">3. HTTPS</button><button type="button" data-visit-step="3" aria-pressed="false">4. App</button><button type="button" data-visit-step="4" aria-pressed="false">5. Response</button>
+    </div>
+    <button type="button" class="lesson-play" data-visit-play>Follow a visit</button>
+  </div>
+  <div class="visit-explanation" aria-live="polite" aria-atomic="true"><strong data-visit-title>Start with a name people can remember.</strong><p data-visit-description>You control example.com. The name my-app.platform.example.com identifies this app; it is not another server.</p></div>
+  <p class="lesson-footnote">All names and IPs are reserved examples. DNS only answers the lookup; your page does not pass through DNS.</p>
+</section>
 <table>
 <thead>
 <tr>
@@ -37,7 +65,7 @@ documentation values, not deployed resources. Commands run in <code>openstackV3<
 </tr>
 <tr>
 <td>App URL</td>
-<td><code>https://hello.platform.example.com</code></td>
+<td><code>https://my-app.platform.example.com</code></td>
 <td>The link your visitor opens. The app name chooses a route, not another VM.</td>
 </tr>
 <tr>
@@ -68,15 +96,23 @@ documentation values, not deployed resources. Commands run in <code>openstackV3<
 </tbody></table>
 <p>One visit works like this:</p>
 <ol>
-<li>The browser asks DNS for <code>hello.platform.example.com</code> and gets the app entry IP.</li>
+<li>The browser asks DNS for <code>my-app.platform.example.com</code> and gets the app entry IP.</li>
 <li>It connects to that IP on HTTPS port 443. DNS is a lookup, not a traffic proxy.</li>
 <li>Octavia passes the connection through Swarm to Traefik. TLS terminates at
-Traefik, which chooses the <code>hello</code> service from the hostname/path.</li>
+Traefik, which chooses the <code>my-app</code> service from the hostname/path.</li>
 <li>A running app copy returns a page or API result. This sample needs no database.</li>
 </ol>
 <p>The maintained platform has three managers, one Traefik replica and explicit
 local-data availability limits. See <a href="/architecture.html">architecture</a>.</p>
 <h2 id="2-create-account-and-project-access">2. Create account and project access</h2>
+<figure class="lesson" aria-label="Account, project and deployment access">
+  <div class="lesson-top"><span class="lesson-label">STEP 0 · GET A PLACE TO BUILD</span><span class="lesson-example">In the provider’s website</span></div>
+  <div class="access-account"><span class="lesson-label">YOUR INFOMANIAK CUSTOMER ACCOUNT</span><strong>You / your organization</strong><span>Owns the subscription and pays the bill</span>
+    <div class="access-project"><span class="lesson-label">PUBLIC CLOUD PROJECT · MY-CLOUD</span><strong>A workspace for your cloud resources</strong><span>Servers, networking and cloud usage belong here</span><div class="lesson-empty">Empty for now · no TOAD servers yet</div></div>
+  </div>
+  <div class="lesson-flow access-flow"><div><span class="lesson-label">DEDICATED OPENSTACK USER</span><strong>Permission to use the project</strong><span>Separate from your customer login</span></div><span class="lesson-flow-arrow" aria-hidden="true">→</span><div><span class="lesson-label">PRIVATE ACCESS CONFIGURATION</span><strong>Used locally by TOAD</strong><span>Credentials stay outside chat and Git</span></div></div>
+  <figcaption><strong>Checkpoint:</strong> you can access the intended project and download its dedicated user’s cloud configuration. An account alone does not deploy an app.</figcaption>
+</figure>
 <ol>
 <li>Create or reuse an <a href="https://www.infomaniak.com/en/support/faq/2232/create-an-infomaniak-account">Infomaniak customer account</a>.
 Verify your email and select the organization that should own the resources.</li>
@@ -97,6 +133,12 @@ for the intended region. Keep it private; never paste it into chat.</li>
 the difference between customer accounts, service users and local contexts.
 Creating access does not create TOAD servers.</p>
 <h2 id="3-prepare-the-operator-machine">3. Prepare the operator machine</h2>
+<figure class="lesson" aria-label="The local operator context connects to the provider project">
+  <div class="lesson-top"><span class="lesson-label">STEP 1 · CONNECT YOUR TOOLS</span><span class="lesson-example">On your computer or your agent’s machine</span></div>
+  <div class="lesson-flow"><div class="context-local"><span class="lesson-label">YOUR OPERATOR MACHINE</span><strong>TOAD + context my-cloud</strong><span>Private credentials + platform settings</span><code>contexts/my-cloud/</code></div><div class="lesson-flow-arrow"><span>authenticated API calls</span><b aria-hidden="true">⇄</b></div><div><span class="lesson-label">INFOMANIAK PUBLIC CLOUD</span><strong>The provider project</strong><span>The place that will contain the servers</span></div></div>
+  <div class="lesson-pair"><p><strong>Context</strong><br>A local folder selecting one environment.</p><p><strong>Project</strong><br>The provider workspace that owns resources.</p></div>
+  <figcaption><strong>Checkpoint:</strong> the selected context is correct and authentication works. Installing TOAD and creating a context do not create cloud servers.</figcaption>
+</figure>
 <p>Install the <a href="/quickstart.html#1-prepare-your-operator-context">quickstart prerequisites</a>,
 including Node 22, pnpm, Python/venv, Docker Buildx, OpenSSH, OpenSSL and age.</p>
 <pre><code class="language-sh">git clone https://github.com/RemiGirard/TOAD-infra.git
@@ -179,6 +221,16 @@ pnpm run cloud -- plan my-cloud --json
 costs and target stack with the human. The plan changes nothing and is not a
 provider quote. Continue only after approval of the actual resource/DNS plan.</p>
 <h2 id="5-create-the-platform-and-finish-dns">5. Create the platform and finish DNS</h2>
+<figure class="lesson" aria-label="Public and internal addresses of the current three-manager platform">
+  <div class="lesson-top"><span class="lesson-label">STEP 2 · CREATE THE PLACE YOUR APP RUNS</span><span class="lesson-example">Current complete TOAD profile · example IPs</span></div>
+  <div class="cloud-doors"><div><span class="lesson-label">VISITORS · HTTPS</span><strong>App entrance</strong><code>198.51.100.30</code><span>Load balancer · app DNS points here</span></div><div><span class="lesson-label">YOU / YOUR AGENT · SSH</span><strong>Operator entrance</strong><code>198.51.100.20</code><span>Restricted access through manager 1</span></div></div>
+  <div class="cloud-internal"><span class="lesson-label">HEAT STACK MY-CLOUD · RESOURCE GROUP INSIDE YOUR PROJECT</span><div class="cloud-servers"><div><strong>Server 1</strong><code>10.0.0.20</code><span>Swarm manager</span></div><div><strong>Server 2</strong><code>10.0.0.21</code><span>Swarm manager</span></div><div><strong>Server 3</strong><code>10.0.0.22</code><span>Swarm manager</span></div></div><p>They communicate on a private network. Docker Swarm coordinates the HTTPS gateway, monitoring and your app containers.</p></div>
+  <div class="cloud-outbound"><span aria-hidden="true">↑</span><div><strong>Outgoing connections</strong><span>Router gateway <code>198.51.100.40</code> → image registries, updates and external services</span></div></div>
+  <figcaption><strong>Three different jobs:</strong> app access, operator access and outgoing access. Visitors use the app entrance; private 10.0.0.x addresses stay inside the cloud network.</figcaption>
+  <p class="lesson-label">HOW TOAD BUILDS THIS · FIRST SETUP</p>
+  <ol class="setup-rail"><li><strong>Plan</strong><span>Review local settings</span><small>No cloud changes</small></li><li><strong>Apply</strong><span>Create & configure the platform</span><small>Billable resources start here</small></li><li><strong>DNS wait</strong><span>Servers exist; delegation is missing</span><small>Keep the same stack</small></li><li><strong>Delegate</strong><span>Add the child NS records</span><small>One manual DNS step</small></li><li><strong>Resume & verify</strong><span>Finish DNS and check the platform</span><small>Then deploy your app</small></li></ol>
+  <p class="lesson-footnote">The complete workflow currently creates three managers. The cheaper one-server IPv6 design is documented separately and still needs a TOAD implementation.</p>
+</figure>
 <pre><code class="language-sh">pnpm run cloud -- apply my-cloud
 </code></pre>
 <p>This creates billable resources. It provisions networking, servers, the public
@@ -187,6 +239,12 @@ monitoring. The operator SSH rule is restricted to the workstation&#39;s public
 IPv4 <code>/32</code>. It does not open SSH to everybody.</p>
 <p>On a first run, a DNS-waiting result is expected while delegation is missing.
 Keep the stack; do not deploy another one to retry. Read the child nameservers:</p>
+<figure class="lesson" aria-label="DNS delegation and the app address lookup">
+  <div class="lesson-top"><span class="lesson-label">GIVE YOUR PLATFORM A NAME</span><span class="lesson-example">DNS is an address book</span></div>
+  <div class="dns-zones"><div><span class="lesson-label">PARENT ZONE · INFOMANIAK DNS</span><strong>example.com</strong><span>You own this domain</span></div><div class="dns-delegation"><span class="lesson-tag">YOU · ONE TIME</span><strong>NS records for platform</strong><span>“Ask these nameservers about platform.example.com”</span><b aria-hidden="true">↓</b></div><div class="dns-child"><span class="lesson-label">CHILD ZONE · OPENSTACK DESIGNATE</span><strong>platform.example.com</strong><span>TOAD maintains its app-entry records</span><div class="dns-answer"><span><code>*.platform.example.com</code><small>A record · a name resolves to IPv4</small></span><b aria-hidden="true">→</b><code>198.51.100.30</code></div></div></div>
+  <figcaption><strong>Then:</strong> my-app.platform.example.com uses the wildcard to find the app entrance. Traefik uses the hostname to choose my-app. Another app normally shares this IP; it does not need another VM or public IP.</figcaption>
+  <p class="lesson-footnote">Use the actual nameservers and IPs from your stack outputs. Current apply also updates the parent @ and * A records; use a dedicated domain and review those changes first.</p>
+</figure>
 <pre><code class="language-sh">pnpm run os -- recordset list platform.example.com.
 </code></pre>
 <p>In <strong>Infomaniak Manager → domain → DNS zone</strong>, add NS records named <code>platform</code>
@@ -204,19 +262,29 @@ the load balancer; a new app normally uses that wildcard rather than needing
 another public IP. Continue when platform verification passes.</p>
 <p>For an existing platform, preserve its original admin CA and operator bundle.
 Missing access must be restored from escrow, not solved by replacing trust.</p>
-<h2 id="6-publish-hello-and-open-its-url">6. Publish hello and open its URL</h2>
+<h2 id="6-publish-my-app-and-open-its-url">6. Publish my-app and open its URL</h2>
+<figure class="lesson" aria-label="Code is packaged into an image, then run as containers">
+  <div class="lesson-top"><span class="lesson-label">STEP 3 · PUT YOUR APP ON THE PLATFORM</span><span class="lesson-example">Repeat this for each release</span></div>
+  <div class="release-pipeline"><div><span class="lesson-number">ON YOUR MACHINE</span><strong>Your app’s source</strong><span>Code + dependencies + Dockerfile</span></div><span class="release-action"><b>publish</b><span>build &amp; upload</span><i aria-hidden="true">→</i></span><div><span class="lesson-number">IN AN IMAGE REGISTRY</span><strong>A container image</strong><span>A packaged version of the app</span><small>Digest = its exact fingerprint</small></div><span class="release-action"><b>deploy</b><span>run that image</span><i aria-hidden="true">→</i></span><div><span class="lesson-number">ON YOUR CLOUD SERVERS</span><strong>Running containers</strong><span>App copies serving requests</span><small>Behind the same HTTPS entrance</small></div></div>
+  <div class="lesson-pair"><p><strong>Image</strong><br>The package you can download again.</p><p><strong>Container</strong><br>A running instance of that package.</p></div>
+  <p class="lesson-footnote">The my-app sample lives in TOAD's apps folder. Your own existing application can keep its source in its own repository.</p>
+  <figcaption><strong>Checkpoint:</strong> the requested image is actually running and the declared HTTPS checks pass. Uploading an image alone does not put the app online.</figcaption>
+  <p class="lesson-footnote">A database or saved uploads need a separate storage and backup plan. Running more app copies does not automatically replicate their data.</p>
+</figure>
+<p><code>my-app</code> is a fresh sample name. The repository&#39;s existing <code>hello</code> app is a
+platform test service; keep it intact.</p>
 <p>Authenticate Docker to a registry you control using its normal credential
 manager. The first image should be publicly pullable, or node-side private
 registry access must already be configured. Replace <code>YOUR-OWNER</code> below.</p>
-<pre><code class="language-sh">pnpm run app -- create hello --template node-web
-# Edit ../apps/hello/source/ and its build allow-list.
-pnpm run app -- publish hello --image ghcr.io/YOUR-OWNER/hello:v1
+<pre><code class="language-sh">pnpm run app -- create my-app --template node-web
+# Edit ../apps/my-app/source/ and its build allow-list.
+pnpm run app -- publish my-app --image ghcr.io/YOUR-OWNER/my-app:v1
 pnpm run check
-pnpm run app -- validate hello
-pnpm run app -- deploy hello
-pnpm run app -- diagnose hello --json
+pnpm run app -- validate my-app
+pnpm run app -- deploy my-app
+pnpm run app -- diagnose my-app --json
 </code></pre>
-<p>Open <code>https://hello.platform.example.com</code> and test the app&#39;s page and API.
+<p>Open <code>https://my-app.platform.example.com</code> and test the app&#39;s page and API.
 Publishing packages the app into an image and pins its digest; deploying runs
 that image on the existing servers. The diagnosis should show the requested
 image running, converged copies and passing declared HTTPS checks. These do
@@ -225,7 +293,13 @@ not replace application-specific tests.</p>
 instead of substituting this sample. An app needing uploads or a database
 must declare storage and backup/recovery policy before deployment.</p>
 <h2 id="7-open-the-control-room-and-follow-an-update">7. Open the control room and follow an update</h2>
-<pre><code class="language-sh">pnpm run observe -- --context my-cloud --app hello --watch
+<figure class="lesson" aria-label="Three independent checks for a successful release">
+  <div class="lesson-top"><span class="lesson-label">STEP 4 · SEE WHAT ACTUALLY HAPPENED</span><span class="lesson-example">Read-only monitoring</span></div>
+  <div class="evidence-receipt"><div><span class="lesson-number">01 · VERSION</span><strong>Did the right app ship?</strong><span>Requested image ↔ running task digests</span></div><div><span class="lesson-number">02 · RUNNING COPIES</span><strong>Is the app ready?</strong><span>Ready replicas ↔ declared replicas</span></div><div><span class="lesson-number">03 · PUBLIC RESULT</span><strong>Does its URL respond?</strong><span>Declared HTTPS checks ↔ expected result</span></div></div>
+  <div class="lesson-caution"><strong>A green URL alone is not enough.</strong><span>A failed update can roll back to a healthy older version. Check all three, plus observation freshness, before calling the new release successful.</span></div>
+  <figcaption>Open the <a href="/#agent-demo">interactive control room</a> to compare a successful release, a rollback and missing evidence. Your private view uses the same interface with observations from your selected cloud.</figcaption>
+</figure>
+<pre><code class="language-sh">pnpm run observe -- --context my-cloud --app my-app --watch
 </code></pre>
 <p>Open the private HTML path printed by the command. Keep this terminal running
 to refresh observations. It is the same interface as the website&#39;s example,
@@ -260,4 +334,4 @@ includes IPv6 Heat/security rules and SSH bootstrap, AAAA DNS, Docker ingress
 and outbound dependency checks, lighter monitoring, one-node verification and
 restart/recovery acceptance. Do not relabel the current IPv4 Heat-only
 experiment as this profile. See <a href="/costs.html">costs and growth</a>.</p>
-</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer><script type="module" src="/lessons.mjs"></script></body></html>

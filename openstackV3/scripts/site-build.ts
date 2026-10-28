@@ -64,6 +64,8 @@ const illustrations: Record<string, { desktopHeight: number; mobileHeight: numbe
   journey: { desktopHeight: 320, mobileHeight: 960 }, observability: { desktopHeight: 350, mobileHeight: 790 },
   'app-map': { desktopHeight: 470, mobileHeight: 1100 },
 };
+const lessonNames = ['visit', 'access', 'context', 'cloud', 'dns', 'release', 'evidence'] as const;
+const lessons = new Map(lessonNames.map((name) => [name, readFileSync(join(source, 'lessons', `${name}.html`), 'utf8')]));
 function href(value: string, document: string): string {
   if (value.startsWith('#') || /^(?:https?:|mailto:)/.test(value)) return value;
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)) return '#';
@@ -76,7 +78,16 @@ for (const [name, slug, label] of pages) {
   const path = resolve(root, 'docs', `${name}${name === '../LICENSE' ? '' : '.md'}`);
   let markdown = readFileSync(path, 'utf8');
   const renderer = new marked.Renderer();
-  renderer.html = ({ text }) => escape(text);
+  const usedLessons = new Set<string>();
+  renderer.html = ({ text }) => {
+    if (!text.includes('TOAD_LESSON')) return escape(text);
+    const lessonName = text.trim().match(/^<!-- TOAD_LESSON: ([a-z]+) -->$/)?.[1];
+    const lesson = lessons.get(lessonName as typeof lessonNames[number]);
+    // Only the two reviewed onboarding documents can embed these static fragments.
+    if (!lessonName || !lesson || usedLessons.has(lessonName) || !['QUICKSTART', 'INFOMANIAK-EXAMPLE'].includes(name)) throw new Error(`Invalid or duplicate teaching diagram in ${path}.`);
+    usedLessons.add(lessonName);
+    return lesson;
+  };
   const renderCode = renderer.code;
   renderer.code = function (token) {
     if (token.lang !== 'mermaid') return renderCode.call(this, token);
@@ -101,11 +112,11 @@ for (const [name, slug, label] of pages) {
   if (name === '../LICENSE') markdown = `# MIT License\n\n\`\`\`text\n${markdown}\n\`\`\`\n\n${readFileSync(join(root, 'LICENSING.md'), 'utf8').replace(/^(#{1,5}) /gm, '#$1 ')}`;
   const body = marked.parse(markdown, { renderer, gfm: true, async: false });
   const navigation = pages.map(([, target, title]) => `<a href="/${target}.html"${target === slug ? ' aria-current="page"' : ''}>${title}</a>`).join('');
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css">${usedLessons.size ? '<link rel="stylesheet" href="/lessons.css">' : ''}</head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer>${usedLessons.has('visit') ? '<script type="module" src="/lessons.mjs"></script>' : ''}</body></html>`;
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg'];
+  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {

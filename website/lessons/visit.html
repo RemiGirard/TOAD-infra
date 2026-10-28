@@ -1,0 +1,29 @@
+<section class="lesson visit-lesson" data-visit aria-label="Follow a visit to your app">
+  <div class="lesson-top"><span class="lesson-label">THE RESULT YOU ARE BUILDING</span><span class="lesson-example">Interactive example · no cloud access</span></div>
+  <div class="lesson-address"><span>https://</span><strong>my-app.platform.example.com</strong><span>/</span></div>
+  <p class="lesson-intro">A link is a name. Your app runs on a computer. Here is how the browser gets from one to the other.</p>
+  <div class="visit-lookup">
+    <div class="visit-card" data-visit-part="browser"><span class="lesson-label">ON YOUR VISITOR’S DEVICE</span><strong>The browser</strong><span>Opens the app’s name</span></div>
+    <div class="visit-lookup-arrow"><span>asks for an address</span><b aria-hidden="true">⇄</b><span>receives the IP</span></div>
+    <div class="visit-card" data-visit-part="dns"><span class="lesson-label">DNS · THE NAME LOOKUP</span><strong>Name → IP address</strong><code>198.51.100.30</code></div>
+  </div>
+  <p class="visit-connection"><span aria-hidden="true">↓</span> The browser connects to this IP over HTTPS, on port 443</p>
+  <div class="visit-cloud"><span class="lesson-label">IN YOUR INFOMANIAK PROJECT · THE CURRENT TOAD PLATFORM</span>
+    <div class="visit-route">
+      <div class="visit-card" data-visit-part="entry"><span class="lesson-number">01</span><strong>Public entrance</strong><span>Octavia forwards the encrypted connection</span><code>198.51.100.30</code></div>
+      <span class="visit-route-arrow" aria-hidden="true">→</span>
+      <div class="visit-card" data-visit-part="https"><span class="lesson-number">02</span><strong>HTTPS gateway</strong><span>Traefik proves your domain with a certificate, then selects my-app</span><small>Browser encryption ends here · TLS, often called SSL</small></div>
+      <span class="visit-route-arrow" aria-hidden="true">→</span>
+      <div class="visit-card" data-visit-part="app"><span class="lesson-number">03</span><strong>Your running app</strong><span>A container answers on internal port 3000</span><small>The response goes back to the browser</small></div>
+    </div>
+    <p class="lesson-footnote">These services run across the three-server Swarm platform. This is a route model, not a map of where each app copy is placed.</p>
+  </div>
+  <div class="visit-controls" hidden data-visit-controls>
+    <div class="visit-stages" role="group" aria-label="Steps in a web visit">
+      <button type="button" data-visit-step="0" aria-pressed="true">1. Name</button><button type="button" data-visit-step="1" aria-pressed="false">2. Address</button><button type="button" data-visit-step="2" aria-pressed="false">3. HTTPS</button><button type="button" data-visit-step="3" aria-pressed="false">4. App</button><button type="button" data-visit-step="4" aria-pressed="false">5. Response</button>
+    </div>
+    <button type="button" class="lesson-play" data-visit-play>Follow a visit</button>
+  </div>
+  <div class="visit-explanation" aria-live="polite" aria-atomic="true"><strong data-visit-title>Start with a name people can remember.</strong><p data-visit-description>You control example.com. The name my-app.platform.example.com identifies this app; it is not another server.</p></div>
+  <p class="lesson-footnote">All names and IPs are reserved examples. DNS only answers the lookup; your page does not pass through DNS.</p>
+</section>

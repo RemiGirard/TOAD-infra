@@ -1,17 +1,48 @@
-# Get started: cloud first, then your app
+# Put your app online, and see how it works
 
-TOAD first creates and configures your cloud platform. You then publish and
-deploy applications onto it. Provision the platform once; repeat the app
-workflow for each app and update.
+You have an app on your computer. You want a link other people can open,
+even when your computer is off. TOAD sets up rented cloud servers in your
+account, then runs your app on them behind HTTPS.
+
+We will use one example throughout: an app called **my-app**, reachable at
+**`https://my-app.platform.example.com`**. Replace the example domain with a
+dedicated domain you control. The names and IPs in the diagrams are examples,
+not values to copy into your configuration.
+
+[Go straight to setup](#0-get-cloud-account-and-project-access) ·
+[Already have a verified platform? Deploy an app](FIRST-APP.md)
+
+<!-- TOAD_LESSON: visit -->
+
+## The path from your laptop to a public link
+
+1. **Get access:** an Infomaniak account and a Public Cloud project.
+2. **Connect TOAD:** a private local context tells it which project to use.
+3. **Create the platform:** servers, networking, HTTPS and monitoring.
+4. **Connect the name:** DNS tells visitors how to find the app entrance.
+5. **Release my-app:** package the app, run it on the servers, then check it.
+
+Create the platform once. Reuse it for more apps and repeat the release step
+for updates. The complete workflow below currently creates **three servers**;
+the [smaller one-server IPv6 design](INFOMANIAK-EXAMPLE.md#the-minimum-ipv6-design)
+still needs implementation and validation in TOAD.
 
 For one complete worked example with account access, IPs, DNS records, app URL
 and monitoring, follow [Infomaniak: from account to monitored app](INFOMANIAK-EXAMPLE.md).
 
-Already operate a verified TOAD platform? Go to [First app](FIRST-APP.md).
 For an optional frontend/API preview, [run the example locally](LOCAL-STARTER.md).
-New to domains, DNS, cloud servers or containers? Start with
-[Your app explained](UNDERSTAND.md): a visual map, plain-language terms and a
-comparison of hosting responsibilities.
+For more definitions and a comparison of what different hosting options
+manage for you, see [Your app explained](UNDERSTAND.md).
+
+You can work through the commands yourself, or ask your coding agent:
+
+```text
+Use TOAD-infra to put this app online.
+https://github.com/RemiGirard/TOAD-infra
+```
+
+The repository's agent instructions supply the operating workflow. The same
+diagrams below help you understand and review the agent's plan.
 
 The homepage uses the repository launcher `./toad` from the checkout root.
 After installing dependencies below, try `./toad --help` from that root.
@@ -19,6 +50,8 @@ After installing dependencies below, try `./toad --help` from that root.
 The commands below use package scripts from `openstackV3`; both reach the same CLI.
 
 ## 0. Get cloud account and project access
+
+<!-- TOAD_LESSON: access -->
 
 No cloud account yet? Follow [Account and access](CLOUD-ACCOUNT.md) first:
 create or reuse your customer account, activate Public Cloud, prepare a project
@@ -35,6 +68,8 @@ OpenStack providers need [compatibility review and adaptation](CLOUD-ACCOUNT.md#
 they are not verified drop-in targets.
 
 ## 1. Prepare your operator context
+
+<!-- TOAD_LESSON: context -->
 
 You need Node.js 22, pnpm, Git, Python 3 with `venv`, OpenSSH, OpenSSL 3 with
 its legacy provider (for browser certificate bundles), Docker with Buildx,
@@ -72,6 +107,8 @@ explains account permissions, configuration fields, and DNS ownership.
 
 ## 2. Provision and verify the platform
 
+<!-- TOAD_LESSON: cloud -->
+
 The maintained production profile creates three managers, an Octavia load
 balancer, networking, and a delegated DNS zone. Ansible configures Docker Swarm,
 Traefik HTTPS, monitoring, and the platform test services.
@@ -92,6 +129,8 @@ Keep using the same stack name for this cloud.
 On the first run, setup reports `waiting_for_dns` while the child zone awaits manual
 delegation. It retains the existing resources and prints the required records. Read its nameservers:
 
+<!-- TOAD_LESSON: dns -->
+
 ```sh
 pnpm run os -- recordset list YOUR-PLATFORM-DOMAIN.
 ```
@@ -108,7 +147,12 @@ pnpm run verify -- my-cloud --json
 Continue when verification passes. The lower-level `deploy` command creates
 Heat resources only; it does not replace this platform setup.
 
+**Checkpoint:** the platform is verified and your domain points to its app
+entrance. The servers are ready; the sample named `my-app` has not been deployed yet.
+
 ## 3. Publish and deploy your app
+
+<!-- TOAD_LESSON: release -->
 
 Authenticate Docker to a registry you control. For the simplest first
 deployment, make the image publicly pullable; private images require pull
@@ -125,11 +169,22 @@ pnpm run app -- diagnose my-app --json
 ```
 
 Publishing pins the registry image digest in Compose. Deployment updates the
-app on the existing platform. Open `https://my-app.YOUR-PLATFORM-DOMAIN/` and
+app on the existing platform. With `platform.example.com` replaced by your
+configured child domain, open `https://my-app.platform.example.com/` and
 check its page and API. The [first-app guide](FIRST-APP.md) covers the registry,
 customization, secrets, updates, and rollback.
 
 ## 4. Operate and update
+
+<!-- TOAD_LESSON: evidence -->
+
+```sh
+pnpm run observe -- --context my-cloud --app my-app --watch
+```
+
+Open the private HTML path the command prints. It shows your selected cloud's
+observations, with evidence freshness and gaps. Keep the terminal running to
+refresh it. For terminal or agent-readable results:
 
 ```sh
 pnpm run app -- diagnose my-app --json

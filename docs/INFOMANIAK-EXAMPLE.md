@@ -1,6 +1,6 @@
 # A complete Infomaniak example: from account to monitored app
 
-We will put a small app named **hello** at **https://hello.platform.example.com**.
+We will put a small app named **my-app** at **`https://my-app.platform.example.com`**.
 You will see where its name, IP addresses, servers, HTTPS and running copies
 come from, then open the same monitoring interface shown on TOAD's site.
 
@@ -16,14 +16,14 @@ documentation values, not deployed resources. Commands run in `openstackV3`.
 
 ## 1. Decide what you are building
 
-![DNS returns the public entry address; HTTPS passes through Octavia to Traefik and the hello app. Stored data is a separate choice.](../website/app-map.svg)
+<!-- TOAD_LESSON: visit -->
 
 | Name or address | In this example | What it does |
 |---|---|---|
 | Provider project / TOAD context / Heat stack | `my-cloud` | Provider resources / isolated local operator setup / the declared resource group. These names happen to match; they are distinct things. |
 | Domain you own | `example.com` | A name and its DNS zone, not a server. Use a dedicated domain for this recipe. |
 | Platform child domain | `platform.example.com` | A delegated zone managed by OpenStack Designate. |
-| App URL | `https://hello.platform.example.com` | The link your visitor opens. The app name chooses a route, not another VM. |
+| App URL | `https://my-app.platform.example.com` | The link your visitor opens. The app name chooses a route, not another VM. |
 | App entry IPv4 | `198.51.100.30` | Octavia's floating IP. App DNS points here. |
 | Operator entry IPv4 | `198.51.100.20` | Restricted SSH access through manager 1. App DNS does not point here. |
 | Router gateway IPv4 | `198.51.100.40` | Outbound networking for private servers; also billable. It is not the app URL. |
@@ -32,16 +32,18 @@ documentation values, not deployed resources. Commands run in `openstackV3`.
 
 One visit works like this:
 
-1. The browser asks DNS for `hello.platform.example.com` and gets the app entry IP.
+1. The browser asks DNS for `my-app.platform.example.com` and gets the app entry IP.
 2. It connects to that IP on HTTPS port 443. DNS is a lookup, not a traffic proxy.
 3. Octavia passes the connection through Swarm to Traefik. TLS terminates at
-   Traefik, which chooses the `hello` service from the hostname/path.
+   Traefik, which chooses the `my-app` service from the hostname/path.
 4. A running app copy returns a page or API result. This sample needs no database.
 
 The maintained platform has three managers, one Traefik replica and explicit
 local-data availability limits. See [architecture](ARCHITECTURE.md).
 
 ## 2. Create account and project access
+
+<!-- TOAD_LESSON: access -->
 
 1. Create or reuse an [Infomaniak customer account](https://www.infomaniak.com/en/support/faq/2232/create-an-infomaniak-account).
    Verify your email and select the organization that should own the resources.
@@ -63,6 +65,8 @@ the difference between customer accounts, service users and local contexts.
 Creating access does not create TOAD servers.
 
 ## 3. Prepare the operator machine
+
+<!-- TOAD_LESSON: context -->
 
 Install the [quickstart prerequisites](QUICKSTART.md#1-prepare-your-operator-context),
 including Node 22, pnpm, Python/venv, Docker Buildx, OpenSSH, OpenSSL and age.
@@ -139,6 +143,8 @@ provider quote. Continue only after approval of the actual resource/DNS plan.
 
 ## 5. Create the platform and finish DNS
 
+<!-- TOAD_LESSON: cloud -->
+
 ```sh
 pnpm run cloud -- apply my-cloud
 ```
@@ -150,6 +156,8 @@ IPv4 `/32`. It does not open SSH to everybody.
 
 On a first run, a DNS-waiting result is expected while delegation is missing.
 Keep the stack; do not deploy another one to retry. Read the child nameservers:
+
+<!-- TOAD_LESSON: dns -->
 
 ```sh
 pnpm run os -- recordset list platform.example.com.
@@ -175,23 +183,28 @@ another public IP. Continue when platform verification passes.
 For an existing platform, preserve its original admin CA and operator bundle.
 Missing access must be restored from escrow, not solved by replacing trust.
 
-## 6. Publish hello and open its URL
+## 6. Publish my-app and open its URL
+
+<!-- TOAD_LESSON: release -->
+
+`my-app` is a fresh sample name. The repository's existing `hello` app is a
+platform test service; keep it intact.
 
 Authenticate Docker to a registry you control using its normal credential
 manager. The first image should be publicly pullable, or node-side private
 registry access must already be configured. Replace `YOUR-OWNER` below.
 
 ```sh
-pnpm run app -- create hello --template node-web
-# Edit ../apps/hello/source/ and its build allow-list.
-pnpm run app -- publish hello --image ghcr.io/YOUR-OWNER/hello:v1
+pnpm run app -- create my-app --template node-web
+# Edit ../apps/my-app/source/ and its build allow-list.
+pnpm run app -- publish my-app --image ghcr.io/YOUR-OWNER/my-app:v1
 pnpm run check
-pnpm run app -- validate hello
-pnpm run app -- deploy hello
-pnpm run app -- diagnose hello --json
+pnpm run app -- validate my-app
+pnpm run app -- deploy my-app
+pnpm run app -- diagnose my-app --json
 ```
 
-Open `https://hello.platform.example.com` and test the app's page and API.
+Open `https://my-app.platform.example.com` and test the app's page and API.
 Publishing packages the app into an image and pins its digest; deploying runs
 that image on the existing servers. The diagnosis should show the requested
 image running, converged copies and passing declared HTTPS checks. These do
@@ -203,8 +216,10 @@ must declare storage and backup/recovery policy before deployment.
 
 ## 7. Open the control room and follow an update
 
+<!-- TOAD_LESSON: evidence -->
+
 ```sh
-pnpm run observe -- --context my-cloud --app hello --watch
+pnpm run observe -- --context my-cloud --app my-app --watch
 ```
 
 Open the private HTML path printed by the command. Keep this terminal running

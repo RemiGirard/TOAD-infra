@@ -13,6 +13,8 @@ files:
   - walkthrough.json
   - walkthrough.css
   - diagrams.css
+  - lessons.css
+  - lessons.mjs
   - agent-view.mjs
   - agent-view.css
   - observability.svg
