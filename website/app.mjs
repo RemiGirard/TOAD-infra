@@ -61,9 +61,10 @@ walkthrough();
 const duet = document.querySelector('[data-deploy-duet]');
 if (duet) {
   const brief = duet.querySelector('[data-duet-message]').textContent;
+  const starterPrompt = duet.querySelector('[data-agent-prompt]').textContent.trim();
   const beats = [
     { key: 'plan', speaker: 'YOUR BRIEF', message: brief,
-      caption: 'First, a read-only plan.', command: './toad cloud plan my-cloud --context my-cloud --json',
+      caption: 'With a configured context: a read-only plan.', command: './toad cloud plan my-cloud --context my-cloud --json',
       output: '{ "changes": false,\n  "resources": { "managers": 3, "loadBalancers": 1 } }',
       result: 'Your cloud. Your call.', detail: 'Type the command, or let your agent take the next step.' },
     { key: 'inspect', speaker: 'AGENT → YOU', message: 'Let me read the room: the target cloud, the running app, and any gaps in the evidence.',
@@ -115,11 +116,15 @@ if (duet) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
   document.addEventListener('toad:playback', event => { if (event.detail !== 'duet') stop(); });
   async function copy(value, message, resetToBrief = false) {
+    stop();
     const feedback = duet.querySelector('[data-duet-feedback]');
     try { await navigator.clipboard.writeText(value); feedback.textContent = message; }
-    catch { if (resetToBrief) show(0); feedback.textContent = 'Select the text above to copy it.'; }
+    catch {
+      if (resetToBrief) { show(0); duet.querySelector('.duet-brief-details').open = true; }
+      feedback.textContent = resetToBrief ? 'Select the full prompt above to copy it.' : 'Select the command above to copy it.';
+    }
   }
-  duet.querySelector('[data-copy-brief]').addEventListener('click', () => copy(brief, 'Starter brief copied.', true));
+  duet.querySelector('[data-copy-brief]').addEventListener('click', () => copy(starterPrompt, 'Full TOAD-infra prompt copied.', true));
   duet.querySelector('[data-copy-command]').addEventListener('click', () => copy(beats[current].command, 'Command copied.'));
   show(0);
 }

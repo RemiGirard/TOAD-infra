@@ -60,7 +60,14 @@ visible. The stage buttons also work without playback; playback starts only on
 request, can be paused, and stops when the page is hidden. Reduced-motion
 preferences disable the decorative movement.
 
-Copy the current terminal command or the original starter brief. Commands use
+Copy the current terminal command or the full starter prompt. Start from your
+own app repository; the prompt names and links TOAD-infra, asks the agent to
+inspect your app, reuse existing setup, and explain any cloud requirements and
+costs before making changes. No app or context placeholders need filling in.
+Expand **Read the full prompt** to review exactly what will be copied.
+The canonical text lives in `agent-prompt.txt`; the build escapes and embeds it
+in the homepage and publishes the same plain-text file for direct use.
+Commands use
 the repository's `./toad` launcher after workstation, context and app setup.
 `node toad.mjs` remains equivalent on platforms without executable symlinks.
 The example represents a coding agent using your local CLI/operator context;

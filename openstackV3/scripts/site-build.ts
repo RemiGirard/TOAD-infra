@@ -91,10 +91,15 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
+  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
-  copyFileSync(join(source, asset), join(output, asset));
+  if (asset === 'index.html') {
+    const html = readFileSync(join(source, asset), 'utf8');
+    const slot = '<!-- TOAD_AGENT_PROMPT -->';
+    if (html.split(slot).length !== 2) throw new Error('The homepage must contain exactly one starter-prompt slot.');
+    writeFileSync(join(output, asset), html.replace(slot, () => escape(readFileSync(join(source, 'agent-prompt.txt'), 'utf8').trim())));
+  } else copyFileSync(join(source, asset), join(output, asset));
 }
 writeFileSync(join(output, 'robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://toad.remigirard.dev/sitemap.xml\n');
 writeFileSync(join(output, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://toad.remigirard.dev/</loc></url>${pages.map(([, slug]) => `<url><loc>https://toad.remigirard.dev/${slug}.html</loc></url>`).join('')}</urlset>`);

@@ -5,6 +5,20 @@ The agent inspects structured evidence, proposes a bounded action, uses the
 human's authorization, verifies the actual result, and explains what changed.
 Commands run from `openstackV3` unless stated otherwise.
 
+## Start from the app you are building
+
+Open your application's repository in your coding agent and paste the
+[starter prompt](../website/agent-prompt.txt), also available as
+[plain text on the project site](https://toad.remigirard.dev/agent-prompt.txt).
+It names TOAD-infra and links its repository, so the agent can read the current
+instructions instead of assuming it already knows the tool.
+
+The prompt asks the agent to inspect your actual app, reuse existing operator
+setup where available, and explain the requirements and costs if you need a
+new Infomaniak platform. You do not need to invent app or context names before
+starting the conversation. Keep application source in your existing repository;
+the [first-app guide](FIRST-APP.md) covers adding TOAD metadata there.
+
 ## Discover commands and make the target explicit
 
 ```sh

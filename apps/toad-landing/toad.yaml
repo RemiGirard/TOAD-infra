@@ -41,6 +41,7 @@ files:
   - diagram-recovery-1.svg
   - diagram-recovery-1-mobile.svg
   - diagram-recovery-2.svg
+  - agent-prompt.txt
   - quickstart.html
   - deployment.html
   - first-app.html

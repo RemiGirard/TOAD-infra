@@ -1,0 +1,10 @@
+Help me put the app in this repository online using TOAD-infra:
+https://github.com/RemiGirard/TOAD-infra
+
+Read TOAD's README.md, AGENTS.md, SECURITY.md, docs/QUICKSTART.md and docs/AGENT-RUNBOOK.md first. Inspect my app's stack, build/run commands, port, environment variables and persistent data. Keep my app in this repository; reuse an existing TOAD checkout and operator context, or help me prepare them separately.
+
+Check whether I already have a verified TOAD platform. TOAD targets Infomaniak Public Cloud. If I need a platform, explain the account, domain, registry and tooling requirements, expected costs and DNS changes first. Ask only for missing decisions. Guide me to store credentials locally, never in this chat.
+
+Propose the smallest deployment plan for my actual app, including any container/build changes and backups for persistent data. Show the exact target and changes, then wait for my approval before provisioning, publishing, deploying or changing DNS.
+
+Use TOAD's CLI and documented checks. After deployment, help me open the private operation view and report the app URL, requested/running image match, ready replicas, HTTPS checks and any missing evidence. A rollback to the old version does not count as shipping the new one.
