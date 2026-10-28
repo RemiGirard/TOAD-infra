@@ -1,6 +1,6 @@
 # Overview pictograms
 
-Ten unmodified SVG source files from [Lucide](https://github.com/lucide-icons/lucide),
+Twelve unmodified SVG source files from [Lucide](https://github.com/lucide-icons/lucide),
 pinned to revision `be09619c1c1124ad09c19fc3e87ee3b939409bbd`.
 
 Source: `https://raw.githubusercontent.com/lucide-icons/lucide/be09619c1c1124ad09c19fc3e87ee3b939409bbd/icons/NAME.svg`.

@@ -1,8 +1,13 @@
 const map = document.querySelector('[data-learning-map]');
+const conceptGuide = document.querySelector('.concept-guide');
+if (conceptGuide) {
+  if (location.hash === '#your-app') conceptGuide.open = true;
+  for (const link of document.querySelectorAll('[data-open-concepts]')) link.addEventListener('click', () => { conceptGuide.open = true; });
+}
 if (map) {
-  let model = 'ipv6';
+  let model = 'platform';
   const concepts = {
-    domain: ['The name people type', 'Domain', 'A domain is a name you control, such as example.com. Your app can use an address below it, such as hello.platform.example.com. Buying a name does not buy a server.', 'People get a memorable app address. You choose the name and keep its registration active.'],
+    domain: ['The name people type', 'Domain', 'A domain is a name you control, such as example.com. Your app can use an address below it, such as my-app.platform.example.com. Buying a name does not buy a server.', 'People get a memorable app address. You choose the name and keep its registration active.'],
     dns: ['Find the right address', 'DNS', 'DNS is the lookup that turns your app’s name into its public network address. The browser gets the load balancer’s address, then connects to it. Website traffic does not travel through DNS.', 'Your app name points to the platform. The first setup includes a DNS delegation step that your agent can explain.'],
     cloud: ['Computers you rent', 'Cloud servers', 'The maintained TOAD platform rents three virtual computers in your Infomaniak project. Docker Swarm coordinates them. Your apps use their CPU, memory and storage.', 'You control the platform and pay the cloud bill. Three managers protect coordination; they do not duplicate every app or its data.'],
     entry: ['A front door for connections', 'Load balancer', 'Octavia is the public entry to the platform. It distributes incoming connections across the servers. Swarm forwards them to Traefik, the gateway that knows which app was requested.', 'Visitors use one public entry. The load balancer passes HTTPS through; it does not decrypt it here.'],
@@ -11,7 +16,7 @@ if (map) {
     data: ['Files that must survive', 'Persistent data', 'A database or uploaded files need a deliberate storage choice. TOAD’s local-volume profile keeps files on one chosen server. A volume survives container replacement; it is not a backup.', 'An explicit data and recovery plan. Databases, offsite backups and successful restore tests are not created just by shipping a web app.']
   };
   const ipv6Concepts = {
-    dns: ['A name becomes a network address', 'DNS / AAAA', 'DNS looks up hello.platform.example.com and returns an IPv6 address, shown here as the reserved example 2001:db8::20. An AAAA record maps a name to IPv6; an A record does the same for IPv4. Web requests then connect to that address.', 'A stable name for the app. The proposed IPv6 starter needs AAAA automation; current TOAD automation manages A records.'],
+    dns: ['A name becomes a network address', 'DNS / AAAA', 'DNS looks up my-app.platform.example.com and returns an IPv6 address, shown here as the reserved example 2001:db8::20. An AAAA record maps a name to IPv6; an A record does the same for IPv4. Web requests then connect to that address.', 'A stable name for the app. The proposed IPv6 starter needs AAAA automation; current TOAD automation manages A records.'],
     cloud: ['One computer you rent', 'Minimum design', 'A small virtual machine can run an app directly. Infomaniak offers ext-v6only1 with free public IPv6, so this design needs no paid IPv4, load balancer or customer router.', 'A low-cost provider architecture. TOAD’s one-node IPv6 app profile and lightweight monitoring still need implementation and runtime validation.'],
     entry: ['Connect straight to the server', 'Public IPv6', 'An IPv6 address identifies the server on the internet. Its firewall permits the app’s HTTPS connection and restricted operator access. Direct IPv6 avoids the load balancer, but IPv4-only visitors need an additional dual-stack edge or IPv4.', 'Fewer paid components and one failure point. The operator, visitors, image registry and app dependencies need working connectivity.'],
     https: ['An encrypted browser connection', 'HTTPS / TLS', 'The proposed gateway presents a certificate for the app name and routes to the container. TLS is the current technology often called SSL. IPv6 DNS, certificate issuance, container ingress and outbound connectivity must be tested together.', 'The intended result is an HTTPS app URL. This teaching design is not yet a verified TOAD deployment recipe.']
@@ -49,7 +54,7 @@ if (map) {
 
 const builder = document.querySelector('[data-setup-builder]');
 if (builder) {
-  const results = ['A project you own and access stored locally. Next, review costs and the exact target.', 'Three rented servers and a public entry IP. You can inspect what exists before putting an app on it.', 'The name resolves to the public IP. HTTPS reaches the hello container; the app now has a URL people can use.', 'Compare requested and running versions, app copies and endpoint checks. Keep missing or stale evidence visible.'];
+  const results = ['A project you own and access stored locally. Next, review costs and the exact target.', 'Three rented servers and a public entry IP. You can inspect what exists before putting an app on it.', 'The name resolves to the public IP. HTTPS reaches the my-app container; the app now has a URL people can use.', 'Compare requested and running versions, app copies and endpoint checks. Keep missing or stale evidence visible.'];
   const statuses = ['Account access ready', 'Platform created and verified', 'App released and diagnosed', 'Observation collected'];
   for (const button of builder.querySelectorAll('[data-setup-step]')) button.addEventListener('click', () => {
     const step = Number(button.dataset.setupStep);

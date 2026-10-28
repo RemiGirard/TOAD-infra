@@ -61,6 +61,8 @@ HOST=127.0.0.1 node apps/my-app/source/server.mjs
 
 ## 3. Authenticate and publish
 
+<!-- TOAD_LESSON: release -->
+
 Create a registry repository you control. Authenticate Docker using the
 registry's credential manager; see the
 [official GHCR guide](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
@@ -80,6 +82,8 @@ must already be configured on Swarm; publishing does not distribute your
 workstation's registry credentials.
 
 ## 4. Validate, deploy, and open
+
+<!-- TOAD_LESSON: evidence -->
 
 ```sh
 pnpm run check

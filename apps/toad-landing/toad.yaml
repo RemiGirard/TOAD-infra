@@ -53,6 +53,8 @@ files:
   - global-map.svg
   - global-map-mobile.svg
   - lucide-LICENSE.txt
+  - teaching-icons.svg
+  - visuals.css
   - monitor.css
   - monitor.mjs
   - understand.html

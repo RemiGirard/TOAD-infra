@@ -28,6 +28,8 @@ local TOAD context → verified platform → your app.**
 
 These are different things:
 
+<!-- TOAD_LESSON: access -->
+
 | Item | What it is for |
 |---|---|
 | Infomaniak customer account | Sign in to Manager, own products and manage billing within your organization. |
@@ -83,6 +85,8 @@ project and service-user names available for your agent, without disclosing
 their credential values.
 
 ## 4. Download access configuration and prepare TOAD locally
+
+<!-- TOAD_LESSON: context -->
 
 Follow [Connect to the project](https://docs.infomaniak.cloud/getting_started/first_project/connect_project/)
 to download the OpenStack cloud configuration for the selected user and region.

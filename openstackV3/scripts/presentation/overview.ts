@@ -1,14 +1,21 @@
 /** Public teaching illustration: reviewed icon sources, no infrastructure data. */
 export const overviewIcons = ['laptop', 'bot', 'package', 'cloud', 'server', 'globe', 'lock-keyhole', 'app-window', 'activity', 'database'] as const;
+export const teachingIconNames = [...overviewIcons, 'user-round', 'folder'] as const;
+
+function svgContents(svg: string): string {
+  const body = svg.match(/<svg\b[^>]*>([\s\S]*?)<\/svg>/)?.[1];
+  if (!body || /<(?:script|foreignObject|image|use)\b|\bon\w+=|(?:href|url\()/i.test(body)) throw new Error('Review overview icon source.');
+  return body.trim();
+}
+
+export function renderTeachingSprite(icons: Record<string, string>, license: string): string {
+  const notice = license.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  return `<svg xmlns="http://www.w3.org/2000/svg"><metadata>${notice}</metadata><defs>${teachingIconNames.map(name => `<symbol id="${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${svgContents(icons[name]!)}</symbol>`).join('')}</defs></svg>\n`;
+}
 
 export function renderOverview(icons: Record<string, string>, mascot: string, license: string): { desktop: string; mobile: string } {
   const escape = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-  function contents(svg: string): string {
-    const body = svg.match(/<svg\b[^>]*>([\s\S]*?)<\/svg>/)?.[1];
-    if (!body || /<(?:script|foreignObject|image|use)\b|\bon\w+=|(?:href|url\()/i.test(body)) throw new Error('Review overview icon source.');
-    return body.trim();
-  }
-  const symbols = overviewIcons.map((name) => `<symbol id="${name}" viewBox="0 0 24 24">${contents(icons[name]!)}</symbol>`).join('\n') + `<symbol id="toad" viewBox="0 0 64 64">${contents(mascot)}</symbol>`;
+  const symbols = overviewIcons.map((name) => `<symbol id="${name}" viewBox="0 0 24 24">${svgContents(icons[name]!)}</symbol>`).join('\n') + `<symbol id="toad" viewBox="0 0 64 64">${svgContents(mascot)}</symbol>`;
   function icon(name: string, x: number, y: number, size = 64, color = '#355440'): string {
     return `<use href="#${name}" x="${x}" y="${y}" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>`;
   }

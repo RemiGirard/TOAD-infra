@@ -53,6 +53,8 @@ The [beginner guide](UNDERSTAND.md) explains the full visitor journey.
 The [Infomaniak example](INFOMANIAK-EXAMPLE.md#7-open-the-control-room-and-follow-an-update)
 shows the complete setup and how to open the default local export.
 
+<!-- TOAD_LESSON: evidence -->
+
 | Area | What it proves | What it does not prove |
 |---|---|---|
 | Managers | Readiness, reachability, role and quorum at capture time | Application data replication or future availability |

@@ -3,18 +3,18 @@
   <div class="lesson-address"><span>https://</span><strong>my-app.platform.example.com</strong><span>/</span></div>
   <p class="lesson-intro">A link is a name. Your app runs on a computer. Here is how the browser gets from one to the other.</p>
   <div class="visit-lookup">
-    <div class="visit-card" data-visit-part="browser"><span class="lesson-label">ON YOUR VISITOR’S DEVICE</span><strong>The browser</strong><span>Opens the app’s name</span></div>
+    <div class="visit-card" data-visit-part="browser"><span class="lesson-label">ON YOUR VISITOR’S DEVICE</span><strong><!-- TOAD_ICON: app-window -->The browser</strong><span>Opens the app’s name</span></div>
     <div class="visit-lookup-arrow"><span>asks for an address</span><b aria-hidden="true">⇄</b><span>receives the IP</span></div>
-    <div class="visit-card" data-visit-part="dns"><span class="lesson-label">DNS · THE NAME LOOKUP</span><strong>Name → IP address</strong><code>198.51.100.30</code></div>
+    <div class="visit-card" data-visit-part="dns"><span class="lesson-label">DNS · THE NAME LOOKUP</span><strong><!-- TOAD_ICON: globe -->Name → IP address</strong><code>198.51.100.30</code></div>
   </div>
   <p class="visit-connection"><span aria-hidden="true">↓</span> The browser connects to this IP over HTTPS, on port 443</p>
   <div class="visit-cloud"><span class="lesson-label">IN YOUR INFOMANIAK PROJECT · THE CURRENT TOAD PLATFORM</span>
     <div class="visit-route">
-      <div class="visit-card" data-visit-part="entry"><span class="lesson-number">01</span><strong>Public entrance</strong><span>Octavia forwards the encrypted connection</span><code>198.51.100.30</code></div>
+      <div class="visit-card" data-visit-part="entry"><span class="lesson-number">01</span><strong><!-- TOAD_ICON: cloud -->Public entrance</strong><span>Octavia forwards the encrypted connection</span><code>198.51.100.30</code></div>
       <span class="visit-route-arrow" aria-hidden="true">→</span>
-      <div class="visit-card" data-visit-part="https"><span class="lesson-number">02</span><strong>HTTPS gateway</strong><span>Traefik proves your domain with a certificate, then selects my-app</span><small>Browser encryption ends here · TLS, often called SSL</small></div>
+      <div class="visit-card" data-visit-part="https"><span class="lesson-number">02</span><strong><!-- TOAD_ICON: lock-keyhole -->HTTPS gateway</strong><span>Traefik proves your domain with a certificate, then selects my-app</span><small>Browser encryption ends here · TLS, often called SSL</small></div>
       <span class="visit-route-arrow" aria-hidden="true">→</span>
-      <div class="visit-card" data-visit-part="app"><span class="lesson-number">03</span><strong>Your running app</strong><span>A container answers on internal port 3000</span><small>The response goes back to the browser</small></div>
+      <div class="visit-card" data-visit-part="app"><span class="lesson-number">03</span><strong><!-- TOAD_ICON: app-window -->Your running app</strong><span>A container answers on internal port 3000</span><small>The response goes back to the browser</small></div>
     </div>
     <p class="lesson-footnote">These services run across the three-server Swarm platform. This is a route model, not a map of where each app copy is placed.</p>
   </div>

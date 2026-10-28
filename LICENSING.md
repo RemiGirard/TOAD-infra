@@ -36,10 +36,10 @@ and external service images also have independent terms. Consult each pinned
 component's distribution and notices; this is not an exhaustive dependency
 license inventory. Preserve upstream notices when redistributing them.
 
-The global overview's pictograms in `website/vendor/lucide/` are separately
+The site's pictograms in `website/vendor/lucide/` are separately
 licensed Lucide icons, including Feather-derived icons. Their complete ISC
 and Feather MIT notices are retained in that directory's `LICENSE`, embedded
-in the standalone overview SVGs, and distributed as `website/lucide-LICENSE.txt`
+in the standalone overview SVGs and shared teaching-icon sprite, and distributed as `website/lucide-LICENSE.txt`
 with the public site. The surrounding TOAD illustration remains MIT.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the terms of new contributions.

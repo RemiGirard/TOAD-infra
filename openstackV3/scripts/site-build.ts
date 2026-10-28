@@ -10,21 +10,23 @@ import { diagramSources, digest } from './site-diagrams.js';
 import { renderMonitor } from './presentation/monitoring/view.js';
 import { monitorCss, monitorClient } from './presentation/monitoring/assets.js';
 import { monitoringExamples } from './presentation/monitoring/example.js';
-import { overviewIcons, renderOverview } from './presentation/overview.js';
+import { teachingIconNames, renderOverview, renderTeachingSprite } from './presentation/overview.js';
 
 const root = resolve(ROOT_DIR, '..');
 const source = join(root, 'website');
 const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const iconLicense = readFileSync(join(source, 'vendor', 'lucide', 'LICENSE'), 'utf8');
+const teachingIcons = Object.fromEntries(teachingIconNames.map((name) => [name, readFileSync(join(source, 'vendor', 'lucide', `${name}.svg`), 'utf8')]));
 const overview = renderOverview(
-  Object.fromEntries(overviewIcons.map((name) => [name, readFileSync(join(source, 'vendor', 'lucide', `${name}.svg`), 'utf8')])),
+  teachingIcons,
   readFileSync(join(source, 'toad.svg'), 'utf8'), iconLicense,
 );
 // Keep standalone Markdown illustrations and deployed assets in sync.
 writeFileSync(join(source, 'global-map.svg'), overview.desktop);
 writeFileSync(join(source, 'global-map-mobile.svg'), overview.mobile);
 writeFileSync(join(source, 'lucide-LICENSE.txt'), iconLicense);
+writeFileSync(join(source, 'teaching-icons.svg'), renderTeachingSprite(teachingIcons, iconLicense));
 const pages = [
   ['UNDERSTAND', 'understand', 'Your app explained'],
   ['INFOMANIAK-EXAMPLE', 'infomaniak', 'Infomaniak example'],
@@ -76,7 +78,15 @@ const illustrations: Record<string, { desktopHeight: number; mobileHeight: numbe
   'global-map': { desktopHeight: 860, mobileHeight: 1570 },
 };
 const lessonNames = ['visit', 'access', 'context', 'cloud', 'dns', 'release', 'evidence'] as const;
-const lessons = new Map(lessonNames.map((name) => [name, readFileSync(join(source, 'lessons', `${name}.html`), 'utf8')]));
+function expandIcons(html: string): string {
+  const expanded = html.replace(/<!-- TOAD_ICON: ([a-z-]+) -->/g, (_match, name: string) => {
+    if (!teachingIconNames.includes(name as typeof teachingIconNames[number])) throw new Error(`Unreviewed teaching icon: ${name}.`);
+    return `<svg class="visual-icon" width="44" height="44" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="/teaching-icons.svg#${name}"></use></svg>`;
+  });
+  if (expanded.includes('TOAD_ICON')) throw new Error('Malformed teaching icon marker.');
+  return expanded;
+}
+const lessons = new Map(lessonNames.map((name) => [name, expandIcons(readFileSync(join(source, 'lessons', `${name}.html`), 'utf8'))]));
 function href(value: string, document: string): string {
   if (value.startsWith('#') || /^(?:https?:|mailto:)/.test(value)) return value;
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)) return '#';
@@ -94,8 +104,8 @@ for (const [name, slug, label] of pages) {
     if (!text.includes('TOAD_LESSON')) return escape(text);
     const lessonName = text.trim().match(/^<!-- TOAD_LESSON: ([a-z]+) -->$/)?.[1];
     const lesson = lessons.get(lessonName as typeof lessonNames[number]);
-    // Only the two reviewed onboarding documents can embed these static fragments.
-    if (!lessonName || !lesson || usedLessons.has(lessonName) || !['QUICKSTART', 'INFOMANIAK-EXAMPLE'].includes(name)) throw new Error(`Invalid or duplicate teaching diagram in ${path}.`);
+    // Only reviewed onboarding and operating documents can embed these static fragments.
+    if (!lessonName || !lesson || usedLessons.has(lessonName) || !['QUICKSTART', 'INFOMANIAK-EXAMPLE', 'CLOUD-ACCOUNT', 'FIRST-APP', 'OBSERVABILITY'].includes(name)) throw new Error(`Invalid or duplicate teaching diagram in ${path}.`);
     usedLessons.add(lessonName);
     return lesson;
   };
@@ -124,11 +134,11 @@ for (const [name, slug, label] of pages) {
   if (name === '../LICENSE') markdown = `# MIT License\n\n\`\`\`text\n${markdown}\n\`\`\`\n\n${readFileSync(join(root, 'LICENSING.md'), 'utf8').replace(/^(#{1,5}) /gm, '#$1 ')}`;
   const body = marked.parse(markdown, { renderer, gfm: true, async: false });
   const navigation = pages.map(([, target, title]) => `<a href="/${target}.html"${target === slug ? ' aria-current="page"' : ''}>${title}</a>`).join('');
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css">${usedLessons.size ? '<link rel="stylesheet" href="/lessons.css">' : ''}</head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer>${usedLessons.has('visit') ? '<script type="module" src="/lessons.mjs"></script>' : ''}</body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css">${usedLessons.size ? '<link rel="stylesheet" href="/lessons.css"><link rel="stylesheet" href="/visuals.css">' : ''}</head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer>${usedLessons.has('visit') ? '<script type="module" src="/lessons.mjs"></script>' : ''}</body></html>`;
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg', 'global-map.svg', 'global-map-mobile.svg', 'lucide-LICENSE.txt'];
+  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg', 'global-map.svg', 'global-map-mobile.svg', 'lucide-LICENSE.txt', 'teaching-icons.svg', 'visuals.css'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {
@@ -143,6 +153,10 @@ for (const asset of assets) {
     const examples = monitoringExamples();
     const monitor = `<div data-monitor-examples><div class="monitor-scenarios" role="group" aria-label="Example monitoring state">${examples.map((example, index) => `<button type="button" data-monitor-scenario="${example.key}" aria-pressed="${index === 0}">${example.label}</button>`).join('')}</div>${examples.map((example, index) => `<div class="monitor-example" data-monitor-example="${example.key}"${index === 0 ? '' : ' hidden'}>${renderMonitor(example.data, { example: true, id: `example-${example.key}` })}</div>`).join('')}</div>`;
     html = html.replace(monitorSlot, () => monitor);
+    const overviewSlot = '<!-- TOAD_OVERVIEW -->';
+    if (html.split(overviewSlot).length !== 2) throw new Error('The homepage must contain one global overview.');
+    html = html.replace(overviewSlot, () => `<figure class="home-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="1570"><img src="/global-map.svg" width="1120" height="860" alt="You and your agent use TOAD to prepare cloud servers and ship an app. Visitors use DNS and HTTPS to reach it. Monitoring brings evidence back to you." loading="lazy"></picture><figcaption><span>Green: ship · Blue: visit · Dotted: DNS lookup · Purple: observe</span><a href="/understand.html#global-map">Read the diagram →</a></figcaption></figure>`);
+    html = expandIcons(html);
     writeFileSync(join(output, asset), html);
   } else copyFileSync(join(source, asset), join(output, asset));
 }

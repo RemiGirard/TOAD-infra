@@ -39,15 +39,26 @@ The diagram is illustrative and makes no infrastructure requests. SVG
 presentation attributes keep both image embeds and standalone diagrams
 compatible with the deployed Content Security Policy, without inline CSS.
 
-The quickstart and complete Infomaniak example embed the reviewed HTML teaching
-diagrams in `lessons/` using exact `TOAD_LESSON` comments. The build accepts
-only the named fragments in those two documents; all other raw Markdown HTML
+The quickstart, complete Infomaniak example, account, first-app and observation
+guides embed the reviewed HTML teaching diagrams in `lessons/` using exact
+`TOAD_LESSON` comments. The build accepts only the named fragments in those
+five documents; all other raw Markdown HTML
 remains escaped. `lessons.css` lays them out for desktop and mobile, and
 `lessons.mjs` lets readers follow a browser request through DNS, HTTPS and the
 app. Playback starts on request and pauses when the page is hidden. Nothing
 connects to a cloud. Without JavaScript, the complete route and inline diagrams
 remain visible. Keep the Markdown's surrounding explanations useful on GitHub,
 where the visual comments do not render.
+
+The homepage shows the global overview before its optional parts explorer.
+The explorer starts with the current three-server profile; the proposed IPv6
+profile is a separate choice. Setup, app, cost and teaching cards reuse
+`teaching-icons.svg` through reviewed `TOAD_ICON` markers. The sprite carries
+the complete upstream notices, needs no JavaScript or third-party requests,
+and its icons are decorative: text labels remain available to screen readers.
+`visuals.css` controls their sizes and layout. The same `my-app` example joins
+the homepage, runnable guides and public monitoring fixture. Recorded deployment
+evidence retains its original names.
 
 The homepage's `learn.css` / `learn.mjs` teaching map introduces domains,
 DNS, cloud servers, load balancing, TLS, containers and persistent data before

@@ -2,15 +2,15 @@ import type { ObservationView } from '../../domain/entities/observation-view.js'
 
 /** Public fixture only. No collector, credentials, customer data or cloud access. */
 export function monitoringExamples(): Array<{ key: string; label: string; data: ObservationView }> {
-  const v2 = `example/hello@sha256:${'2'.repeat(64)}`;
-  const v3 = `example/hello@sha256:${'3'.repeat(64)}`;
+  const v2 = `example/my-app@sha256:${'2'.repeat(64)}`;
+  const v3 = `example/my-app@sha256:${'3'.repeat(64)}`;
   const healthy: ObservationView = {
-    context: 'my-cloud / hello', ok: true, generatedAt: '2026-10-28T12:30:00Z', expiresAt: '2026-10-28T12:31:00Z',
+    context: 'my-cloud / my-app', ok: true, generatedAt: '2026-10-28T12:30:00Z', expiresAt: '2026-10-28T12:31:00Z',
     nodes: [1, 2, 3].map(index => ({ hostname: `manager-${index}`, address: `10.0.0.${19 + index}`, role: 'manager', leader: index === 1, state: 'ready', reachability: 'reachable', availability: 'active' })),
     quorum: { healthy: 3, managers: 3, required: 2, state: 'available' },
-    apps: [{ app: 'hello', ok: true, outcome: 'deployed', services: [{ name: 'hello_web', running: 2, desired: 2, expectedImage: v2, image: v2, actualDigests: [`sha256:${'2'.repeat(64)}`], issues: [], updateState: 'completed' }], checks: [{ name: 'app-home', ok: true, detail: 'HTTP 200 · expected status received', url: 'https://hello.platform.example.com/' }], hints: [] }],
+    apps: [{ app: 'my-app', ok: true, outcome: 'deployed', services: [{ name: 'my-app_web', running: 2, desired: 2, expectedImage: v2, image: v2, actualDigests: [`sha256:${'2'.repeat(64)}`], issues: [], updateState: 'completed' }], checks: [{ name: 'app-home', ok: true, detail: 'HTTP 200 · expected status received', url: 'https://my-app.platform.example.com/' }], hints: [] }],
     monitoring: { state: 'observed', healthyTargets: 18, totalTargets: 18, firingAlerts: 0 },
-    operation: null, history: [{ operation: 'app deploy hello', state: 'completed', events: [{ phase: 'validate', at: '12:28:00 · example' }, { phase: 'rollout', at: '12:28:04 · example' }, { phase: 'verify', at: '12:29:40 · example' }] }],
+    operation: null, history: [{ operation: 'app deploy my-app', state: 'completed', events: [{ phase: 'validate', at: '12:28:00 · example' }, { phase: 'rollout', at: '12:28:04 · example' }, { phase: 'verify', at: '12:29:40 · example' }] }],
     gaps: [], notifications: 'Outbound notification delivery is not verified by this observation.',
   };
   const rollback = structuredClone(healthy);
