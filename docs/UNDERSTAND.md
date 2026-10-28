@@ -2,8 +2,10 @@
 
 You built something on your computer. To let other people use it, it needs
 an address, somewhere to run, and a way to reach the right app securely.
-TOAD helps prepare those parts in your cloud account. You can work with a
-coding agent; you still choose the costs, access and responsibilities.
+TOAD prepares those parts in your own cloud account, from infrastructure and
+configuration defined in code. You or your coding agent use the same open-source
+CLI to deploy and operate the platform. You keep control of the files, account
+access, costs and responsibilities.
 
 ![You and your agent use TOAD to prepare cloud servers and deploy a packaged app. Visitors look up its name in DNS, then connect to the public IP over HTTPS to reach the app. Read-only monitoring returns evidence to you and your agent.](../website/global-map.svg)
 
@@ -20,6 +22,24 @@ The [visual quickstart](QUICKSTART.md) explains each step, and the
 [Compare the responsibilities first](#choose-your-level-of-responsibility).
 You can also [preview the example locally](LOCAL-STARTER.md) without buying
 cloud resources.
+
+## Your platform stays in your hands
+
+- **Your account:** cloud resources belong to your provider project. You choose
+  access and capacity and pay the provider directly.
+- **Your definitions:** Heat templates describe infrastructure, Ansible playbooks
+  configure the servers, and Compose/app manifests describe workloads. They are
+  files you can inspect, keep in Git and change.
+- **Your workflow:** TOAD runs from your operator machine or automation and
+  coordinates provisioning, releases and diagnostics. Your app source can stay
+  in its own repository, using a registry you choose.
+- **Your ability to adapt:** the current TOAD distribution is MIT licensed.
+  You can inspect, fork and modify it while retaining the required notices.
+  See [the license and its scope](../LICENSE).
+
+The cloud hardware is rented, and your chosen providers charge for their
+services. You still operate the platform and plan data storage and recovery.
+Infomaniak is the verified path; other OpenStack providers require adaptation.
 
 ## Follow one visit to your app
 

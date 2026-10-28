@@ -1,8 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your app explained — TOAD</title><meta name="description" content="TOAD: Your app explained. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/understand.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html" aria-current="page">Your app explained</a><a href="/infomaniak.html">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / YOUR APP EXPLAINED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/UNDERSTAND.md">Markdown source ↗</a></div><h1 id="your-app-from-code-to-a-public-link">Your app, from code to a public link</h1>
 <p>You built something on your computer. To let other people use it, it needs
 an address, somewhere to run, and a way to reach the right app securely.
-TOAD helps prepare those parts in your cloud account. You can work with a
-coding agent; you still choose the costs, access and responsibilities.</p>
+TOAD prepares those parts in your own cloud account, from infrastructure and
+configuration defined in code. You or your coding agent use the same open-source
+CLI to deploy and operate the platform. You keep control of the files, account
+access, costs and responsibilities.</p>
 <p><span id="global-map" class="illustration global-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="1570"><img src="/global-map.svg" width="1120" height="860" alt="You and your agent use TOAD to prepare cloud servers and deploy a packaged app. Visitors look up its name in DNS, then connect to the public IP over HTTPS to reach the app. Read-only monitoring returns evidence to you and your agent." loading="eager"></picture><span class="overview-caption"><span><span class="overview-key ship-key">Ship your app</span><span class="overview-key visit-key">Visit your app</span><span class="overview-key watch-key">Observe it</span></span><a href="/global-map.svg">Open the full diagram ↗</a></span><span class="overview-note">Teaching example · current three-server workflow · icons: <a href="/lucide-LICENSE.txt">Lucide / Feather notices</a></span></span></p>
 <p><strong>Read it in two directions.</strong> The green arrows show you shipping the app:
 prepare the cloud once, publish a package, then deploy it. The blue arrows
@@ -15,6 +17,23 @@ The <a href="/quickstart.html">visual quickstart</a> explains each step, and the
 <a href="#choose-your-level-of-responsibility">Compare the responsibilities first</a>.
 You can also <a href="/local-starter.html">preview the example locally</a> without buying
 cloud resources.</p>
+<h2 id="your-platform-stays-in-your-hands">Your platform stays in your hands</h2>
+<ul>
+<li><strong>Your account:</strong> cloud resources belong to your provider project. You choose
+access and capacity and pay the provider directly.</li>
+<li><strong>Your definitions:</strong> Heat templates describe infrastructure, Ansible playbooks
+configure the servers, and Compose/app manifests describe workloads. They are
+files you can inspect, keep in Git and change.</li>
+<li><strong>Your workflow:</strong> TOAD runs from your operator machine or automation and
+coordinates provisioning, releases and diagnostics. Your app source can stay
+in its own repository, using a registry you choose.</li>
+<li><strong>Your ability to adapt:</strong> the current TOAD distribution is MIT licensed.
+You can inspect, fork and modify it while retaining the required notices.
+See <a href="/license.html">the license and its scope</a>.</li>
+</ul>
+<p>The cloud hardware is rented, and your chosen providers charge for their
+services. You still operate the platform and plan data storage and recovery.
+Infomaniak is the verified path; other OpenStack providers require adaptation.</p>
 <h2 id="follow-one-visit-to-your-app">Follow one visit to your app</h2>
 <p>This is a teaching map of the maintained TOAD setup, not a reading of your
 account or a health report. The public homepage lets you select each part

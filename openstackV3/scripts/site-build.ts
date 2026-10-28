@@ -155,7 +155,7 @@ for (const asset of assets) {
     html = html.replace(monitorSlot, () => monitor);
     const overviewSlot = '<!-- TOAD_OVERVIEW -->';
     if (html.split(overviewSlot).length !== 2) throw new Error('The homepage must contain one global overview.');
-    html = html.replace(overviewSlot, () => `<figure class="home-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="1570"><img src="/global-map.svg" width="1120" height="860" alt="You and your agent use TOAD to prepare cloud servers and ship an app. Visitors use DNS and HTTPS to reach it. Monitoring brings evidence back to you." loading="lazy"></picture><figcaption><span>Green: ship · Blue: visit · Dotted: DNS lookup · Purple: observe</span><a href="/understand.html#global-map">Read the diagram →</a></figcaption></figure>`);
+    html = html.replace(overviewSlot, () => `<figure class="home-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="1570"><img src="/global-map.svg" width="1120" height="860" alt="You and your agent use a local TOAD CLI, editable platform files and a registry you choose. Servers and the running app live in your cloud account. Visitors use DNS and HTTPS to reach the app; monitoring brings evidence back to you." loading="lazy"></picture><figcaption><span>Green: ship · Blue: visit · Dotted: DNS lookup · Purple: observe</span><a href="/understand.html#global-map">Read the diagram →</a></figcaption></figure>`);
     html = expandIcons(html);
     writeFileSync(join(output, asset), html);
   } else copyFileSync(join(source, asset), join(output, asset));

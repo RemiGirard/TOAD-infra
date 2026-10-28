@@ -1,14 +1,18 @@
 # TOAD
 
-**Deploy and operate your apps on infrastructure you control.**
+**Your cloud account. Your platform defined in code. One open-source CLI to deploy and operate it.**
 
-TOAD is an open-source deployment toolkit for independent developers and small
-teams who want their own OpenStack-based cloud. Infomaniak Public Cloud is its
-verified production path. It provisions the servers,
-configures Docker Swarm, routes HTTPS, and gives you one CLI for applications,
-diagnosis, updates, and recovery. It is built for people and coding agents:
-versioned JSON, explicit targets, strict commands, exact release checks, and
-a private visual operation view keep actions understandable and reviewable.
+TOAD is an MIT-licensed infrastructure and orchestration toolkit for developers
+and small teams who want control of their app platform. Heat templates declare
+cloud resources, Ansible configures the servers, and Compose/manifests declare
+applications. The CLI coordinates provisioning, releases, diagnosis and recovery
+from your operator machine or automation. Your app source can stay in its own
+repository; you choose the registry and hold the cloud account.
+
+Infomaniak Public Cloud is the verified production path on TOAD's OpenStack
+foundation. Other providers need adaptation and validation. For people and
+coding agents, versioned JSON, explicit targets, strict commands, exact release
+checks and a private visual operation view keep actions understandable and reviewable.
 
 [Project site](https://toad.remigirard.dev) ·
 [Get started](docs/QUICKSTART.md) · [Cloud setup details](docs/DEPLOYMENT.md) ·
@@ -20,6 +24,21 @@ and compare the responsibilities of a hosted platform, Coolify and TOAD before
 creating resources.
 Follow the [complete Infomaniak example](docs/INFOMANIAK-EXAMPLE.md) for account
 setup, DNS/IP choices, a published app and its private monitoring interface.
+
+## What stays in your hands
+
+| You control | How TOAD supports it |
+|---|---|
+| Provider project and access | Resources are created in your cloud account; you pay the provider directly. |
+| Infrastructure and configuration | Heat templates, Ansible playbooks and app manifests are files you can inspect, version and change. |
+| Delivery and operations | One local CLI coordinates platform setup, app releases, observations and recovery workflows. Your agent uses the same commands. |
+| Use and modification of TOAD | The current MIT-licensed distribution can be inspected, forked and adapted, retaining the required notices. See [licensing scope](LICENSING.md). |
+
+TOAD has no subscription fee. Cloud resources, domains, registries and backup
+services have their own costs. You rent the underlying hardware and retain
+responsibility for capacity, security, upkeep and recovery. Account setup and
+the first child DNS delegation still need human steps; the
+[complete example](docs/INFOMANIAK-EXAMPLE.md) makes those hand-offs explicit.
 
 ## 1. Provision your cloud platform
 

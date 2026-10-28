@@ -189,7 +189,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-3b781c8bd01ebccd
+    name: toad-web-0-be9eafacb98ccf73
     file: ./index.html
   asset-1:
     name: toad-web-1-294171d4baa9f6d6
@@ -324,10 +324,10 @@ configs:
     name: toad-web-44-6282592218304c9c
     file: ./app-map-mobile.svg
   asset-45:
-    name: toad-web-45-1e9b183194e1835d
+    name: toad-web-45-f354c3eb2c0a80c9
     file: ./global-map.svg
   asset-46:
-    name: toad-web-46-8ce22108ebf38175
+    name: toad-web-46-791df7ed7d8e8b0f
     file: ./global-map-mobile.svg
   asset-47:
     name: toad-web-47-b495047bd93a9b06
@@ -336,7 +336,7 @@ configs:
     name: toad-web-48-52af6f712d8d1720
     file: ./teaching-icons.svg
   asset-49:
-    name: toad-web-49-554bab181c4fb337
+    name: toad-web-49-5778e25e0bb4f8bf
     file: ./visuals.css
   asset-50:
     name: toad-web-50-f5c6bac8e5031b75
@@ -345,7 +345,7 @@ configs:
     name: toad-web-51-db084c6466735075
     file: ./monitor.mjs
   asset-52:
-    name: toad-web-52-2a6e75274437b540
+    name: toad-web-52-7b49705a6ef2f1df
     file: ./understand.html
   asset-53:
     name: toad-web-53-d73f5e1b890954c6

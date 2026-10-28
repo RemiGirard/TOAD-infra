@@ -41,7 +41,7 @@ export function renderOverview(icons: Record<string, string>, mascot: string, li
       .replaceAll('class="rule"', 'class="rule" stroke="#cbd7bf" stroke-width="1"');
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="title desc">
 <title id="title">Your app: build it, publish it, visit it, understand it</title>
-<desc id="desc">You or your coding agent use TOAD to prepare a three-server cloud platform and publish a packaged app. A visitor looks up the app name in DNS, then connects to the public IP over HTTPS. Traefik handles encryption and routes to your running app. Read-only monitoring shows collected evidence. Data storage is optional and must be planned separately.</desc>
+<desc id="desc">You or your coding agent use TOAD to prepare a three-server cloud platform and publish a packaged app. Platform definitions stay in your repository and resources in your own provider project. A visitor looks up the app name in DNS, then connects to the public IP over HTTPS. Traefik handles encryption and routes to your running app. Read-only monitoring shows collected evidence. Data storage is optional and must be planned separately.</desc>
 <metadata>TOAD illustration: MIT, Remi Girard. Icon source: https://github.com/lucide-icons/lucide/tree/be09619c1c1124ad09c19fc3e87ee3b939409bbd\n${escape(license)}</metadata>
 <defs>${symbols}
 ${[['ship', '#69873e'], ['visit', '#267b88'], ['lookup', '#7d8d89'], ['watch', '#827194']].map(([id, color]) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="${color}"/></marker>`).join('')}
@@ -59,10 +59,10 @@ ${dot(130, 156)}${icon('laptop', 88, 119, 84)}${dot(199, 182, '#e8eee2', 28)}${i
 ${text(145, 235, 'Your code + your agent', 'title')}${text(145, 259, 'Your app stays in your repository', 'small')}
 ${arrow('M244 156H342')}${text(294, 139, 'ask / type', 'small green')}
 ${dot(400, 156, '#dceabf', 50)}${frog(361, 115, 78)}
-${text(400, 235, 'TOAD', 'title')}${text(400, 259, 'One CLI for you or your agent', 'small')}
+${text(400, 235, 'TOAD', 'title')}${text(400, 259, 'Your local CLI', 'small')}
 ${arrow('M458 156H622')}${text(540, 138, '2 · publish', 'body green')}${text(540, 183, 'build & upload', 'tiny')}
 ${dot(680, 156)}${icon('package', 647, 123, 66)}
-${text(680, 235, 'Your app, packaged', 'title')}${text(680, 259, 'Image stored in a registry', 'small')}
+${text(680, 235, 'Your app, packaged', 'title')}${text(680, 259, 'Registry you choose', 'small')}
 ${arrow('M400 278V326')}${text(418, 305, '1 · prepare your cloud', 'body green', 'start')}
 <rect x="340" y="334" width="750" height="395" rx="24" class="cloud"/>
 ${arrow('M738 156H974Q1004 156 1004 186V486')}${text(986, 276, '3 · deploy', 'body green', 'end')}
@@ -89,7 +89,7 @@ ${text(542, 701, 'Three servers run this platform · app placement is simplified
 ${text(140, 704, 'DNS finds the address.', 'small')}${text(140, 725, 'The page does not pass through DNS.', 'tiny')}
 ${arrow('M707 732V766H467V780', 'watch')}
 ${dot(468, 811, '#eee9f2', 31)}${icon('activity', 445, 788, 46, '#827194')}
-${text(515, 802, 'You and your agent see what is running', 'title', 'start')}${text(515, 827, 'Read-only evidence: version, app copies, HTTPS, freshness', 'small', 'start')}
+${text(515, 802, 'Your monitoring, for you and your agent', 'title', 'start')}${text(515, 827, 'Read-only evidence: version, app copies, HTTPS, freshness', 'small', 'start')}
 ${icon('database', 76, 781, 34)}${text(121, 797, 'Data is optional.', 'small', 'start')}${text(121, 819, 'Plan storage + backups.', 'tiny', 'start')}
 `);
 
@@ -99,10 +99,10 @@ ${text(22, 60, 'You ship it', 'title green', 'start')}
 ${dot(84, 122, '#e7efda', 37)}${icon('laptop', 54, 92, 60)}${dot(125, 149, '#e8eee2', 21)}${icon('bot', 109, 133, 32)}
 ${text(87, 196, 'Your code + agent', 'body')}
 ${arrow('M151 122H216')}${text(183, 103, 'ask / type', 'tiny green')}
-${dot(265, 122, '#dceabf', 41)}${frog(233, 87, 64)}${text(265, 196, 'TOAD', 'title')}
+${dot(265, 122, '#dceabf', 41)}${frog(233, 87, 64)}${text(265, 196, 'TOAD · your CLI', 'title')}
 ${arrow('M249 212V230H83V266')}${text(100, 251, '2 · publish image', 'small green', 'start')}
-${arrow('M278 212V266')}${text(299, 247, '1 · setup', 'tiny green', 'end')}
-${dot(83, 306, '#e7efda', 35)}${icon('package', 56, 279, 54)}${text(83, 364, 'App package', 'body')}${text(83, 386, 'In a registry', 'tiny')}
+${arrow('M278 212V266')}${text(335, 247, '1 · setup', 'tiny green', 'end')}
+${dot(83, 306, '#e7efda', 35)}${icon('package', 56, 279, 54)}${text(83, 364, 'App package', 'body')}${text(83, 386, 'Registry you choose', 'tiny')}
 ${dot(265, 306, '#e7efda', 35)}${icon('cloud', 239, 280, 52)}${text(265, 364, 'Your cloud', 'body')}${text(265, 386, '3 rented servers', 'tiny')}
 ${arrow('M83 398V429H144V453')}${arrow('M265 398V429H218V453')}
 ${text(180, 432, '3 · deploy', 'tiny green')}
@@ -125,7 +125,7 @@ ${icon('server', 95, 1303, 24)}${icon('server', 126, 1303, 24)}${icon('server', 
 ${text(180, 1347, 'Placement is simplified', 'tiny')}
 ${arrow('M180 1369V1406', 'watch')}
 ${dot(180, 1437, '#eee9f2', 27)}${icon('activity', 160, 1417, 40, '#827194')}
-${text(180, 1490, 'You + your agent can see what is running', 'body')}${text(180, 1512, 'Versions · copies · HTTPS · freshness', 'tiny')}
+${text(180, 1490, 'Your monitoring, for you and your agent', 'body')}${text(180, 1512, 'Versions · copies · HTTPS · freshness', 'tiny')}
 ${text(180, 1545, 'Data? Plan storage + backups separately.', 'tiny')}
 `, true);
   return { desktop, mobile };

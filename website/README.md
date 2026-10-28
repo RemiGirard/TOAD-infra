@@ -24,6 +24,20 @@ Only the exact `toad.remigirard.dev` router is owned by this app. Deploy it
 through the intended existing operator context using the normal app lifecycle.
 The starter demo is a separate `toad-demo` app routed at `/starter/`.
 
+## Positioning
+
+Lead with user control: the provider account, infrastructure definitions,
+application source and operation workflow. Heat, Ansible and Compose are
+inspectable files; the local CLI makes them one workflow for people and agents.
+The ownership section provides concrete evidence before the teaching map.
+
+Free means the current MIT-licensed TOAD software can be used and modified;
+cloud resources and chosen services still cost money. The hardware is rented.
+The current complete workflow is verified on Infomaniak, and other providers
+need adaptation. Account setup and first DNS delegation include human steps.
+Keep operator access private; platform and app services receive declared
+secrets in the cluster. Ownership also includes upkeep and recovery.
+
 ## Diagrams
 
 The global overview in [Your app explained](../docs/UNDERSTAND.md) connects
