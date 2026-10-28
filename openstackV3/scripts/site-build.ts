@@ -91,7 +91,7 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'agent-view.mjs', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
+  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   copyFileSync(join(source, asset), join(output, asset));

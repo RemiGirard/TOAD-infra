@@ -67,3 +67,18 @@ The example represents a coding agent using your local CLI/operator context;
 no hosted agent is implied, no credentials belong in chat, and nothing on this
 page runs a deployment. Approval happens in the agent conversation, as asked
 by the starter brief. Example output is an illustrative excerpt.
+
+The agent section's **release room** plays a six-step story on an existing
+platform with a pinned image: inspect, validate, ask for approval, roll out,
+check, and report. `app deploy` deploys the reviewed image without rebuilding it.
+Playback pauses at the demo approval. Choose a successful release, automatic
+rollback, or expired observation; the agent's explanation, terminal excerpt,
+infrastructure diagram, and release evidence change together. The old version
+remaining healthy never counts as delivery of the requested image.
+
+Play/pause, previous/next, and individual steps support manual exploration.
+Playback stops when the room leaves the viewport or the page is hidden, and
+starting another player pauses the current one. Reduced-motion preferences
+remove decorative animations while preserving the steps and controls. These
+stories use illustrative data only; the separate recorded walkthrough keeps
+its original evidence and dates.

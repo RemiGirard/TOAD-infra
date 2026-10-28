@@ -46,10 +46,13 @@ async function walkthrough() {
     play.disabled = false;
     play.addEventListener('click', () => {
       if (timer) { stop(); return; }
+      document.dispatchEvent(new CustomEvent('toad:playback', { detail: 'recorded-run' }));
       if (current === steps.length - 1) current = 0;
       show(); play.textContent = 'Pause';
       timer = setInterval(() => { if (current === steps.length - 1) { stop(); return; } current += 1; show(); }, 5500);
     });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+    document.addEventListener('toad:playback', event => { if (event.detail !== 'recorded-run') stop(); });
     show();
   } catch { title.textContent = 'The recorded run is unavailable. Open the first-app guide to follow the steps.'; }
 }
@@ -104,11 +107,13 @@ if (duet) {
   buttons.forEach((button, at) => button.addEventListener('click', () => { stop(); show(at); }));
   play.addEventListener('click', () => {
     if (timer) { stop(); return; }
+    document.dispatchEvent(new CustomEvent('toad:playback', { detail: 'duet' }));
     if (current === beats.length - 1) show(0);
     duet.dataset.playing = 'true'; play.textContent = 'Pause'; play.setAttribute('aria-pressed', 'true');
     timer = setInterval(() => { if (current === beats.length - 1) { stop(); return; } show(current + 1); }, 5000);
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+  document.addEventListener('toad:playback', event => { if (event.detail !== 'duet') stop(); });
   async function copy(value, message, resetToBrief = false) {
     const feedback = duet.querySelector('[data-duet-feedback]');
     try { await navigator.clipboard.writeText(value); feedback.textContent = message; }
