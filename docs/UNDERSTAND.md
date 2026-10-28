@@ -11,10 +11,12 @@ access, costs and responsibilities.
 
 Move the difficulty slider on the [evolving diagram](https://toad.remigirard.dev/#whole-picture).
 Ten steps gradually reveal web basics, your cloud, shipping, Swarm, networking,
-trust, observation and the full system. The maximum unfolds 42 connected detail
-cards in the same scene. Use zoom and **View this step** to inspect addresses,
-ports, secret movement, metrics/log flows, exact release proof and recovery
-boundaries. The [expert implementation notes](IMPLEMENTATION.md) provide the
+trust, observation and the full system. At maximum, open **Your computer**,
+**Swarm & registry**, or **Monitoring** to follow the actual component topology:
+OpenStack CLI, Ansible, Buildx, registry push/pull, Swarm tasks, Traefik, collectors,
+Prometheus, Loki, Grafana and Alertmanager. The 42 network, trust, observation and
+lifecycle detail cards remain below it. Use zoom to inspect the ports and arrows.
+The [expert implementation notes](IMPLEMENTATION.md) provide the
 full explanation and source links. These are declarations, not live health.
 
 **Read it in two directions.** The green arrows show you shipping the app:

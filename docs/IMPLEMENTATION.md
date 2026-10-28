@@ -54,6 +54,40 @@ Sources: [Heat profile](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/op
 
 ## Provisioning and desired state
 
+### The tools on your computer
+
+The full-system diagram separates the **operator toolchain** from the services
+installed on the servers. These are source requirements, not an audit of the
+tools installed on your particular computer.
+
+| Tool | How TOAD uses it |
+|---|---|
+| Node 22+, pnpm and tsx | The `toad` launcher runs the TypeScript CLI. It coordinates the other tools and records operations. |
+| Python + OpenStack CLI | A dedicated virtual environment contains the locked OpenStack, Heat, Keystone, Octavia and Designate clients. The CLI invokes it against provider APIs. |
+| Python + Ansible | A separate virtual environment runs playbooks over SSH, using generated private inventory. Hosts run Docker Engine and Swarm after configuration. |
+| OpenSSH, ssh-keygen, OpenSSL | SSH transport and project keys; admin CA/client certificate creation and import envelopes. Only the public client CA reaches Traefik. |
+| Docker CLI, daemon and Buildx | Needed for `app publish`, not cloud provisioning or SSH-based inspection. Buildx pushes an allow-listed build and returns the digest pinned into Compose. |
+| curl and tar | Client-authenticated Prometheus requests and application bundle transfer. |
+| age and rclone | Age handles encrypted secret/backup inputs. Configured offsite backup jobs also use rclone. |
+
+The optional OCI operator image bundles Node, the Python environments and support
+tools. Its Dockerfile **does not install Docker CLI or Buildx**; image publishing
+inside that image needs additional setup. The registry is a separate OCI service
+you choose. Local Docker authentication for pushing is not automatically sent to
+Swarm: deployment does not use `--with-registry-auth`. Use publicly pullable images
+for the simplest path, or configure node pull authentication separately.
+
+Toolchain sources reviewed at [80b79b0](https://github.com/RemiGirard/TOAD-infra/tree/80b79b0):
+[launcher](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/toad),
+[doctor](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/openstackV3/scripts/presentation/pages/doctor.ts),
+[OpenStack invocation](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/openstackV3/scripts/infrastructure/openstack.ts),
+[Ansible environment](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/openstackV3/scripts/presentation/pages/apply.ts),
+[operator image](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/Dockerfile),
+[publish](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/openstackV3/scripts/infrastructure/app-image.ts),
+[stack deployment](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/ansible/playbooks/deployApp.yaml).
+
+### Provisioning sequence
+
 1. **Select a context.** `cloud init NAME` creates/selects local templates;
    it does not create cloud servers. Operator credentials and environment
    configuration remain outside public source. An application's source can
@@ -153,6 +187,16 @@ Alloy, node-exporter and cAdvisor are global services. Prometheus retention is
 7 days with a 5 GB size limit. Notification destinations and successful delivery
 need explicit configuration and validation.
 
+Grafana queries its file-provisioned Prometheus and Loki datasources; dashboards
+and datasource definitions are managed as files. Alloy discovers Docker logs
+every 5 seconds through the local socket and pushes to Loki's
+`/loki/api/v1/push`; port `12345` is Alloy's HTTP/metrics endpoint. Loki uses
+filesystem storage, 168-hour retention and replication factor 1. Blackbox's
+bundled targets are hello, whoami, root and www, not every app's declared check.
+The default Alertmanager receiver is `dashboard-only`, with no external
+notification integration. Prometheus, Loki, Grafana, Blackbox and Alertmanager
+each run one task on the monitoring-state node.
+
 | Evidence channel | Exact scope |
 |---|---|
 | `observe` | Swarm node identity/address/role/state/reachability/availability/leader, app release evidence, declared HTTPS results, sanitized task issues, authenticated Prometheus target/alert counts and local operation history. |
@@ -172,6 +216,9 @@ tests to assess a release.
 Sources: [monitoring stack](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/docker-compose.yaml),
 [Prometheus configuration](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/prometheus.yml.j2),
 [Alloy log collection](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/alloy/config.alloy),
+[Grafana datasources](https://github.com/RemiGirard/TOAD-infra/tree/80b79b0/monitoring/grafana/provisioning/datasources),
+[Loki storage](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/monitoring/loki-config.yml),
+[Alertmanager defaults](https://github.com/RemiGirard/TOAD-infra/blob/80b79b0/monitoring/alertmanager.yml),
 [observation collection](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/observation.ts),
 [watch/export handler](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/observe.ts),
 [operation journal](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/operation-lock.ts).

@@ -205,7 +205,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-9a73f81d5af75904
+    name: toad-web-0-1f17faa7e7b5cd69
     file: ./index.html
   asset-1:
     name: toad-web-1-294171d4baa9f6d6
@@ -355,10 +355,10 @@ configs:
     name: toad-web-49-5778e25e0bb4f8bf
     file: ./visuals.css
   asset-50:
-    name: toad-web-50-3120298a91e9df75
+    name: toad-web-50-cb951f0884d56bec
     file: ./diagram-levels.css
   asset-51:
-    name: toad-web-51-8dc805137fcf4d20
+    name: toad-web-51-e9f9b302b27e70b3
     file: ./diagram-levels.mjs
   asset-52:
     name: toad-web-52-a74a231958ad8dbf
@@ -382,7 +382,7 @@ configs:
     name: toad-web-58-db084c6466735075
     file: ./monitor.mjs
   asset-59:
-    name: toad-web-59-9b3bf1ba55e411df
+    name: toad-web-59-eeaef73c1ec65eec
     file: ./understand.html
   asset-60:
     name: toad-web-60-d762eb0be92f53e9
@@ -406,7 +406,7 @@ configs:
     name: toad-web-66-aff83f5b4c9a6a70
     file: ./architecture.html
   asset-67:
-    name: toad-web-67-50b01641b51b595f
+    name: toad-web-67-2cc41e0c8d1b89d8
     file: ./implementation.html
   asset-68:
     name: toad-web-68-f3f77705e4ae2013

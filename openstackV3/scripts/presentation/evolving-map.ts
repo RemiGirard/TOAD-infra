@@ -1,4 +1,5 @@
 import { renderDetailBranches } from './diagram-depth.js';
+import { renderComponentMap } from './component-map.js';
 
 /** One persistent SVG scene. The client reveals layers without replacing nodes. */
 export function renderEvolvingMap(): string {
@@ -29,8 +30,8 @@ ${node('entry', `${circle()}${icon('globe', 56)}${text(69, 'Public entry')}${tex
 ${node('agent', `${circle('ship', 37)}${icon('laptop', 52)}${text(4, '&lt;/&gt;', 'map-laptop-code')}${layer('delivery', `<use href="/teaching-icons.svg#bot" x="19" y="10" width="31" height="31"/>${text(64, 'Your code + agent')}${text(88, 'Your app repository', 'map-small')}`)}${layer('delivery', `${text(64, 'My website')}${text(88, 'Code on my computer', 'map-small')}`, true)}`)}
 ${node('brief', `${layer('delivery', `<rect x="-108" y="-25" width="216" height="38" rx="9" class="map-brief-bubble"/>${text(0, 'Deploy my website', 'map-brief-text')}`, true)}`)}
 ${node('toad', `${circle('ship', 40)}<image href="/toad.svg" x="-33" y="-33" width="66" height="66"/>${text(64, 'TOAD')}${text(88, 'Your local CLI', 'map-small')}${layer('network', text(110, 'Context · Heat · Ansible', 'map-technical'))}`, 'delivery')}
-${node('package', `${circle('ship', 37)}${icon('package', 55)}${text(64, 'Your app, packaged')}${text(88, 'Registry you choose', 'map-small')}${layer('network', text(110, 'Publish → immutable digest', 'map-technical'))}`, 'delivery')}
-${node('managers', `${[-106, 0, 106].map((x, index) => `<g transform="translate(${x} 0)"><rect x="-46" y="-28" width="92" height="100" rx="9" class="map-manager"/>${icon('server', 30)}${text(34, `manager-${index + 1}`, 'map-small')}${layer('network', text(56, `10.0.0.${20 + index}`, 'map-code'))}</g>`).join('')}${layer('network', text(96, 'Swarm quorum 2/3 · overlay 10.20.0.0/16', 'map-technical'))}`, 'cloud')}
+${node('package', `${circle('ship', 37)}${icon('package', 55)}${text(64, 'Your image registry')}${text(88, 'A service you choose', 'map-small')}${layer('network', text(110, 'Buildx push · Swarm pull · digest', 'map-technical'))}`, 'delivery')}
+${node('managers', `${text(-45, 'Docker Swarm', 'map-small')}${[-106, 0, 106].map((x, index) => `<g transform="translate(${x} 0)"><rect x="-46" y="-28" width="92" height="100" rx="9" class="map-manager"/>${icon('server', 30)}${text(34, `manager-${index + 1}`, 'map-small')}${layer('network', text(56, `10.0.0.${20 + index}`, 'map-code'))}</g>`).join('')}${layer('network', text(96, 'Swarm quorum 2/3 · overlay 10.20.0.0/16', 'map-technical'))}`, 'cloud')}
 ${node('monitor', `${circle('watch', 30)}${icon('activity', 43)}${text(58, 'Your monitoring')}${text(83, 'Version · copies · HTTPS · freshness', 'map-small')}${layer('network', text(108, 'Prometheus :9090 · Grafana :3000 · mTLS', 'map-technical'))}`, 'observe')}
 ${node('other-paths', `${text(0, 'Other paths &amp; boundaries')}${text(27, 'SSH → 198.51.100.20 → manager-1', 'map-technical')}${text(49, 'Private: 22 / 2377 / 7946 / 4789', 'map-technical')}${text(71, 'Separate router for outbound traffic', 'map-technical')}${text(93, 'ACME + app data: node-local state', 'map-technical')}`, 'network')}
 ${node('return-label', text(0, 'The page comes back to your screen', 'map-small'))}
@@ -40,6 +41,7 @@ ${node('prepare-label', text(0, '1 · prepare your cloud', 'map-small ship'), 'd
 ${node('publish-label', text(0, '2 · publish', 'map-small ship'), 'delivery')}
 ${node('deploy-label', text(0, '3 · deploy', 'map-small ship'), 'delivery')}
 <path data-map-spine class="map-unfold-path" data-reveal="network"/>
+${renderComponentMap()}
 ${renderDetailBranches()}
 </g></svg>`;
 }

@@ -120,12 +120,12 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     for (const branch of branches) {
       const branchHeight = Number(mobile ? branch.dataset.mobileHeight : branch.dataset.desktopHeight);
       branch.setAttribute('transform', `translate(0 ${nextY})`);
-      const [start, end] = branchPreparation[branch.dataset.mapBranch];
+      const [start, end] = branchPreparation[branch.dataset.reveal];
       const open = smooth((value - start) / (end - start));
       if (open > 0) height = Math.max(height, nextY + branchHeight * open + 40);
       if (previous) spine += ` M${mobile ? 180 : 560} ${previous}V${nextY}`;
-      previous = nextY + branchHeight - 16;
-      nextY += branchHeight + 60;
+      previous = nextY + branchHeight * open - 16;
+      nextY += (branchHeight + 60) * open;
     }
     svg.querySelector('[data-map-spine]').setAttribute('d', spine);
     const top = svg.getAttribute('viewBox').split(' ')[1];
@@ -157,10 +157,11 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     root.querySelector('[data-scene-title]').textContent = stop.title;
     root.querySelector('[data-scene-description]').textContent = stop.description;
     svg.querySelector('desc').textContent = `${stop.description} Teaching model, not live health or placement.`;
-    const branch = branches.find(branch => branch.dataset.mapBranch === stop.key);
+    const branch = branches.find(branch => branch.dataset.mapBranch === (stop.key === 'expert' ? 'components' : stop.key));
     root.querySelector('[data-view-step]').hidden = !branch;
     root.querySelector('[data-view-overview]').hidden = !branch;
-    root.querySelector('[data-view-step]').textContent = `View ${stop.name.toLowerCase()} ↓`;
+    root.querySelector('[data-view-step]').textContent = stop.key === 'expert' ? 'View components ↓' : `View ${stop.name.toLowerCase()} ↓`;
+    root.querySelector('[data-component-tools]').hidden = target < 94;
     const url = new URL(location.href);
     url.searchParams.set('level', stop.key);
     if (target === stop.at) url.searchParams.delete('detail');
@@ -208,9 +209,17 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   root.querySelector('[data-zoom-fit]').addEventListener('click', () => { zoom(0); viewport.scrollLeft = 0; });
   root.querySelector('[data-view-step]').addEventListener('click', () => {
     set(target, true);
-    const branch = branches.find(branch => branch.dataset.mapBranch === nearest(stops, target).key);
+    const key = nearest(stops, target).key;
+    const branch = branches.find(branch => branch.dataset.mapBranch === (key === 'expert' ? 'components' : key));
     if (!branch) return;
     const top = branch.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 8;
+    viewport.scrollTo({ top, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
+  });
+  for (const button of root.querySelectorAll('[data-component-jump]')) button.addEventListener('click', () => {
+    set(100, true);
+    remember();
+    const section = svg.querySelector(`.map-advanced-${mobile ? 'mobile' : 'desktop'} [data-map-section="${button.dataset.componentJump}"]`);
+    const top = section.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 8;
     viewport.scrollTo({ top, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
   });
   root.querySelector('[data-view-overview]').addEventListener('click', () => viewport.scrollTo({ top: 0, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' }));

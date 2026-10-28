@@ -58,7 +58,13 @@ A native difficulty range has ten stops: **Your code**, **Names & IPs**, **HTTPS
 **Your cloud**, **Shipping**, **Swarm** (the default), **Networking**, **Trust**,
 **Observation**, and **Full system**. The same device, Internet and app nodes
 persist throughout. `presentation/diagram-depth.ts` owns the step descriptions
-and 42 advanced detail cards. Its four connected branches unfold below the core
+and 42 advanced detail cards. `presentation/component-map.ts` adds an explicit
+component topology at Full system: local tools, provider APIs, chosen OCI registry,
+Docker Swarm services and the monitoring pipelines. Workstation, Swarm/registry
+and monitoring shortcuts pan to those sections in the same SVG. Named service
+nodes show ports, tool environments, placement, storage and evidence boundaries;
+mobile uses numbered connection lanes with a matching legend. Its four connected
+detail branches unfold below the core
 route in the same SVG: network paths, trust/secrets, observation, and the full
 provision/release/recovery lifecycle. Desktop cards use three columns; mobile
 uses a vertical layout with the same content.
@@ -75,7 +81,9 @@ Native keyboard controls work, and the URL shares both named levels
 (`?level=network#whole-picture`) and intermediate detail (`?detail=61#whole-picture`).
 Old `web` and `toad` named links still resolve to HTTPS and Swarm. Fit and
 100–250% zoom operate inside the diagram viewport; View this step and Overview
-pan within it. New advanced layers do not auto-pan; returning to a basic step
+pan within it. View components opens the topology before the advanced detail
+cards. Inactive branches reserve no vertical space. New advanced layers do not
+auto-pan; returning to a basic step
 brings the original route back into view.
 Range adjustments are coalesced into history entries; Back/Forward restore the scene.
 
