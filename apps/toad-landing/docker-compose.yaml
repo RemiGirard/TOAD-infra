@@ -149,13 +149,13 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-7f4fac81120bb5b5
+    name: toad-web-0-a85d8e69fd00669c
     file: ./index.html
   asset-1:
-    name: toad-web-1-7541ea014174341c
+    name: toad-web-1-ad4df2bf1f7df745
     file: ./style.css
   asset-2:
-    name: toad-web-2-2d095bba43b8c01a
+    name: toad-web-2-8516ccd7dbb5d10a
     file: ./app.mjs
   asset-3:
     name: toad-web-3-42bdfa741838204b

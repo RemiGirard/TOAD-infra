@@ -55,33 +55,66 @@ async function walkthrough() {
 }
 walkthrough();
 
-const usage = document.querySelector('[data-usage-preview]');
-if (usage) {
-  const tabs = [...usage.querySelectorAll('[role="tab"]')];
-  function selectUsage(tab) {
-    for (const candidate of tabs) {
-      const selected = candidate === tab;
-      candidate.setAttribute('aria-selected', String(selected));
-      candidate.tabIndex = selected ? 0 : -1;
-      document.getElementById(candidate.getAttribute('aria-controls')).hidden = !selected;
-    }
+const duet = document.querySelector('[data-deploy-duet]');
+if (duet) {
+  const brief = duet.querySelector('[data-duet-message]').textContent;
+  const beats = [
+    { key: 'plan', speaker: 'YOUR BRIEF', message: brief,
+      caption: 'First, a read-only plan.', command: './toad cloud plan my-cloud --context my-cloud --json',
+      output: '{ "changes": false,\n  "resources": { "managers": 3, "loadBalancers": 1 } }',
+      result: 'Your cloud. Your call.', detail: 'Type the command, or let your agent take the next step.' },
+    { key: 'inspect', speaker: 'AGENT → YOU', message: 'Let me read the room: the target cloud, the running app, and any gaps in the evidence.',
+      caption: 'Your agent uses the same CLI you do.', command: './toad observe --app my-app --context my-cloud --json',
+      output: '// quorum · image digests · HTTPS · metrics\n// one timestamped observation, shared with you',
+      result: 'Same view. Same understanding.', detail: 'You can inspect the private operation view alongside your agent.' },
+    { key: 'approve', speaker: 'AGENT → YOU', message: 'Here’s the plan. Shall I apply my-cloud and then release my-app? You give the green light.',
+      caption: 'Planned next command — after your approval.', command: './toad cloud apply my-cloud --context my-cloud',
+      output: '// approval happens in your agent conversation\n// then: Heat → Ansible → Swarm → HTTPS',
+      result: 'You’re still at the wheel.', detail: 'The starter brief asks your agent to wait before making changes.' },
+    { key: 'ship', speaker: 'AGENT → YOU', message: 'Green light received. I’ll ship the pinned image and check what actually runs. You keep building.',
+      caption: 'A few extra hands. One familiar command.', command: './toad app release my-app --context my-cloud',
+      output: 'build → pin → deploy → verify\nimage@sha256:8a4d…',
+      result: 'A little teamwork. A real release.', detail: 'The CLI checks the requested image against the service and running tasks.' },
+    { key: 'verify', speaker: 'AGENT → YOU', message: 'Shipped. Here are the receipts: the requested image is running, replicas are ready, and HTTPS passes.',
+      caption: 'The result comes with evidence.', command: './toad app diagnose my-app --context my-cloud --json',
+      output: '{ "ok": true, "outcome": "deployed",\n  "services": [{ "running": 2, "desired": 2 }] }',
+      result: 'Hello, your next idea.', detail: 'my-app.your-domain.dev · exact image · ready replicas · HTTPS' }
+  ];
+  const buttons = [...duet.querySelectorAll('[data-duet-step]')];
+  const play = duet.querySelector('[data-duet-play]');
+  let current = 0;
+  let timer;
+  function show(index) {
+    current = index;
+    const beat = beats[current];
+    duet.dataset.beat = beat.key;
+    for (const [selector, value] of [
+      ['[data-duet-speaker]', beat.speaker], ['[data-duet-message]', beat.message],
+      ['[data-duet-caption]', beat.caption], ['[data-duet-command]', beat.command],
+      ['[data-duet-output]', beat.output], ['[data-duet-result]', beat.result],
+      ['[data-duet-result-detail]', beat.detail], ['[data-duet-count]', `0${current + 1} / 05`]
+    ]) duet.querySelector(selector).textContent = value;
+    buttons.forEach((button, at) => button.setAttribute('aria-pressed', String(at === current)));
+    duet.querySelector('[data-duet-feedback]').textContent = '';
   }
-  for (const [index, tab] of tabs.entries()) {
-    tab.addEventListener('click', () => selectUsage(tab));
-    tab.addEventListener('keydown', event => {
-      let next;
-      if (event.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
-      else if (event.key === 'ArrowLeft') next = tabs[(index + tabs.length - 1) % tabs.length];
-      else if (event.key === 'Home') next = tabs[0];
-      else if (event.key === 'End') next = tabs[tabs.length - 1];
-      if (next) { event.preventDefault(); selectUsage(next); next.focus(); }
-    });
+  function stop() {
+    clearInterval(timer); timer = undefined; duet.dataset.playing = 'false';
+    play.textContent = 'Play the handoff'; play.setAttribute('aria-pressed', 'false');
   }
-  usage.querySelector('[data-copy-agent-brief]').addEventListener('click', async () => {
-    const feedback = usage.querySelector('[data-copy-feedback]');
-    try {
-      await navigator.clipboard.writeText(usage.querySelector('#agent-brief-text').textContent);
-      feedback.textContent = 'Brief copied.';
-    } catch { feedback.textContent = 'Select the brief above to copy it.'; }
+  buttons.forEach((button, at) => button.addEventListener('click', () => { stop(); show(at); }));
+  play.addEventListener('click', () => {
+    if (timer) { stop(); return; }
+    if (current === beats.length - 1) show(0);
+    duet.dataset.playing = 'true'; play.textContent = 'Pause'; play.setAttribute('aria-pressed', 'true');
+    timer = setInterval(() => { if (current === beats.length - 1) { stop(); return; } show(current + 1); }, 5000);
   });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+  async function copy(value, message, resetToBrief = false) {
+    const feedback = duet.querySelector('[data-duet-feedback]');
+    try { await navigator.clipboard.writeText(value); feedback.textContent = message; }
+    catch { if (resetToBrief) show(0); feedback.textContent = 'Select the text above to copy it.'; }
+  }
+  duet.querySelector('[data-copy-brief]').addEventListener('click', () => copy(brief, 'Starter brief copied.', true));
+  duet.querySelector('[data-copy-command]').addEventListener('click', () => copy(beats[current].command, 'Command copied.'));
+  show(0);
 }

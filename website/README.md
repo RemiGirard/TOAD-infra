@@ -54,9 +54,16 @@ Normal builds and deployment do not install or launch the renderer.
 
 ## Terminal and agent examples
 
-The hero separates terminal commands from a copyable coding-agent brief. Its
-commands use the repository's `./toad` launcher, a symlink to `toad.mjs`, after
-workstation, context and app setup. `node toad.mjs` remains the equivalent
-launcher on platforms without executable symlinks. The agent example uses the
-same local CLI and operator context; it does not imply a hosted agent service
-or ask users to paste credentials into chat. Both panels are illustrative.
+The hero shows a terminal and an agent conversation together, connected by a
+playable five-step handoff: plan, inspect, approve, ship and verify. Both remain
+visible. The stage buttons also work without playback; playback starts only on
+request, can be paused, and stops when the page is hidden. Reduced-motion
+preferences disable the decorative movement.
+
+Copy the current terminal command or the original starter brief. Commands use
+the repository's `./toad` launcher after workstation, context and app setup.
+`node toad.mjs` remains equivalent on platforms without executable symlinks.
+The example represents a coding agent using your local CLI/operator context;
+no hosted agent is implied, no credentials belong in chat, and nothing on this
+page runs a deployment. Approval happens in the agent conversation, as asked
+by the starter brief. Example output is an illustrative excerpt.
