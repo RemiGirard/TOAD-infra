@@ -53,17 +53,26 @@ The diagram is illustrative and makes no infrastructure requests. SVG
 presentation attributes keep both image embeds and standalone diagrams
 compatible with the deployed Content Security Policy, without inline CSS.
 
-The homepage offers four levels of this story: **Just the idea**, **Web basics**,
-**TOAD platform** (the default), and **Expert**. `diagram-levels.css` and
-`diagram-levels.mjs` provide keyboard-accessible tabs and shareable
-`?level=simple|web|toad|expert#whole-picture` views. Simple and web diagrams each
-have a mobile layout. Expert uses the same reviewed `IMPLEMENTATION.md` as its
-standalone guide: six expandable chapters, source links, a wide topology that
-can be panned or fitted to the screen, and explicit failure boundaries.
-Keep the six-section embedding contract in `presentation/diagram-explorer.ts`
-aligned when editing that guide. Without JavaScript, the default map and links
-to the other diagrams/guide remain available. These are teaching models, never
-live observations; the simple view does not promise a one-server TOAD profile.
+The homepage has one evolving SVG scene, rendered by `presentation/evolving-map.ts`.
+A native difficulty range reveals DNS and HTTPS, then TOAD delivery and cloud
+resources, then technical addresses and boundaries. The same device, Internet
+and app nodes persist throughout. Four named stops are available: **Just the
+idea**, **Web basics**, **TOAD platform** (the default), and **Expert**.
+`diagram-levels.mjs` gently interpolates SVG attributes and makes room before
+fading in new parts; it does not replace diagrams or inject inline styles.
+Motion stops when settled or hidden, and honors reduced-motion preferences.
+The mobile layout follows the same scene vertically in a scrollable viewport.
+Native keyboard controls work, and the URL shares both named levels
+(`?level=web#whole-picture`) and intermediate detail (`?level=web&detail=42#whole-picture`).
+Range adjustments are coalesced into history entries; Back/Forward restore the scene.
+
+The optional implementation notes reuse `IMPLEMENTATION.md` in six expandable
+chapters, with source links and explicit failure boundaries. Its separate static
+topology stays in the standalone guide. Keep the six-section embedding contract
+in `presentation/diagram-explorer.ts` aligned when editing that guide.
+Without JavaScript, the default static map and links to the other diagrams/guide
+remain available. These are teaching models, never live observations; the simple
+view does not promise a one-server TOAD profile.
 
 The quickstart, complete Infomaniak example, account, first-app and observation
 guides embed the reviewed HTML teaching diagrams in `lessons/` using exact

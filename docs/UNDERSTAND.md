@@ -9,9 +9,9 @@ access, costs and responsibilities.
 
 ![You and your agent use TOAD to prepare cloud servers and deploy a packaged app. Visitors look up its name in DNS, then connect to the public IP over HTTPS to reach the app. Read-only monitoring returns evidence to you and your agent.](../website/global-map.svg)
 
-Choose your depth in the [four-level visual explorer](https://toad.remigirard.dev/#whole-picture):
-just the idea, web basics, the TOAD platform, or the
-[expert implementation](IMPLEMENTATION.md). The expert level includes exact
+Move the difficulty slider on the [evolving diagram](https://toad.remigirard.dev/#whole-picture).
+The same scene gradually reveals web basics, the TOAD platform and technical
+detail. The [expert implementation notes](IMPLEMENTATION.md) include exact
 network paths, ports, trust boundaries and failure behavior, with source links.
 
 **Read it in two directions.** The green arrows show you shipping the app:

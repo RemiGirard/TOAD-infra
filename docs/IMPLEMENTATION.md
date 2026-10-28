@@ -8,7 +8,7 @@ inventory of your account. Public `198.51.100.x` addresses are reserved examples
 private addresses below are the template's defaults.
 
 The same implementation can be read in the homepage's **Expert** level.
-Start with [the four-level explorer](https://toad.remigirard.dev/#whole-picture) or the
+Start with [the evolving diagram](https://toad.remigirard.dev/#whole-picture) or the
 [complete Infomaniak recipe](INFOMANIAK-EXAMPLE.md) for the runnable setup.
 
 ## Network and runtime
