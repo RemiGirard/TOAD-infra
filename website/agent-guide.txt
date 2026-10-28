@@ -8,9 +8,11 @@ Observability and private visual view: https://toad.remigirard.dev/observability
 Cloud-first setup: https://toad.remigirard.dev/quickstart.html
 Account, project and provider compatibility: https://toad.remigirard.dev/account.html
 Beginner map, terminology and hosting choices: https://toad.remigirard.dev/understand.html
+Complete Infomaniak account-to-monitoring example: https://toad.remigirard.dev/infomaniak.html
 Application delivery: https://toad.remigirard.dev/first-app.html
 
 Read the checkout's AGENTS.md, README.md and SECURITY.md before acting.
+Short user requests are sufficient; use AGENTS.md and the runbook as the operating context.
 Inspect the user's existing app and TOAD context; do not substitute the starter app.
 If there is no verified platform, explain Infomaniak setup, costs and DNS changes first.
 If account/project access is missing, guide official provider setup; reuse existing accounts and suitable projects.

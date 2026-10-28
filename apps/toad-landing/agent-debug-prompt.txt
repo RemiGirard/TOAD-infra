@@ -1,8 +1,2 @@
-Investigate why this app's latest release failed on TOAD-infra:
+Investigate my failed TOAD release and propose a fix before changing anything.
 https://github.com/RemiGirard/TOAD-infra
-
-Read TOAD's AGENTS.md, README.md, SECURITY.md and docs/AGENT-RUNBOOK.md. Inspect this repository's TOAD metadata and existing operator setup. Identify the exact app, context and requested release; ask me if the target is ambiguous.
-
-Start read-only. Inspect the current operation before considering a retry, then collect app diagnosis, failed checks and relevant bounded logs through TOAD's CLI. Keep credentials and raw logs local; summarize only the evidence needed to explain the failure. Distinguish a recovered old version from successful delivery of the new image, and mark unknown or stale evidence explicitly.
-
-Explain the likely cause, the evidence supporting it and a proposed fix for review. This investigation is read-only: do not edit application source, manifests or operator configuration, apply patches, build or publish images, deploy, restart, roll back or change infrastructure. After the report, wait for my approval before starting a fix. Do not launch another deployment merely because a previous command timed out.

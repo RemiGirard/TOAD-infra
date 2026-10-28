@@ -17,6 +17,11 @@ cloud resources.
 This is a teaching map of the maintained TOAD setup, not a reading of your
 account or a health report. The public homepage lets you select each part
 for an explanation. No account or credentials are needed to explore it.
+It also compares a one-server IPv6 design with the current three-server
+workflow. The one-server TOAD profile still needs implementation and validation;
+provider support alone does not make a TOAD deployment recipe ready.
+The [complete Infomaniak example](INFOMANIAK-EXAMPLE.md) connects these concepts
+to concrete names, reserved example IPs and the actual commands.
 
 1. A visitor opens **hello.platform.example.com**.
 2. Their browser asks **DNS** for the name's address. DNS returns the public

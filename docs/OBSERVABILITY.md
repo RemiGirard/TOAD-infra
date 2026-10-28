@@ -35,14 +35,23 @@ never load your cluster credentials or private state.
 
 ## Read the view
 
-Start with **Your infrastructure map**. The route model explains DNS lookup,
-the public load balancer, the HTTPS gateway and containers. Below it, observed
-server and application cards use the selected context's collected names,
-states and running-copy counts. No placement edges are inferred between them.
-Expand **Explain the infrastructure terms** for plain-language definitions.
+The website's example and private exports now use the same interface:
+
+- **Overview:** counts, explained visitor route and actual observed server cards.
+  Open a server to inspect its Swarm-advertised address, role and reachability.
+- **Applications:** running copies, requested/running images and declared endpoint checks.
+- **Signals:** metrics collection, alert counts, evidence gaps and protected dashboard links.
+- **Agent activity:** current local operation and recorded phase history.
+
+Tabs support arrow keys, Home and End. Without JavaScript, the default Overview
+is visible; enable JavaScript to use the other views. The route model explains
+DNS lookup, the load balancer, HTTPS gateway and containers. It does not infer
+placement edges from observed servers to apps.
 DNS/load-balancer/gateway health, container placement, storage and backup state
 are not separately discovered by this map. Use the check evidence below it.
 The [beginner guide](UNDERSTAND.md) explains the full visitor journey.
+The [Infomaniak example](INFOMANIAK-EXAMPLE.md#7-open-the-control-room-and-follow-an-update)
+shows the complete setup and how to open the default local export.
 
 | Area | What it proves | What it does not prove |
 |---|---|---|

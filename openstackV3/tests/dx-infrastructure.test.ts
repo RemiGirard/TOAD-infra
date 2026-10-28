@@ -3,9 +3,11 @@ import { mkdtempSync, writeFileSync, rmSync, existsSync, mkdirSync, symlinkSync 
 import { tmpdir, hostname } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { createHash } from 'node:crypto';
 import { validateCommandArguments } from '../scripts/infrastructure/command-arguments.js';
 import { acknowledgeInterruptedOperation, withOperationLock, operationHistory } from '../scripts/infrastructure/operation-lock.js';
-import { renderObservation, type Observation } from '../scripts/infrastructure/observation.js';
+import type { Observation } from '../scripts/infrastructure/observation.js';
+import { renderObservation } from '../scripts/presentation/monitoring/view.js';
 import { appSecretPath } from '../scripts/infrastructure/app-manifest.js';
 
 test('unsupported safety flags fail before any command handler', () => {
@@ -26,7 +28,7 @@ test('dead coordinator locks remain until explicit local acknowledgement', async
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 test('private operation view escapes observed names and embeds explicit expiry', () => {
-  const observation = { version: 1, ok: false, context: '<script>unsafe</script>', generatedAt: '2026-10-28T09:00:00Z', expiresAt: '2026-10-28T09:01:00Z', nodes: [], apps: [{ app: '<img src=x onerror=unsafe()>', ok: false, outcome: 'failed', services: [{ name: '<svg onload=unsafe()>', running: 0, desired: 2, expectedImage: '', image: '', updateState: '' }], checks: [], hints: [] }], quorum: { state: 'unknown', healthy: 0, managers: 0, required: 1 }, monitoring: { state: 'unknown' }, operation: null, history: [], gaps: ['Metrics unavailable'], notifications: 'Not verified' } as Observation;
+  const observation = { version: 1, ok: false, context: '<script>unsafe</script>', generatedAt: '2026-10-28T09:00:00Z', expiresAt: '2026-10-28T09:01:00Z', nodes: [], apps: [{ app: '<img src=x onerror=unsafe()>', ok: false, outcome: 'failed', services: [{ name: '<svg onload=unsafe()>', running: 0, desired: 2, expectedImage: 'example/image@sha256:v2', image: 'example/image@sha256:v2', actualDigests: ['sha256:v1'], issues: ['task_digest_mismatch'], updateState: '' }], checks: [{ name: 'private endpoint', ok: false, detail: 'unavailable', url: 'https://user:password@example.com/?token=secret' }], hints: [] }], quorum: { state: 'unknown', healthy: 0, managers: 0, required: 1 }, monitoring: { state: 'unknown' }, operation: null, history: [], gaps: ['Metrics unavailable'], notifications: 'Not verified' } as Observation;
   const html = renderObservation(observation);
   assert.equal(html.includes('<script>unsafe</script>'), false);
   assert.equal(html.includes('<img src=x onerror=unsafe()>'), false);
@@ -34,6 +36,17 @@ test('private operation view escapes observed names and embeds explicit expiry',
   assert.match(html, /data-expiry="2026-10-28T09:01:00Z"/);
   assert.match(html, /Stale evidence/);
   assert.match(html, /Metrics unavailable/);
+  assert.match(html, /Running task digests<br>sha256:v1/);
+  assert.match(html, /task_digest_mismatch/);
+  assert.equal(html.includes('user:password'), false);
+  assert.equal(html.includes('token=secret'), false);
+  const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script);
+  assert.ok(html.includes(`script-src 'sha256-${createHash('sha256').update(script).digest('base64')}'`));
+  const withUnsafeLink = renderObservation({ ...observation, monitoring: { state: 'unknown', links: { unsafe: 'javascript:alert(1)', credentials: 'https://user:password@example.com/', grafana: 'https://grafana.example.com/' } } });
+  assert.equal(withUnsafeLink.includes('href="javascript:'), false);
+  assert.equal(withUnsafeLink.includes('href="https://user:password@'), false);
+  assert.ok(withUnsafeLink.includes('href="https://grafana.example.com/"'));
 });
 test('ciphertext paths cannot follow a secret-directory alias into another project', () => {
   const directory = mkdtempSync(join(tmpdir(), 'toad-secret-boundary-'));

@@ -5,6 +5,28 @@ Swarm platform for Infomaniak Public Cloud. Terraform is intentionally outside
 scope. Read `README.md`, `SECURITY.md`, and `docs/AGENT-RUNBOOK.md` before making
 infrastructure changes.
 
+## Start from a short request
+
+A user may ask only “Use TOAD-infra to put this app online” and supply the
+repository URL. The operating context belongs here, not in a long user prompt.
+Read `README.md` and `docs/AGENT-RUNBOOK.md`, inspect the user's app, and reuse
+an existing checkout, operator context and verified platform when suitable.
+Keep the user's application source in its own repository.
+
+For a first deployment, follow `docs/INFOMANIAK-EXAMPLE.md`. Explain the plan
+using the user's app name, URL, DNS lookup, public/private IPs, running app and
+monitoring view. Identify account/tooling gaps, costs and persistent data.
+Guide missing account access through `docs/CLOUD-ACCOUNT.md`; credentials stay
+in private provider/local interfaces. Show the target and resource/DNS changes
+and obtain the human's approval before provisioning, publishing or deploying.
+Existing explicit authorization remains valid for its stated scope.
+
+Treat health-check and failed-release investigation requests as read-only.
+Use diagnostics and the private operation view, report evidence freshness and
+gaps, and propose a repair before changing the deployment. After an approved
+release, verify the requested image, replicas and declared HTTPS checks;
+an automatic rollback to an old version does not count as shipping the new one.
+
 ## Safety
 
 - Never print, summarize, upload, or commit anything under a `credentials/`

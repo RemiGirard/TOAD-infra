@@ -2,6 +2,7 @@
   "version": 1,
   "recordedOn": "2026-10-27",
   "description": "Selected results from an actual deployment; playback does not execute commands.",
+  "monitoringSteps": [1, 2, 4, 5],
   "steps": [
     {
       "title": "Publish an exact image",

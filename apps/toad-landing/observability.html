@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Understand operations — TOAD</title><meta name="description" content="TOAD: Understand operations. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/observability.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html" aria-current="page">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / UNDERSTAND OPERATIONS</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/OBSERVABILITY.md">Markdown source ↗</a></div><h1 id="understand-what-your-infrastructure-and-agent-are-doing">Understand what your infrastructure and agent are doing</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Understand operations — TOAD</title><meta name="description" content="TOAD: Understand operations. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/observability.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html" aria-current="page">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / UNDERSTAND OPERATIONS</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/OBSERVABILITY.md">Markdown source ↗</a></div><h1 id="understand-what-your-infrastructure-and-agent-are-doing">Understand what your infrastructure and agent are doing</h1>
 <p>TOAD gives a person and their coding agent the same evidence: manager quorum,
 requested and running application images, HTTPS checks, metric and alert state,
 and the stages of the current operation. The agent uses JSON; you can open a
@@ -22,14 +22,23 @@ information. Keep it off public hosting, Git, tickets, and shared folders.
 The public project&#39;s interactive examples are explicitly illustrative; they
 never load your cluster credentials or private state.</p>
 <h2 id="read-the-view">Read the view</h2>
-<p>Start with <strong>Your infrastructure map</strong>. The route model explains DNS lookup,
-the public load balancer, the HTTPS gateway and containers. Below it, observed
-server and application cards use the selected context&#39;s collected names,
-states and running-copy counts. No placement edges are inferred between them.
-Expand <strong>Explain the infrastructure terms</strong> for plain-language definitions.
+<p>The website&#39;s example and private exports now use the same interface:</p>
+<ul>
+<li><strong>Overview:</strong> counts, explained visitor route and actual observed server cards.
+Open a server to inspect its Swarm-advertised address, role and reachability.</li>
+<li><strong>Applications:</strong> running copies, requested/running images and declared endpoint checks.</li>
+<li><strong>Signals:</strong> metrics collection, alert counts, evidence gaps and protected dashboard links.</li>
+<li><strong>Agent activity:</strong> current local operation and recorded phase history.</li>
+</ul>
+<p>Tabs support arrow keys, Home and End. Without JavaScript, the default Overview
+is visible; enable JavaScript to use the other views. The route model explains
+DNS lookup, the load balancer, HTTPS gateway and containers. It does not infer
+placement edges from observed servers to apps.
 DNS/load-balancer/gateway health, container placement, storage and backup state
 are not separately discovered by this map. Use the check evidence below it.
-The <a href="/understand.html">beginner guide</a> explains the full visitor journey.</p>
+The <a href="/understand.html">beginner guide</a> explains the full visitor journey.
+The <a href="/infomaniak.html#7-open-the-control-room-and-follow-an-update">Infomaniak example</a>
+shows the complete setup and how to open the default local export.</p>
 <table>
 <thead>
 <tr>

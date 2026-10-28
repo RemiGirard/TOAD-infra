@@ -4,6 +4,9 @@ TOAD first creates and configures your cloud platform. You then publish and
 deploy applications onto it. Provision the platform once; repeat the app
 workflow for each app and update.
 
+For one complete worked example with account access, IPs, DNS records, app URL
+and monitoring, follow [Infomaniak: from account to monitored app](INFOMANIAK-EXAMPLE.md).
+
 Already operate a verified TOAD platform? Go to [First app](FIRST-APP.md).
 For an optional frontend/API preview, [run the example locally](LOCAL-STARTER.md).
 New to domains, DNS, cloud servers or containers? Start with

@@ -18,6 +18,8 @@ a private visual operation view keep actions understandable and reviewable.
 New to cloud, domains or containers? [See your app explained visually](docs/UNDERSTAND.md)
 and compare the responsibilities of a hosted platform, Coolify and TOAD before
 creating resources.
+Follow the [complete Infomaniak example](docs/INFOMANIAK-EXAMPLE.md) for account
+setup, DNS/IP choices, a published app and its private monitoring interface.
 
 ## 1. Provision your cloud platform
 
@@ -64,6 +66,7 @@ workflow for updates; use `apply` for platform changes. See the
 
 | You want to… | Start here | Requirements |
 |---|---|---|
+| Follow one complete Infomaniak deployment | [Worked example](docs/INFOMANIAK-EXAMPLE.md) | A dedicated domain and a reviewed cloud budget |
 | Understand what runs where and compare hosting approaches | [Your app explained](docs/UNDERSTAND.md) | No account or infrastructure vocabulary required |
 | Create an account and prepare cloud access | [Account and access](docs/CLOUD-ACCOUNT.md) | Your email and provider billing decisions; an agent can guide the steps |
 | Create a cloud platform and ship your first app | [Get started](docs/QUICKSTART.md) | Infomaniak project, domain and operator tooling |

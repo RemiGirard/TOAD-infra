@@ -7,15 +7,19 @@ Commands run from `openstackV3` unless stated otherwise.
 
 ## Start from the app you are building
 
-Open your application's repository in your coding agent and paste the
-[starter prompt](../website/agent-prompt.txt), also available as
+Open your application's repository and give your coding agent a short
+[request](../website/agent-prompt.txt), also available as
 [plain text on the project site](https://toad.remigirard.dev/agent-prompt.txt).
 It names TOAD-infra and links its repository, so the agent can read the current
-instructions instead of assuming it already knows the tool.
+instructions instead of assuming it already knows the tool. The workflow is
+defined by TOAD's `AGENTS.md` and this runbook; the user does not need to copy
+those instructions into their request.
 
-The prompt asks the agent to inspect your actual app, reuse existing operator
-setup where available, and explain the requirements and costs if you need a
-new Infomaniak platform. You do not need to invent app or context names before
+Inspect the actual app, reuse existing operator setup where available, and
+explain requirements and costs if a new platform is needed. Use the
+[complete Infomaniak example](INFOMANIAK-EXAMPLE.md) to connect the project,
+DNS, public/private addresses, app URL and observation interface.
+The user does not need to invent app or context names before
 starting the conversation. Keep application source in your existing repository;
 the [first-app guide](FIRST-APP.md) covers adding TOAD metadata there.
 

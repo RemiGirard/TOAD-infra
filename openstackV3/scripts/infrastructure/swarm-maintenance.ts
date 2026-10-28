@@ -8,6 +8,7 @@ import { runProgram, runProgramStream } from './shell.js';
 export interface SwarmNode {
   id: string;
   hostname: string;
+  address?: string;
   role: 'manager' | 'worker';
   availability: string;
   state: string;
@@ -19,7 +20,7 @@ interface NodeInspect {
   ID?: string;
   Spec?: { Role?: 'manager' | 'worker'; Availability?: string };
   Description?: { Hostname?: string };
-  Status?: { State?: string };
+  Status?: { State?: string; Addr?: string };
   ManagerStatus?: { Reachability?: string; Leader?: boolean };
 }
 
@@ -41,6 +42,7 @@ export function inspectSwarm(): SwarmNode[] {
   return raw.map((node) => ({
     id: node.ID ?? '',
     hostname: node.Description?.Hostname ?? 'unknown',
+    address: node.Status?.Addr ?? 'unknown',
     role: node.Spec?.Role ?? 'worker',
     availability: node.Spec?.Availability ?? 'unknown',
     state: node.Status?.State ?? 'unknown',

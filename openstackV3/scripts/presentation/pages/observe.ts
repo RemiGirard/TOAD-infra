@@ -2,7 +2,8 @@ import { mkdirSync, writeFileSync, renameSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { STATE_DIR } from '../../infrastructure/paths.js';
-import { observe, renderObservation } from '../../infrastructure/observation.js';
+import { observe } from '../../infrastructure/observation.js';
+import { renderObservation } from '../monitoring/view.js';
 export async function run(args: string[]): Promise<void> {
   const option = (flag: string) => { const at = args.indexOf(flag); return at < 0 ? undefined : args[at + 1]; };
   const watch = args.includes('--watch'); const json = args.includes('--json');

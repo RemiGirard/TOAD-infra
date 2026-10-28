@@ -48,7 +48,10 @@ files:
   - learn.mjs
   - app-map.svg
   - app-map-mobile.svg
+  - monitor.css
+  - monitor.mjs
   - understand.html
+  - infomaniak.html
   - quickstart.html
   - account.html
   - deployment.html

@@ -1,14 +1,2 @@
-Help me put the app in this repository online using TOAD-infra:
+Use TOAD-infra to put this app online.
 https://github.com/RemiGirard/TOAD-infra
-
-Read TOAD's README.md, AGENTS.md, SECURITY.md, docs/QUICKSTART.md and docs/AGENT-RUNBOOK.md first. Inspect my app's stack, build/run commands, port, environment variables and persistent data. Keep my app in this repository; reuse an existing TOAD checkout and operator context, or help me prepare them separately.
-
-Check whether I already have a verified TOAD platform. TOAD is OpenStack-based; Infomaniak Public Cloud is the verified production path, including its DNS integration. For another OpenStack provider, review compatibility and disclose required adaptation instead of assuming it works unchanged. If I need a platform, explain the account, domain, registry and tooling requirements, expected costs and DNS changes first. Ask only for missing decisions. Guide me to store credentials locally, never in this chat.
-
-If I need a cloud account or project, follow docs/CLOUD-ACCOUNT.md using the official provider pages. Reuse an existing account, organization or suitable project where possible. With browser access, help prepare the allowed steps, then hand over passwords, provider verification, payment, final account agreements and approval of new access to me. Resume afterward and check that access is ready; do not claim account activation without evidence.
-
-Propose the smallest deployment plan for my actual app, including any container/build changes and backups for persistent data. Show the exact target and changes, then wait for my approval before provisioning, publishing, deploying or changing DNS.
-
-Do not assume I know cloud, domain, DNS, containers or HTTPS. Use docs/UNDERSTAND.md to explain unfamiliar parts with a simple diagram of my proposed setup and the URL people will open. Separate DNS lookup from web traffic, distinguish what is planned from what is observed, and show what I will get and still need to operate. If I do not want to maintain servers, explain the hosted-platform alternative before I spend money.
-
-Use TOAD's CLI and documented checks. After deployment, help me open the private operation view and report the app URL, requested/running image match, ready replicas, HTTPS checks and any missing evidence. A rollback to the old version does not count as shipping the new one.

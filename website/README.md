@@ -73,47 +73,33 @@ visible. The stage buttons also work without playback; playback starts only on
 request, can be paused, and stops when the page is hidden. Reduced-motion
 preferences disable the decorative movement.
 
-Copy the current terminal command or the full starter prompt. Start from your
-own app repository; the prompt names and links TOAD-infra, asks the agent to
-inspect your app, reuse existing setup, and explain any cloud requirements and
-costs before making changes. No app or context placeholders need filling in.
-The [account/access guide](../docs/CLOUD-ACCOUNT.md) starts before local
-operator setup. It separates customer registration, Public Cloud activation,
-project/service-user access and TOAD configuration, with explicit browser
-hand-offs. Account and billing links were checked on 28 October 2026.
-Describe TOAD as OpenStack-based with Infomaniak as the verified production
-path; the guide records the current DNS/ACME dependencies and other-provider
-compatibility checklist. Do not claim universal OpenStack compatibility.
-Expand **Read the full prompt** to review exactly what will be copied.
-The canonical text lives in `agent-prompt.txt`; the build escapes and embeds it
-in the homepage and publishes the same plain-text file for direct use.
-The agent section also offers health-check and failed-release investigation
-prompts, backed by `agent-health-prompt.txt` and `agent-debug-prompt.txt`.
-Their full text is reviewable. Copying uses the embedded text and makes no
-network request.
-These two prompts are read-only; they do not authorize deployment or recovery.
-Commands use
-the repository's `./toad` launcher after workstation, context and app setup.
-`node toad.mjs` remains equivalent on platforms without executable symlinks.
-The example represents a coding agent using your local CLI/operator context;
-no hosted agent is implied, no credentials belong in chat, and nothing on this
-page runs a deployment. Approval happens in the agent conversation, as asked
-by the starter brief. Example output is an illustrative excerpt.
+Copy the terminal command or the minimal agent request. The request contains
+one sentence and TOAD-infra's repository URL. The repository's AGENTS.md and
+agent runbook own the operating context, account hand-offs, plan review and
+verification; there is no separate expanded-prompt flow. The three request
+files remain canonical and the build embeds their escaped text. Clipboard
+copying makes no network request. Deployment-task copying remains the original
+request even while the hero plays a later conversation step.
 
-The agent section's **release room** plays a six-step story on an existing
-platform with a pinned image: inspect, validate, ask for approval, roll out,
-check, and report. `app deploy` deploys the reviewed image without rebuilding it.
-Playback pauses at the demo approval. Choose a successful release, automatic
-rollback, or expired observation; the agent's explanation, terminal excerpt,
-infrastructure diagram, and release evidence change together. The old version
-remaining healthy never counts as delivery of the requested image.
+The account guide covers access; the complete Infomaniak example covers the
+project, public/private IPs, DNS, HTTPS, app release and monitoring. The setup
+builder lets visitors see what each stage creates. Reserved documentation
+addresses are examples, not discovered resources. Other OpenStack providers
+still require compatibility review.
 
-Play/pause, previous/next, and individual steps support manual exploration.
-Playback stops when the room leaves the viewport or the page is hidden, and
-starting another player pauses the current one. Reduced-motion preferences
-remove decorative animations while preserving the steps and controls. These
-stories use illustrative data only; the separate recorded walkthrough keeps
-its original evidence and dates.
+The monitoring area uses the same renderer and client as private observation
+exports, in openstackV3/scripts/presentation/monitoring. Public data comes only
+from its explicit example fixture. Tabs, server details and scenario selection
+work; public controls do not connect to infrastructure or execute mutations.
+The recorded release excerpts stay in an expandable monitoring-incident panel.
+They are historical evidence, separate from the interactive example states.
+
+The cost estimator starts with the provider's one-node IPv6 design and links
+the configured estimate. This is not an implemented TOAD starter profile.
+The current complete deployment is still three managers. Rates and support
+status are documented in docs/COSTS.md, including the router gateway IPv4.
+Time, instance rate and topology choices update an itemized estimate; they do
+not perform resizing or imply automatic node migration.
 
 ## Agent content references
 

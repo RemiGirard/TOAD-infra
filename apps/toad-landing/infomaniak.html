@@ -1,0 +1,263 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Infomaniak example — TOAD</title><meta name="description" content="TOAD: Infomaniak example. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/infomaniak.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html" aria-current="page">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / INFOMANIAK EXAMPLE</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/INFOMANIAK-EXAMPLE.md">Markdown source ↗</a></div><h1 id="a-complete-infomaniak-example-from-account-to-monitored-app">A complete Infomaniak example: from account to monitored app</h1>
+<p>We will put a small app named <strong>hello</strong> at <strong><a href="https://hello.platform.example.com">https://hello.platform.example.com</a></strong>.
+You will see where its name, IP addresses, servers, HTTPS and running copies
+come from, then open the same monitoring interface shown on TOAD&#39;s site.</p>
+<p>This recipe follows <strong>TOAD&#39;s current complete three-manager workflow</strong>.
+Infomaniak also supports a much smaller one-server IPv6 architecture; see
+<a href="#the-minimum-ipv6-design">the minimum IPv6 design</a>. That TOAD profile still
+needs implementation and validation. Do not apply the three-manager command
+expecting it to create one server.</p>
+<p>All names and addresses below are examples. Use a dedicated domain you control;
+<code>example.com</code>, <code>198.51.100.0/24</code>, <code>203.0.113.0/24</code> and <code>2001:db8::/32</code> are
+documentation values, not deployed resources. Commands run in <code>openstackV3</code>.</p>
+<h2 id="1-decide-what-you-are-building">1. Decide what you are building</h2>
+<p><span class="illustration"><picture><source media="(max-width:760px)" srcset="/app-map-mobile.svg" width="360" height="1100"><img src="/app-map.svg" width="1120" height="470" alt="DNS returns the public entry address; HTTPS passes through Octavia to Traefik and the hello app. Stored data is a separate choice." loading="lazy"></picture></span></p>
+<table>
+<thead>
+<tr>
+<th>Name or address</th>
+<th>In this example</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Provider project / TOAD context / Heat stack</td>
+<td><code>my-cloud</code></td>
+<td>Provider resources / isolated local operator setup / the declared resource group. These names happen to match; they are distinct things.</td>
+</tr>
+<tr>
+<td>Domain you own</td>
+<td><code>example.com</code></td>
+<td>A name and its DNS zone, not a server. Use a dedicated domain for this recipe.</td>
+</tr>
+<tr>
+<td>Platform child domain</td>
+<td><code>platform.example.com</code></td>
+<td>A delegated zone managed by OpenStack Designate.</td>
+</tr>
+<tr>
+<td>App URL</td>
+<td><code>https://hello.platform.example.com</code></td>
+<td>The link your visitor opens. The app name chooses a route, not another VM.</td>
+</tr>
+<tr>
+<td>App entry IPv4</td>
+<td><code>198.51.100.30</code></td>
+<td>Octavia&#39;s floating IP. App DNS points here.</td>
+</tr>
+<tr>
+<td>Operator entry IPv4</td>
+<td><code>198.51.100.20</code></td>
+<td>Restricted SSH access through manager 1. App DNS does not point here.</td>
+</tr>
+<tr>
+<td>Router gateway IPv4</td>
+<td><code>198.51.100.40</code></td>
+<td>Outbound networking for private servers; also billable. It is not the app URL.</td>
+</tr>
+<tr>
+<td>Server addresses</td>
+<td><code>10.0.0.20</code>, <code>.21</code>, <code>.22</code></td>
+<td>Internal addresses of the three managers. Visitors do not connect to these.</td>
+</tr>
+<tr>
+<td>App internal port</td>
+<td><code>3000</code> for this Node example</td>
+<td>Traefik forwards to this container port. You do not open it publicly.</td>
+</tr>
+</tbody></table>
+<p>One visit works like this:</p>
+<ol>
+<li>The browser asks DNS for <code>hello.platform.example.com</code> and gets the app entry IP.</li>
+<li>It connects to that IP on HTTPS port 443. DNS is a lookup, not a traffic proxy.</li>
+<li>Octavia passes the connection through Swarm to Traefik. TLS terminates at
+Traefik, which chooses the <code>hello</code> service from the hostname/path.</li>
+<li>A running app copy returns a page or API result. This sample needs no database.</li>
+</ol>
+<p>The maintained platform has three managers, one Traefik replica and explicit
+local-data availability limits. See <a href="/architecture.html">architecture</a>.</p>
+<h2 id="2-create-account-and-project-access">2. Create account and project access</h2>
+<ol>
+<li>Create or reuse an <a href="https://www.infomaniak.com/en/support/faq/2232/create-an-infomaniak-account">Infomaniak customer account</a>.
+Verify your email and select the organization that should own the resources.</li>
+<li>Activate Public Cloud using the <strong>Sign Up</strong> link in
+<a href="https://docs.infomaniak.cloud/getting_started/">the official getting-started guide</a>.
+Review billing, payment and terms yourself. An agent can guide the screens;
+you complete passwords, verification, payment and final account agreements.</li>
+<li><a href="https://docs.infomaniak.cloud/getting_started/first_project/create_a_project/">Create or reuse a project</a>.
+Projects span regions; choose the deployment region when downloading access
+and creating resources. Keep it consistent throughout the recipe.</li>
+<li>Create a dedicated OpenStack user. Its generated <code>PCU-…</code> login is separate
+from your customer login. The current Heat trust workflow needs a
+password-authenticated service user.</li>
+<li><a href="https://docs.infomaniak.cloud/getting_started/first_project/connect_project/">Download that user&#39;s cloud configuration</a>
+for the intended region. Keep it private; never paste it into chat.</li>
+</ol>
+<p>The <a href="/account.html">account guide</a> explains the current billing checks and
+the difference between customer accounts, service users and local contexts.
+Creating access does not create TOAD servers.</p>
+<h2 id="3-prepare-the-operator-machine">3. Prepare the operator machine</h2>
+<p>Install the <a href="/quickstart.html#1-prepare-your-operator-context">quickstart prerequisites</a>,
+including Node 22, pnpm, Python/venv, Docker Buildx, OpenSSH, OpenSSL and age.</p>
+<pre><code class="language-sh">git clone https://github.com/RemiGirard/TOAD-infra.git
+cd TOAD-infra/openstackV3
+pnpm install --frozen-lockfile
+pnpm run doctor -- --json
+pnpm run cloud -- init my-cloud
+</code></pre>
+<p>Place the downloaded configuration in
+<code>contexts/my-cloud/credentials/clouds.yaml</code>, restricted to your operator user.
+Then run:</p>
+<pre><code class="language-sh">pnpm run setup
+pnpm run doctor -- --cloud --json
+pnpm run discover
+pnpm run os -- availability zone list --compute
+</code></pre>
+<p><code>setup</code> requests a missing service-user password without echoing it.
+<code>discover</code> lists resource choices and compute quota; review network, load-balancer
+and DNS quotas separately. Authentication alone does not establish readiness.</p>
+<h2 id="4-choose-capacity-domain-ownership-and-credentials">4. Choose capacity, domain ownership and credentials</h2>
+<p>Use the <a href="https://www.infomaniak.com/en/hosting/public-cloud/calculator">provider calculator</a>
+and <a href="/costs.html">cost worksheet</a>. Three managers do not require the large instance
+used by older price examples. Smaller sizes need workload and monitoring tests;
+there is no measured minimum full-stack flavor yet.</p>
+<p>Run the guided configuration:</p>
+<pre><code class="language-sh">pnpm run cloud -- configure
+</code></pre>
+<p>Supply these decisions from the actual project:</p>
+<table>
+<thead>
+<tr>
+<th>Prompt</th>
+<th>Example / choice</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Flavor</td>
+<td>A capacity-reviewed flavor from <code>discover</code>; <code>a2-ram4-disk20-perf1</code> is a smaller candidate, not a validated minimum.</td>
+</tr>
+<tr>
+<td>Immutable image</td>
+<td>The actual Ubuntu image UUID returned by your project, not a mutable image display name.</td>
+</tr>
+<tr>
+<td>Public network</td>
+<td><code>ext-floating1</code> for this maintained IPv4 profile.</td>
+</tr>
+<tr>
+<td>Manager availability zones</td>
+<td>Actual available zones, commonly <code>az-1</code>, <code>az-2</code>, <code>az-3</code>; verify them in the chosen region.</td>
+</tr>
+<tr>
+<td>Platform child domain</td>
+<td><code>platform.example.com</code></td>
+</tr>
+<tr>
+<td>Parent domain</td>
+<td><code>example.com</code>, dedicated to this platform</td>
+</tr>
+<tr>
+<td>Certificate and DNS email</td>
+<td>An email you control</td>
+</tr>
+</tbody></table>
+<p><strong>Review DNS ownership before applying.</strong> Current TOAD updates the parent
+domain&#39;s apex <code>@</code> and wildcard <code>*</code> A records as well as its child zone.
+That can move an existing website. This example assumes a dedicated domain;
+do not aim it at an active domain without reviewing those exact changes.
+Mail and unrelated records are preserved. The one-time child NS delegation
+is manual.</p>
+<p>Create an Infomaniak API token restricted to <code>dns:read</code> and <code>dns:write</code>, then
+enter it in the private, non-echoing prompt:</p>
+<pre><code class="language-sh">pnpm run dns-token
+pnpm run context -- current --json
+pnpm run check
+pnpm run doctor -- --for cloud-apply --cloud --json
+pnpm run cloud -- plan my-cloud --json
+</code></pre>
+<p>Review the selected context, three managers, load balancer, domain ownership,
+costs and target stack with the human. The plan changes nothing and is not a
+provider quote. Continue only after approval of the actual resource/DNS plan.</p>
+<h2 id="5-create-the-platform-and-finish-dns">5. Create the platform and finish DNS</h2>
+<pre><code class="language-sh">pnpm run cloud -- apply my-cloud
+</code></pre>
+<p>This creates billable resources. It provisions networking, servers, the public
+entry and child DNS zone, then configures Swarm, Traefik, certificates and
+monitoring. The operator SSH rule is restricted to the workstation&#39;s public
+IPv4 <code>/32</code>. It does not open SSH to everybody.</p>
+<p>On a first run, a DNS-waiting result is expected while delegation is missing.
+Keep the stack; do not deploy another one to retry. Read the child nameservers:</p>
+<pre><code class="language-sh">pnpm run os -- recordset list platform.example.com.
+</code></pre>
+<p>In <strong>Infomaniak Manager → domain → DNS zone</strong>, add NS records named <code>platform</code>
+using the <strong>actual Designate nameservers</strong> printed for your child zone. This
+tells DNS where to look up names below <code>platform.example.com</code>.
+Then resume and verify:</p>
+<pre><code class="language-sh">pnpm run cloud -- resume my-cloud
+pnpm run verify -- my-cloud --json
+pnpm run os -- stack output show my-cloud lb_floating_ip -f json
+pnpm run os -- stack output show my-cloud ssh_floating_ip -f json
+</code></pre>
+<p>Those outputs supply your actual entry addresses. The example <code>198.51.100.30</code>
+is not a value to copy into DNS. The child apex/wildcard A records point to
+the load balancer; a new app normally uses that wildcard rather than needing
+another public IP. Continue when platform verification passes.</p>
+<p>For an existing platform, preserve its original admin CA and operator bundle.
+Missing access must be restored from escrow, not solved by replacing trust.</p>
+<h2 id="6-publish-hello-and-open-its-url">6. Publish hello and open its URL</h2>
+<p>Authenticate Docker to a registry you control using its normal credential
+manager. The first image should be publicly pullable, or node-side private
+registry access must already be configured. Replace <code>YOUR-OWNER</code> below.</p>
+<pre><code class="language-sh">pnpm run app -- create hello --template node-web
+# Edit ../apps/hello/source/ and its build allow-list.
+pnpm run app -- publish hello --image ghcr.io/YOUR-OWNER/hello:v1
+pnpm run check
+pnpm run app -- validate hello
+pnpm run app -- deploy hello
+pnpm run app -- diagnose hello --json
+</code></pre>
+<p>Open <code>https://hello.platform.example.com</code> and test the app&#39;s page and API.
+Publishing packages the app into an image and pins its digest; deploying runs
+that image on the existing servers. The diagnosis should show the requested
+image running, converged copies and passing declared HTTPS checks. These do
+not replace application-specific tests.</p>
+<p>For your own existing repository, use the <a href="/first-app.html#bring-an-existing-app">existing-app recipe</a>
+instead of substituting this sample. An app needing uploads or a database
+must declare storage and backup/recovery policy before deployment.</p>
+<h2 id="7-open-the-control-room-and-follow-an-update">7. Open the control room and follow an update</h2>
+<pre><code class="language-sh">pnpm run observe -- --context my-cloud --app hello --watch
+</code></pre>
+<p>Open the private HTML path printed by the command. Keep this terminal running
+to refresh observations. It is the same interface as the website&#39;s example,
+now filled from your selected context:</p>
+<ul>
+<li><strong>Overview:</strong> reachable managers, running copies, endpoint checks, server details.</li>
+<li><strong>Applications:</strong> requested versus running image, rollout state and HTTPS results.</li>
+<li><strong>Signals:</strong> monitoring targets, alerts, gaps and protected dashboard links.</li>
+<li><strong>Agent activity:</strong> the local operation and its recorded stages.</li>
+</ul>
+<p>The route drawing explains the architecture; it does not discover every DNS
+record, public IP, gateway or placement edge. Server details show Swarm&#39;s
+advertised addresses. Missing evidence stays unknown, and snapshots expire
+after one minute. Keep the export private. Outbound alerts and offsite backups
+still need a destination and an actual delivery/restore test.</p>
+<p>For an app update, publish a new version, validate, deploy and diagnose again.
+If it rolls back, a healthy old version is recovery, not successful delivery
+of the requested new one. Inspect Applications and logs before another action.</p>
+<h2 id="the-minimum-ipv6-design">The minimum IPv6 design</h2>
+<p>Infomaniak&#39;s <a href="https://docs.infomaniak.cloud/network/network_setup_guide/">network guide</a>
+documents <code>ext-v6only1</code> with free public IPv6. A VM connected directly to it
+can avoid the private router, floating IPv4 and Octavia resources above.
+The <a href="https://www.infomaniak.com/en/hosting/public-cloud/calculator?uuid=e28f426f-242e-4ce6-8242-09d9ba3fe754">configured calculator estimate</a>
+quotes <strong>€4.21/month</strong>, excluding VAT, for one Linux VM with 1 vCPU, 2 GB RAM
+and 20 GB disk at 730 hours, with no optional storage, IPv4 or load balancer.
+This is a provider estimate, not a measured TOAD bill.</p>
+<p>The intended simple route is <strong>app name → AAAA lookup → the server&#39;s IPv6 →
+HTTPS gateway → app</strong>. It has one failure point. Operators and visitors need
+IPv6 reachability; IPv4-only visitors need an additional dual-stack edge or IPv4.</p>
+<p><strong>TOAD does not yet implement or validate that complete profile.</strong> Required work
+includes IPv6 Heat/security rules and SSH bootstrap, AAAA DNS, Docker ingress
+and outbound dependency checks, lighter monitoring, one-node verification and
+restart/recovery acceptance. Do not relabel the current IPv4 Heat-only
+experiment as this profile. See <a href="/costs.html">costs and growth</a>.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>

@@ -1,47 +1,152 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cost worksheet — TOAD</title><meta name="description" content="TOAD: Cost worksheet. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/costs.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html" aria-current="page">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / COST WORKSHEET</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/COSTS.md">Markdown source ↗</a></div><h1 id="cost-worksheet">Cost worksheet</h1>
-<p>TOAD has no hosted-service subscription. You pay providers directly. These
-illustrative estimates were checked against
-<a href="https://www.infomaniak.com/en/hosting/public-cloud/prices">Infomaniak public pricing</a>
-on 2026-10-27. They are resource estimates, not a quotation or measured invoice.</p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cost worksheet — TOAD</title><meta name="description" content="TOAD: Cost worksheet. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/costs.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html" aria-current="page">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / COST WORKSHEET</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/COSTS.md">Markdown source ↗</a></div><h1 id="start-small-understand-the-bill-grow-deliberately">Start small, understand the bill, grow deliberately</h1>
+<p>TOAD has no hosted-service subscription. You pay your providers directly.
+The older €-equivalent/CHF64.98 headline used a large comparison instance;
+it was neither a minimum nor this project&#39;s measured invoice.</p>
+<h2 id="a-one-server-ipv6-architecture-421month-in-the-provider-calculator">A one-server IPv6 architecture: €4.21/month in the provider calculator</h2>
+<p>On <strong>28 October 2026</strong>, the <a href="https://www.infomaniak.com/en/hosting/public-cloud/calculator?uuid=e28f426f-242e-4ce6-8242-09d9ba3fe754">configured Infomaniak estimate</a>
+showed <strong>€4.21/month excluding VAT</strong> with these inputs:</p>
 <table>
 <thead>
 <tr>
-<th>Resource</th>
-<th align="right">One-manager evaluation</th>
-<th align="right">Three-manager production</th>
+<th>Input</th>
+<th>Selection</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>4 vCPU / 8 GB / 50 GB instance, illustrative CHF 16.10/month</td>
-<td align="right">1 × 16.10</td>
-<td align="right">3 × 16.10</td>
+<td>Instance</td>
+<td>1 × a1_ram2_disk20_perf1, Linux</td>
 </tr>
 <tr>
-<td>Reserved IPv4, CHF 0.00457/hour × 730 hours</td>
-<td align="right">1 × 3.34</td>
-<td align="right">2 × 3.34</td>
+<td>Capacity</td>
+<td>1 vCPU, 2 GB RAM, 20 GB included disk</td>
 </tr>
 <tr>
-<td>Standard load balancer, CHF 0.0137/hour × 730 hours</td>
-<td align="right">—</td>
-<td align="right">10.00</td>
+<td>Operating time</td>
+<td>100% = 730 hours/month</td>
 </tr>
 <tr>
-<td>Illustrative resource subtotal</td>
-<td align="right"><strong>CHF 19.44/month</strong></td>
-<td align="right"><strong>CHF 64.98/month</strong></td>
+<td>Extra block/object storage</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Paid IPv4 addresses</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Load balancers</td>
+<td>None</td>
 </tr>
 </tbody></table>
-<p>The instance price is the provider&#39;s comparison example. Confirm the actual
-flavor, disk tier, region, and capacity before creating resources. Production
-uses one SSH bootstrap IP and one load-balancer IP. Smaller flavors can cost
-less but must fit the workloads, platform services, and resource reservations.</p>
-<p>Add domain/DNS charges, registry storage, offsite backup storage and requests,
-extra volumes/snapshots, any chargeable traffic, taxes, and operator time.
-This is not a capacity or availability guarantee.</p>
-<p>For a short experiment, multiply actual hourly instance and reserved-IPv4
-rates by the running/reservation time, then add storage and enabled services.
-Use the provider calculator and account quotas before deployment. The local
-Node trial creates no cloud resources. Delete an experiment only after
-reviewing its resources and explicitly approving the exact stack name.</p>
+<p>The displayed compute rate was €0.00577/hour; 730 ×0.00577 =€4.2121 before
+rounding. The calculator creates an estimate, not cloud resources.
+Infomaniak&#39;s <a href="https://docs.infomaniak.cloud/network/network_setup_guide/">network guide</a>
+documents free public IPv6 through <strong>ext-v6only1</strong>. A directly attached server
+can avoid an IPv4 router, floating IP and Octavia load balancer.</p>
+<p><strong>This is the minimum provider architecture to target, not an implemented or
+validated TOAD starter profile.</strong> Current cloud apply still creates the
+three-manager IPv4 platform. The existing one-node Heat experiment is also
+IPv4 and is not a complete app platform. The current full monitoring stack
+has no measured minimum flavor and must not be presented as tested on 2 GB.</p>
+<p>For an IPv6-only app, the operator and visitors need IPv6 reachability.
+An IPv4-only visitor needs an additional dual-stack edge/proxy or IPv4,
+which changes the architecture and potentially the bill. Container ingress,
+ACME/DNS calls, registries, outbound APIs and recovery all need acceptance
+checks before the proposed starter becomes supported.</p>
+<h2 id="current-complete-toad-topology">Current complete TOAD topology</h2>
+<p>The current full workflow provisions three managers, one load balancer, a
+private router and two explicit floating IPs. The router&#39;s external gateway
+also allocates a billable public IPv4, as the provider&#39;s
+<a href="https://docs.infomaniak.cloud/network/create_and_assign_a_floating_ip/#important-billing-note-when-creating-a-router-gateway">billing note</a>
+explains. Count <strong>three paid IPv4s</strong>, not just the two explicit floating IPs.</p>
+<p>The calculator&#39;s EUR rates checked on the same date were:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th align="right">Hourly rate</th>
+<th align="right">Quantity</th>
+<th align="right">At 730 hours</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2 vCPU / 4 GB / 20 GB instance candidate</td>
+<td align="right">€0.00939</td>
+<td align="right">3</td>
+<td align="right">€20.56</td>
+</tr>
+<tr>
+<td>Public IPv4, including router gateway</td>
+<td align="right">€0.00411</td>
+<td align="right">3</td>
+<td align="right">€9.00</td>
+</tr>
+<tr>
+<td>Standard load balancer</td>
+<td align="right">€0.01234</td>
+<td align="right">1</td>
+<td align="right">€9.01</td>
+</tr>
+<tr>
+<td>Resource subtotal</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"><strong>€38.57</strong></td>
+</tr>
+</tbody></table>
+<p>This is calculated from published inputs, not a configured full-platform
+quote or a capacity benchmark. The smaller instance is a candidate to test,
+not a guaranteed minimum for your app and monitoring. Use the
+<a href="https://www.infomaniak.com/en/hosting/public-cloud/calculator">official calculator</a>
+with the actual region, flavor and services. Currency and rates can change.</p>
+<p>Include VAT, domain/DNS services, image registry, offsite backup storage and
+requests, extra volumes/snapshots, chargeable traffic and operator time.
+Storage and reserved IPs can remain billable after a VM is stopped.
+The homepage&#39;s hourly estimator assumes every listed resource exists for
+the selected hours; it does not predict an invoice or perform a resize.</p>
+<h2 id="what-scaling-actually-means">What scaling actually means</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What changes</th>
+<th>Current TOAD support</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Learn locally</td>
+<td>Run the sample on your machine. No cloud account, VM or public IP is created.</td>
+<td>Available; <a href="/local-starter.html">local example</a>.</td>
+</tr>
+<tr>
+<td>One small server + IPv6</td>
+<td>Direct public IPv6, app gateway and an appropriately small monitoring budget.</td>
+<td>Provider architecture available; TOAD profile still needs implementation and validation.</td>
+</tr>
+<tr>
+<td>More copies of a stateless app</td>
+<td>Change the service&#39;s replicas in Compose, validate, deploy and diagnose.</td>
+<td>Available when the existing platform has capacity. No extra public IP per copy is required.</td>
+</tr>
+<tr>
+<td>Bigger servers</td>
+<td>More CPU/RAM/disk. Provider resize is an offline operation.</td>
+<td>Needs maintenance planning; TOAD does not provide a rolling resize workflow.</td>
+</tr>
+<tr>
+<td>Extra worker servers</td>
+<td>More compute capacity on the same platform.</td>
+<td>Needs Heat/inventory adaptation; there is no automated node-growth command.</td>
+</tr>
+<tr>
+<td>One-node experiment to the three-manager platform</td>
+<td>Different resources, addresses and storage placement.</td>
+<td>A planned migration/rebuild with data recovery, not an automatic two-node upgrade.</td>
+</tr>
+</tbody></table>
+<p>Local-volume services remain single-replica on one pinned node. More app
+copies do not replicate their files. Three managers protect coordination;
+they do not remove the single Traefik replica or local-data limits.</p>
+<p>See the provider&#39;s <a href="https://docs.infomaniak.cloud/compute/instances/resources_modification/">resize procedure</a>,
+TOAD&#39;s <a href="/storage.html">storage profiles</a>, and the
+<a href="/infomaniak.html">full Infomaniak deployment example</a>.</p>
 </main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>

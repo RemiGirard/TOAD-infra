@@ -1,21 +1,30 @@
-let profile = 'production';
-const price = document.querySelector('#node-price');
-const total = document.querySelector('#cost-total');
-const breakdown = document.querySelector('#cost-breakdown');
-function calculate() {
-  if (!price || !total) return;
-  const nodePrice = Math.max(0, Number(price.value) || 0);
-  const production = profile === 'production';
-  total.textContent = `CHF ${(nodePrice * (production ? 3 : 1) + 3.34 * (production ? 2 : 1) + (production ? 10 : 0)).toFixed(2)}`;
-  breakdown.textContent = production ? '3 nodes + 2 reserved IPv4s + 1 load balancer' : '1 node + 1 reserved IPv4';
+let budgetProfile = 'ipv6';
+const budgetHours = document.querySelector('#budget-hours');
+const budgetRate = document.querySelector('#budget-node-rate');
+function calculateBudget() {
+  if (!budgetHours || !budgetRate) return;
+  const hours = Math.max(0, Number(budgetHours.value) || 0);
+  const rate = Math.max(0, Number(budgetRate.value) || 0);
+  const platform = budgetProfile === 'platform';
+  const compute = rate * hours * (platform ? 3 : 1);
+  const ips = platform ? 3 * 0.00411 * hours : 0;
+  const balancer = platform ? 0.01234 * hours : 0;
+  const money = value => `€${value.toFixed(2)}`;
+  document.querySelector('#budget-total').textContent = money(compute + ips + balancer);
+  for (const [selector, value] of [['[data-budget-compute]', compute], ['[data-budget-ip]', ips], ['[data-budget-lb]', balancer]]) document.querySelector(selector).textContent = money(value);
+  document.querySelector('[data-budget-ip-label]').textContent = platform ? '3 IPv4 (SSH, load balancer, router)' : '0 paid IPv4';
+  document.querySelector('[data-budget-lb-label]').textContent = platform ? '1 standard load balancer' : 'No load balancer';
+  document.querySelector('[data-budget-status]').textContent = platform ? 'Current TOAD topology · size for your workload' : 'Provider design · TOAD starter profile pending';
 }
-for (const button of document.querySelectorAll('[data-profile]')) button.addEventListener('click', () => {
-  profile = button.dataset.profile;
-  for (const candidate of document.querySelectorAll('[data-profile]')) candidate.setAttribute('aria-pressed', String(candidate === button));
-  calculate();
+for (const button of document.querySelectorAll('[data-budget-profile]')) button.addEventListener('click', () => {
+  budgetProfile = button.dataset.budgetProfile;
+  for (const candidate of document.querySelectorAll('[data-budget-profile]')) candidate.setAttribute('aria-pressed', String(candidate === button));
+  budgetRate.value = budgetProfile === 'platform' ? '0.00939' : '0.00577';
+  calculateBudget();
 });
-price?.addEventListener('input', calculate);
-calculate();
+budgetHours?.addEventListener('input', calculateBudget);
+budgetRate?.addEventListener('input', calculateBudget);
+calculateBudget();
 
 async function walkthrough() {
   const title = document.querySelector('#run-title');
@@ -24,7 +33,7 @@ async function walkthrough() {
     const response = await fetch('/walkthrough.json');
     if (!response.ok) throw new Error('Record unavailable');
     const record = await response.json();
-    const steps = record.steps;
+    const steps = record.monitoringSteps ? record.monitoringSteps.map(index => record.steps[index]).filter(Boolean) : record.steps;
     let current = 0;
     let timer;
     const previous = document.querySelector('#run-prev');
@@ -58,6 +67,7 @@ async function walkthrough() {
 }
 walkthrough();
 
+const deploymentRequest = document.querySelector('[data-agent-prompt]')?.textContent.trim();
 const duet = document.querySelector('[data-deploy-duet]');
 if (duet) {
   const brief = duet.querySelector('[data-duet-message]').textContent;
@@ -74,7 +84,7 @@ if (duet) {
     { key: 'approve', speaker: 'AGENT → YOU', message: 'Here’s the plan. Shall I apply my-cloud and then release my-app? You give the green light.',
       caption: 'Planned next command — after your approval.', command: './toad cloud apply my-cloud --context my-cloud',
       output: '// approval happens in your agent conversation\n// then: Heat → Ansible → Swarm → HTTPS',
-      result: 'You’re still at the wheel.', detail: 'The starter brief asks your agent to wait before making changes.' },
+      result: 'You’re still at the wheel.', detail: 'TOAD’s project context asks the agent to review the plan before making changes.' },
     { key: 'ship', speaker: 'AGENT → YOU', message: 'Green light received. I’ll ship the pinned image and check what actually runs. You keep building.',
       caption: 'A few extra hands. One familiar command.', command: './toad app release my-app --context my-cloud',
       output: 'build → pin → deploy → verify\nimage@sha256:8a4d…',
@@ -120,18 +130,14 @@ if (duet) {
     const feedback = duet.querySelector('[data-duet-feedback]');
     try { await navigator.clipboard.writeText(value); feedback.textContent = message; }
     catch {
-      if (resetToBrief) { show(0); duet.querySelector('.duet-brief-details').open = true; }
-      feedback.textContent = resetToBrief ? 'Select the full prompt above to copy it.' : 'Select the command above to copy it.';
+      if (resetToBrief) { show(0); duet.querySelector('[data-agent-prompt]').focus(); }
+      feedback.textContent = resetToBrief ? 'Select the request above to copy it.' : 'Select the command above to copy it.';
     }
   }
-  duet.querySelector('[data-copy-brief]').addEventListener('click', () => copy(starterPrompt, 'Full TOAD-infra prompt copied.', true));
+  duet.querySelector('[data-copy-brief]').addEventListener('click', () => copy(starterPrompt, 'Request copied.', true));
   duet.querySelector('[data-copy-command]').addEventListener('click', () => copy(beats[current].command, 'Command copied.'));
   show(0);
 }
-
-document.querySelector('[data-review-deploy-prompt]')?.addEventListener('click', () => {
-  document.querySelector('[data-agent-prompt]').closest('details').open = true;
-});
 
 for (const button of document.querySelectorAll('[data-copy-agent-task]')) {
   button.addEventListener('click', async () => {
@@ -140,12 +146,12 @@ for (const button of document.querySelectorAll('[data-copy-agent-task]')) {
     const feedback = button.closest('.agent-task').querySelector('.agent-task-feedback');
     for (const status of document.querySelectorAll('.agent-task-feedback')) status.textContent = '';
     try {
-      await navigator.clipboard.writeText(prompt.textContent.trim());
-      feedback.textContent = 'Full TOAD-infra prompt copied.';
+      await navigator.clipboard.writeText(prompt.id === 'toad-deploy-prompt' ? deploymentRequest : prompt.textContent.trim());
+      feedback.textContent = 'Request copied.';
     } catch {
-      prompt.closest('details').open = true;
+      if (prompt.id === 'toad-deploy-prompt') prompt.textContent = deploymentRequest;
       prompt.focus();
-      feedback.textContent = 'Select the full prompt now shown to copy it.';
+      feedback.textContent = 'Select the request above to copy it.';
     }
   });
 }

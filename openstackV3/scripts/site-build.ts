@@ -7,6 +7,9 @@ import { stringify } from 'yaml';
 import { ROOT_DIR } from './infrastructure/paths.js';
 import { loadApp } from './infrastructure/app-manifest.js';
 import { diagramSources, digest } from './site-diagrams.js';
+import { renderMonitor } from './presentation/monitoring/view.js';
+import { monitorCss, monitorClient } from './presentation/monitoring/assets.js';
+import { monitoringExamples } from './presentation/monitoring/example.js';
 
 const root = resolve(ROOT_DIR, '..');
 const source = join(root, 'website');
@@ -14,6 +17,7 @@ const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const pages = [
   ['UNDERSTAND', 'understand', 'Your app explained'],
+  ['INFOMANIAK-EXAMPLE', 'infomaniak', 'Infomaniak example'],
   ['QUICKSTART', 'quickstart', 'Get started'], ['CLOUD-ACCOUNT', 'account', 'Account and access'],
   ['DEPLOYMENT', 'deployment', 'Cloud setup'],
   ['FIRST-APP', 'first-app', 'Deploy an app'], ['OBSERVABILITY', 'observability', 'Understand operations'],
@@ -111,9 +115,16 @@ for (const asset of assets) {
       if (html.split(slot).length !== 2) throw new Error(`The homepage must contain exactly one ${marker} slot.`);
       html = html.replace(slot, () => escape(readFileSync(join(source, file), 'utf8').trim()));
     }
+    const monitorSlot = '<!-- TOAD_MONITOR -->';
+    if (html.split(monitorSlot).length !== 2) throw new Error('The homepage must contain one monitoring example slot.');
+    const examples = monitoringExamples();
+    const monitor = `<div data-monitor-examples><div class="monitor-scenarios" role="group" aria-label="Example monitoring state">${examples.map((example, index) => `<button type="button" data-monitor-scenario="${example.key}" aria-pressed="${index === 0}">${example.label}</button>`).join('')}</div>${examples.map((example, index) => `<div class="monitor-example" data-monitor-example="${example.key}"${index === 0 ? '' : ' hidden'}>${renderMonitor(example.data, { example: true, id: `example-${example.key}` })}</div>`).join('')}</div>`;
+    html = html.replace(monitorSlot, () => monitor);
     writeFileSync(join(output, asset), html);
   } else copyFileSync(join(source, asset), join(output, asset));
 }
+const sharedAssets = { 'monitor.css': monitorCss, 'monitor.mjs': monitorClient };
+for (const [file, contents] of Object.entries(sharedAssets)) writeFileSync(join(output, file), contents);
 writeFileSync(join(output, 'robots.txt'), 'User-agent: *\nAllow: /\nSitemap: https://toad.remigirard.dev/sitemap.xml\n');
 writeFileSync(join(output, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://toad.remigirard.dev/</loc></url>${pages.map(([, slug]) => `<url><loc>https://toad.remigirard.dev/${slug}.html</loc></url>`).join('')}</urlset>`);
 writeFileSync(join(output, 'nginx.conf'), `server {
@@ -130,7 +141,7 @@ writeFileSync(join(output, 'nginx.conf'), `server {
   location ~ \\.mjs$ { default_type text/javascript; try_files $uri =404; }
   location / { try_files $uri $uri/ =404; }
 }\n`);
-const files = [...assets, ...pages.map(([, slug]) => `${slug}.html`), 'robots.txt', 'sitemap.xml', 'nginx.conf'];
+const files = [...assets, ...Object.keys(sharedAssets), ...pages.map(([, slug]) => `${slug}.html`), 'robots.txt', 'sitemap.xml', 'nginx.conf'];
 const configs: Record<string, unknown> = {};
 const mounts: Array<{ source: string; target: string }> = [];
 for (const [index, file] of files.entries()) {
@@ -156,4 +167,4 @@ const compose = {
 writeFileSync(join(output, 'docker-compose.yaml'), stringify(compose));
 writeFileSync(join(output, 'toad.yaml'), stringify({ apiVersion: 'toad.dev/v1', name: 'toad-landing', description: 'Public TOAD project site and versioned documentation', stack: 'toad-landing', compose: 'docker-compose.yaml', files: ['docker-compose.yaml', ...files], services: ['web'], checks: [{ name: 'project-site', url: 'https://toad.remigirard.dev/', status: 200 }, { name: 'first-app-guide', url: 'https://toad.remigirard.dev/first-app.html', status: 200 }], secrets: [], volumes: [] }));
 loadApp('toad-landing');
-console.log(`Built ${pages.length} documentation pages and ${assets.length} public assets; validated toad-landing.`);
+console.log(`Built ${pages.length} documentation pages and ${assets.length + Object.keys(sharedAssets).length} public assets; validated toad-landing.`);
