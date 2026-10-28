@@ -205,7 +205,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-1f17faa7e7b5cd69
+    name: toad-web-0-d6b1efb10d5021ef
     file: ./index.html
   asset-1:
     name: toad-web-1-294171d4baa9f6d6
@@ -358,7 +358,7 @@ configs:
     name: toad-web-50-cb951f0884d56bec
     file: ./diagram-levels.css
   asset-51:
-    name: toad-web-51-e9f9b302b27e70b3
+    name: toad-web-51-8a822dd4f6c73ecf
     file: ./diagram-levels.mjs
   asset-52:
     name: toad-web-52-a74a231958ad8dbf

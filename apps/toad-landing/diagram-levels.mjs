@@ -52,7 +52,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       lock: [mix(745, 795, toad), mix(350, 390, toad)], entry: [595, 390], agent: [110, 80], toad: [420, 80], package: [725, 80],
       managers: [795, 580], monitor: [795, 740], 'cloud-label': [795, 268], 'other-paths': [270, 590],
       'return-label': [555, 565], 'route-label': [mix(720, 462, toad), mix(300, 344, toad)],
-      'prepare-label': [320, 225], 'publish-label': [573, 65], 'deploy-label': [1005, 212], 'ingress-label': [695, 334], brief: [555, 65],
+      'prepare-label': [320, 225], 'publish-label': [573, 65], 'deploy-label': [1005, 212], 'ingress-label': [695, 334], brief: [725, 65],
     };
     for (const [name, [x, y]] of Object.entries(points)) nodes.get(name).setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
     for (const node of layers) {
@@ -73,7 +73,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('request', `M${vx} ${vy + 115}L180 ${iy - 65}`);
       p('simple-route', `M180 ${iy + 115}V${ay - 56}`, 1 - toad);
       p('return', `M125 ${ay}H28V${vy}H${vx - 55}`, 1 - cloud);
-      p('simple-deploy', `M135 85H341V${ay}H235`, 1 - delivery);
+      p('simple-deploy', `M320 85H341V${ay}H235`, 1 - delivery);
       p('lookup-ask', `M${vx + 43} ${vy - 10}H226`);
       p('lookup-reply', `M226 ${vy + 15}H${vx + 43}`);
       const entryY = points.entry[1];
@@ -94,7 +94,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('request', `M172 390H${ix - 67}`);
       p('simple-route', `M${ix + 67} 390H944`, 1 - toad);
       p('return', 'M1000 520V580H110V520', 1 - cloud);
-      p('simple-deploy', 'M165 80H1000V334', 1 - delivery);
+      p('simple-deploy', 'M475 80H1000V334', 1 - delivery);
       p('lookup-ask', 'M85 335V293');
       p('lookup-reply', 'M135 293V335');
       p('public-route', `M${ix + 67} 390H540`);

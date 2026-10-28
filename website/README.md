@@ -69,9 +69,10 @@ route in the same SVG: network paths, trust/secrets, observation, and the full
 provision/release/recovery lifecycle. Desktop cards use three columns; mobile
 uses a vertical layout with the same content.
 
-The developer's computer and code are present from the first stop, with a simple
-"Deploy my website" path to the online computer. That path unfolds into the
-CLI, registry and deployment workflow at Shipping; visitor traffic stays separate.
+The developer's computer, code and TOAD are present from the first stop, with a
+simple "Deploy my website" path through TOAD to the online computer. TOAD starts
+with a plain-language explanation; its local CLI role, registry and deployment
+workflow unfold at Shipping. Visitor traffic stays separate.
 
 `diagram-levels.mjs` gently interpolates SVG attributes and makes room before
 fading in new parts; it does not replace diagrams or inject inline styles.

@@ -1,6 +1,6 @@
 /** Reviewed public declarations, never observations or operator configuration. */
 export const diagramSteps = [
-  { at: 0, key: 'simple', name: 'Your code', title: 'Your website starts on your computer.', description: 'You write the code on your computer. Deploying puts the website on another computer that stays online. People can then open its link: the Internet carries their request and brings the page back.' },
+  { at: 0, key: 'simple', name: 'Your code', title: 'Your code. TOAD helps put it online.', description: 'You write the code on your computer. TOAD helps deploy the website onto another computer that stays online. People can then open its link: the Internet carries their request and brings the page back.' },
   { at: 12, key: 'dns', name: 'Names & IPs', title: 'A name first needs an address.', description: 'A domain is the name people type. DNS looks up its IP address. The browser then connects to that address; the website does not pass through DNS.' },
   { at: 24, key: 'https', name: 'HTTPS', title: 'Protect the connection to the website.', description: 'HTTPS encrypts the browser connection and uses a certificate for the domain. The lock is protection, not another computer or an app-login system.' },
   { at: 36, key: 'cloud', name: 'Your cloud', title: 'The app runs in your provider account.', description: 'The current TOAD profile rents three managers in an Infomaniak project. Infrastructure is defined in Heat and configured with Ansible. The account, files and operating responsibilities remain yours.' },
