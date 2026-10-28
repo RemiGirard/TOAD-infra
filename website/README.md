@@ -48,10 +48,22 @@ lookup arrows and purple observation arrows have separate meanings.
 `openstackV3/scripts/presentation/overview.ts` generates desktop and mobile SVGs during
 the site build; the copies in this folder also render in GitHub Markdown.
 Icon sources are pinned in `vendor/lucide/`; their full ISC / Feather MIT
-notices are embedded in both SVGs and included as a public text asset.
+notices are embedded in every generated SVG and included as a public text asset.
 The diagram is illustrative and makes no infrastructure requests. SVG
 presentation attributes keep both image embeds and standalone diagrams
 compatible with the deployed Content Security Policy, without inline CSS.
+
+The homepage offers four levels of this story: **Just the idea**, **Web basics**,
+**TOAD platform** (the default), and **Expert**. `diagram-levels.css` and
+`diagram-levels.mjs` provide keyboard-accessible tabs and shareable
+`?level=simple|web|toad|expert#whole-picture` views. Simple and web diagrams each
+have a mobile layout. Expert uses the same reviewed `IMPLEMENTATION.md` as its
+standalone guide: six expandable chapters, source links, a wide topology that
+can be panned or fitted to the screen, and explicit failure boundaries.
+Keep the six-section embedding contract in `presentation/diagram-explorer.ts`
+aligned when editing that guide. Without JavaScript, the default map and links
+to the other diagrams/guide remain available. These are teaching models, never
+live observations; the simple view does not promise a one-server TOAD profile.
 
 The quickstart, complete Infomaniak example, account, first-app and observation
 guides embed the reviewed HTML teaching diagrams in `lessons/` using exact

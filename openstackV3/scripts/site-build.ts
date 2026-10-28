@@ -11,6 +11,7 @@ import { renderMonitor } from './presentation/monitoring/view.js';
 import { monitorCss, monitorClient } from './presentation/monitoring/assets.js';
 import { monitoringExamples } from './presentation/monitoring/example.js';
 import { teachingIconNames, renderOverview, renderTeachingSprite } from './presentation/overview.js';
+import { renderDiagramExplorer } from './presentation/diagram-explorer.js';
 
 const root = resolve(ROOT_DIR, '..');
 const source = join(root, 'website');
@@ -25,6 +26,7 @@ const overview = renderOverview(
 // Keep standalone Markdown illustrations and deployed assets in sync.
 writeFileSync(join(source, 'global-map.svg'), overview.desktop);
 writeFileSync(join(source, 'global-map-mobile.svg'), overview.mobile);
+for (const [file, svg] of Object.entries({ 'diagram-simple.svg': overview.simpleDesktop, 'diagram-simple-mobile.svg': overview.simpleMobile, 'diagram-web.svg': overview.webDesktop, 'diagram-web-mobile.svg': overview.webMobile, 'implementation-map.svg': overview.expert })) writeFileSync(join(source, file), svg);
 writeFileSync(join(source, 'lucide-LICENSE.txt'), iconLicense);
 writeFileSync(join(source, 'teaching-icons.svg'), renderTeachingSprite(teachingIcons, iconLicense));
 const pages = [
@@ -34,6 +36,7 @@ const pages = [
   ['DEPLOYMENT', 'deployment', 'Cloud setup'],
   ['FIRST-APP', 'first-app', 'Deploy an app'], ['OBSERVABILITY', 'observability', 'Understand operations'],
   ['ARCHITECTURE', 'architecture', 'Visual architecture'],
+  ['IMPLEMENTATION', 'implementation', 'Expert implementation'],
   ['LOCAL-STARTER', 'local-starter', 'Optional local preview'], ['EVALUATION', 'evaluation', 'Heat experiment'],
   ['COSTS', 'costs', 'Cost worksheet'], ['OPERATIONS', 'operations', 'Operations'],
   ['DISASTER-RECOVERY', 'recovery', 'Recovery'], ['LAUNCH-READINESS', 'launch', 'Validation record'],
@@ -95,6 +98,7 @@ function href(value: string, document: string): string {
   const target = pagePaths.get(absolute) ?? (absolute === join(root, 'README.md') ? '/' : `https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, absolute)}`);
   return target + (hash ? `#${hash}` : '');
 }
+let expertHtml = '';
 for (const [name, slug, label] of pages) {
   const path = resolve(root, 'docs', `${name}${name === '../LICENSE' ? '' : '.md'}`);
   let markdown = readFileSync(path, 'utf8');
@@ -117,6 +121,7 @@ for (const [name, slug, label] of pages) {
     return `<figure class="doc-diagram ${diagram.layout}${token.text.startsWith('sequenceDiagram') ? ' sequence' : ''}"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture>${diagram.mobile ? `<source media="(max-width:760px)" srcset="/${diagram.mobile}">` : ''}<img src="/${diagram.file}" alt="${escape(diagram.description)}" loading="lazy"></picture></div>${diagram.layout ? '<p class="diagram-hint">Scroll sideways to explore the diagram.</p>' : ''}<figcaption><span>${escape(diagram.description)}.</span><a href="/${diagram.file}">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>${escape(token.text)}</code></pre></details></figure>\n`;
   };
   renderer.image = ({ href: target, text: description }) => {
+    if (target === '../website/implementation-map.svg') return `<span class="implementation-figure"><span class="implementation-scroll" tabindex="0" role="region" aria-label="Expert topology; scroll horizontally to inspect"><span class="implementation-canvas"><img src="/implementation-map.svg" width="1280" height="1240" alt="${escape(description)}" loading="lazy"></span></span><span class="implementation-caption"><span>Source-defined topology · scroll horizontally for the complete map · public IPs are examples</span><a href="/implementation-map.svg">Open full size ↗</a></span></span>`;
     const illustration = Object.keys(illustrations).find((asset) => target === `../website/${asset}.svg`);
     if (illustration) {
       const size = illustrations[illustration]!;
@@ -133,12 +138,13 @@ for (const [name, slug, label] of pages) {
   };
   if (name === '../LICENSE') markdown = `# MIT License\n\n\`\`\`text\n${markdown}\n\`\`\`\n\n${readFileSync(join(root, 'LICENSING.md'), 'utf8').replace(/^(#{1,5}) /gm, '#$1 ')}`;
   const body = marked.parse(markdown, { renderer, gfm: true, async: false });
+  if (name === 'IMPLEMENTATION') expertHtml = body;
   const navigation = pages.map(([, target, title]) => `<a href="/${target}.html"${target === slug ? ' aria-current="page"' : ''}>${title}</a>`).join('');
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css">${usedLessons.size ? '<link rel="stylesheet" href="/lessons.css"><link rel="stylesheet" href="/visuals.css">' : ''}</head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer>${usedLessons.has('visit') ? '<script type="module" src="/lessons.mjs"></script>' : ''}</body></html>`;
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(label)} — TOAD</title><meta name="description" content="TOAD: ${escape(label)}. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/${slug}.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"><link rel="stylesheet" href="/diagram-levels.css">${usedLessons.size ? '<link rel="stylesheet" href="/lessons.css"><link rel="stylesheet" href="/visuals.css">' : ''}</head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p>${navigation}</nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ${escape(label.toUpperCase())}</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/${relative(root, path)}">Markdown source ↗</a></div>${body}</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer>${usedLessons.has('visit') ? '<script type="module" src="/lessons.mjs"></script>' : ''}</body></html>`;
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg', 'global-map.svg', 'global-map-mobile.svg', 'lucide-LICENSE.txt', 'teaching-icons.svg', 'visuals.css'];
+  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg', 'global-map.svg', 'global-map-mobile.svg', 'lucide-LICENSE.txt', 'teaching-icons.svg', 'visuals.css', 'diagram-levels.css', 'diagram-levels.mjs', 'diagram-simple.svg', 'diagram-simple-mobile.svg', 'diagram-web.svg', 'diagram-web-mobile.svg', 'implementation-map.svg'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {
@@ -155,7 +161,8 @@ for (const asset of assets) {
     html = html.replace(monitorSlot, () => monitor);
     const overviewSlot = '<!-- TOAD_OVERVIEW -->';
     if (html.split(overviewSlot).length !== 2) throw new Error('The homepage must contain one global overview.');
-    html = html.replace(overviewSlot, () => `<figure class="home-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="1570"><img src="/global-map.svg" width="1120" height="860" alt="You and your agent use a local TOAD CLI, editable platform files and a registry you choose. Servers and the running app live in your cloud account. Visitors use DNS and HTTPS to reach the app; monitoring brings evidence back to you." loading="lazy"></picture><figcaption><span>Green: ship · Blue: visit · Dotted: DNS lookup · Purple: observe</span><a href="/understand.html#global-map">Read the diagram →</a></figcaption></figure>`);
+    if (!expertHtml) throw new Error('Build the expert implementation guide before the explorer.');
+    html = html.replace(overviewSlot, () => renderDiagramExplorer(expertHtml));
     html = expandIcons(html);
     writeFileSync(join(output, asset), html);
   } else copyFileSync(join(source, asset), join(output, asset));

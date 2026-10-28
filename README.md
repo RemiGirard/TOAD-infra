@@ -91,6 +91,7 @@ workflow for updates; use `apply` for platform changes. See the
 | Create a cloud platform and ship your first app | [Get started](docs/QUICKSTART.md) | Infomaniak project, domain and operator tooling |
 | Ship an app to an existing verified platform | [First app](docs/FIRST-APP.md) | Docker, registry and operator access |
 | Understand the architecture | [Visual guide](docs/ARCHITECTURE.md) | No account required |
+| Inspect exact network paths, trust and failure boundaries | [Expert implementation](docs/IMPLEMENTATION.md) | Source-level detail; no account required |
 | Preview the example frontend and API locally | [Optional local starter](docs/LOCAL-STARTER.md) | Node.js 22; no cloud spend |
 | Explore a one-VM Heat profile | [Evaluation](docs/EVALUATION.md) | Billable resources; not the complete platform |
 

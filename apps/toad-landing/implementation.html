@@ -1,0 +1,339 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expert implementation — TOAD</title><meta name="description" content="TOAD: Expert implementation. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/implementation.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"><link rel="stylesheet" href="/diagram-levels.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/understand.html">Your app explained</a><a href="/infomaniak.html">Infomaniak example</a><a href="/quickstart.html">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/implementation.html" aria-current="page">Expert implementation</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / EXPERT IMPLEMENTATION</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/IMPLEMENTATION.md">Markdown source ↗</a></div><h1 id="toad-implementation-map">TOAD implementation map</h1>
+<p>This is the detailed explanation of the <strong>maintained three-manager IPv4
+profile</strong>, reviewed against runtime source at
+<a href="https://github.com/RemiGirard/TOAD-infra/tree/bfaa413">bfaa413</a> on 28 October 2026.
+It describes declarations and control flow, not the current health or resource
+inventory of your account. Public <code>198.51.100.x</code> addresses are reserved examples;
+private addresses below are the template&#39;s defaults.</p>
+<p>The same implementation can be read in the homepage&#39;s <strong>Expert</strong> level.
+Start with <a href="https://toad.remigirard.dev/#whole-picture">the four-level explorer</a> or the
+<a href="/infomaniak.html">complete Infomaniak recipe</a> for the runnable setup.</p>
+<h2 id="network-and-runtime">Network and runtime</h2>
+<p><span class="implementation-figure"><span class="implementation-scroll" tabindex="0" role="region" aria-label="Expert topology; scroll horizontally to inspect"><span class="implementation-canvas"><img src="/implementation-map.svg" width="1280" height="1240" alt="Declared network and runtime: separate operator, DNS and browser paths; public SSH, outbound router and load-balancer addresses; three private managers, one Traefik replica, application and monitoring services. This is not a live placement or health map." loading="lazy"></span></span><span class="implementation-caption"><span>Source-defined topology · scroll horizontally for the complete map · public IPs are examples</span><a href="/implementation-map.svg">Open full size ↗</a></span></span></p>
+<h3 id="resource-and-address-ownership">Resource and address ownership</h3>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>Declaration and effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Provider</td>
+<td>Infomaniak is the verified path. The workflow needs Keystone, Heat, Nova, Neutron, Octavia and Designate, plus Infomaniak parent-DNS and DNS-01 integrations. Another OpenStack provider needs adaptation and verification.</td>
+</tr>
+<tr>
+<td>Heat resource group</td>
+<td>Three Nova managers, a soft-anti-affinity server group, tenant network/subnet/router, security groups, two explicit floating-IP resources, Octavia resources and a Designate zone/records. Provider-managed internals are not enumerated by this diagram.</td>
+</tr>
+<tr>
+<td>Placement</td>
+<td>Availability-zone parameters default to <code>az-1</code>, <code>az-2</code>, <code>az-3</code>. They must exist in the chosen region. Soft anti-affinity and AZ names do not establish a measured failure-domain guarantee.</td>
+</tr>
+<tr>
+<td>Tenant network</td>
+<td><code>10.0.0.0/24</code>, gateway <code>10.0.0.1</code>; managers <code>10.0.0.20</code>, <code>.21</code>, <code>.22</code>. VM resolver defaults are <code>1.1.1.1</code> and <code>9.9.9.9</code>.</td>
+</tr>
+<tr>
+<td>App public entry</td>
+<td>Octavia&#39;s floating IPv4, <code>198.51.100.30</code> in the example, is bound to its VIP port. The private VIP is provider assigned. App DNS resolves to this public address.</td>
+</tr>
+<tr>
+<td>Operator public entry</td>
+<td>Manager 1&#39;s floating IPv4, <code>198.51.100.20</code> in the example. Inventory uses it directly for manager 1 and an explicit OpenSSH ProxyCommand through it for the other private managers. The generated inventory is private, mode <code>0600</code>.</td>
+</tr>
+<tr>
+<td>Outbound networking</td>
+<td>The Neutron router has an external gateway on the configured public network. Its provider-assigned public address is separate from the two floating-IP resources. <code>198.51.100.40</code> is only an example of this third role.</td>
+</tr>
+</tbody></table>
+<h3 id="allowed-paths-and-routing">Allowed paths and routing</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Exact current declaration</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Public SSH</td>
+<td>TCP <code>22</code> from <code>ssh_allowed_cidr</code> on manager 1. The worked recipe uses the operator workstation&#39;s public <code>/32</code>; the parameter is a configurable IPv4 CIDR.</td>
+</tr>
+<tr>
+<td>Private SSH / web</td>
+<td>TCP <code>22</code>, <code>80</code>, <code>443</code> from <code>10.0.0.0/24</code>. The web rule admits that subnet, not a source identity restricted exclusively to Octavia.</td>
+</tr>
+<tr>
+<td>Swarm internode</td>
+<td>TCP <code>2377</code>; TCP and UDP <code>7946</code>; UDP <code>4789</code>; ICMP from the tenant subnet. IPv4 egress is allowed.</td>
+</tr>
+<tr>
+<td>Swarm overlay</td>
+<td>Initialization uses the disjoint <code>10.20.0.0/16</code> default address pool with <code>/24</code> allocations. <code>traefik-public</code> is an attachable overlay. The creation command does not request encrypted overlay data traffic.</td>
+</tr>
+<tr>
+<td>Public HTTP / HTTPS</td>
+<td>Octavia has separate TCP listeners/pools on <code>80</code> and <code>443</code>, each with all three manager addresses as members. Both use <code>ROUND_ROBIN</code> and TCP health monitors with a 10-second delay, 5-second timeout and 3 retries. These are connection checks, not app-release checks.</td>
+</tr>
+<tr>
+<td>Routing mesh</td>
+<td>Traefik publishes <code>80</code>/<code>443</code> in Swarm ingress mode. A connection accepted at any manager can reach the single Traefik task through the routing mesh. The map does not imply one Traefik task per node.</td>
+</tr>
+<tr>
+<td>TLS boundary</td>
+<td>Octavia passes TCP through. Traefik terminates browser TLS, redirects HTTP to HTTPS and selects a service using router labels. Backend encryption is not asserted by this diagram. The Node example uses internal port <code>3000</code>; other services declare their own port.</td>
+</tr>
+<tr>
+<td>Certificates</td>
+<td>The Traefik stack configures <code>letsencrypt</code> HTTP-01 and <code>infomaniak</code> DNS-01 resolvers. Router labels select the resolver. Generated apps and bundled admin routes default to <code>letsencrypt</code>; specific apps, including this project site, select <code>infomaniak</code>.</td>
+</tr>
+<tr>
+<td>DNS</td>
+<td>The Designate zone has a 300-second TTL; its apex and wildcard A records use 60 seconds and point to the load-balancer floating IP. Manual parent NS delegation tells resolvers where the child zone lives. Parent apex/wildcard A synchronization is a separate operation. DNS never proxies the page.</td>
+</tr>
+</tbody></table>
+<p>Traefik is <strong>one replica</strong>, placed on the manager labelled
+<code>toad.traefik-certificates=true</code> by its deployment playbook. Its certificate
+store is a local named volume. Three healthy managers do not make this ingress
+state highly available. Application tasks use the external <code>traefik-public</code>
+network; application manifests cannot expose their own published host ports.</p>
+<p>Sources: <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/heat/level5-production.yaml">Heat profile</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/ansible/playbooks/initJoinSwarm.yaml">Swarm initialization</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/inventory.ts">inventory generation</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/router/docker-compose.yaml">Traefik stack</a>.</p>
+<h2 id="provisioning-and-desired-state">Provisioning and desired state</h2>
+<ol>
+<li><strong>Select a context.</strong> <code>cloud init NAME</code> creates/selects local templates;
+it does not create cloud servers. Operator credentials and environment
+configuration remain outside public source. An application&#39;s source can
+stay in its own repository.</li>
+<li><strong>Review configuration.</strong> <code>cloud plan STACK</code> is a local review reporting the
+intended three managers, load balancer and DNS zone. It is not an OpenStack
+change-set, a price quote or an approval. Human approval is an agent/human
+workflow requirement; the CLI has no universal <code>approve</code> command.</li>
+<li><strong>Apply.</strong> With an explicit stack target, preflight and Heat validation run,
+then cloud resources are created/updated. TOAD generates inventory and runs
+Docker installation, host hardening, Swarm initialization, Traefik, root
+service, monitoring and platform-hello playbooks.</li>
+<li><strong>Handle first DNS delegation.</strong> All those platform playbooks have run before
+a missing delegation produces <code>waiting_for_dns</code>, exit code <code>2</code>, and operation
+state <code>waiting</code>. Keep the stack and resources; add the actual child NS records
+at the parent provider. Do not create a second stack to retry this stage.</li>
+<li><strong>Resume and verify.</strong> Resume validates the checkpoint&#39;s stack UUID and parent/
+child domain binding. It completes DNS synchronization and platform checks;
+it does not repeat the platform provisioning sequence.</li>
+</ol>
+<p>Current apply synchronizes the parent apex and wildcard A records as well as
+the child zone. Those changes can move an existing website. The worked example
+therefore uses a dedicated domain and an explicit resource/DNS plan.
+Keep the existing admin CA when updating an existing stack; missing escrow is
+not permission to replace its trusted CA.</p>
+<p>Sources: <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/cloud.ts">cloud commands</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/apply.ts">apply / checkpoint / resume</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/dns.ts">parent DNS synchronization</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/main/AGENTS.md">agent operating contract</a>.</p>
+<h2 id="application-releases">Application releases</h2>
+<p><strong>Source → allow-listed build → registry image → immutable Compose reference →
+Swarm service → running-task proof → declared HTTPS checks.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>What changes, and what does not</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Existing-repo <code>init NAME</code></td>
+<td>Writes <code>toad.yaml</code>, <code>compose.toad.yaml</code> and build metadata for a tagged build target. Existing TOAD metadata is refused. The initial tagged-build service is a routing placeholder; an existing immutable input image can skip a local build. The command is top-level <code>init</code>, not <code>app init</code>.</td>
+</tr>
+<tr>
+<td><code>app publish</code></td>
+<td>Stages only allowed build files, executes Buildx with push, requires the resulting SHA-256 digest, then updates the Compose image/routed port and saved image/platform defaults. It does not provision, deploy or change DNS. Multiple services require explicit service selection.</td>
+</tr>
+<tr>
+<td><code>app validate</code></td>
+<td>Enforces the manifest, declared-file boundaries, immutable images, memory limits, rollback policy, <code>no-new-privileges</code> and Traefik ingress. Privileged/host-namespace containers, added capabilities, Docker socket mounts and direct published application ports are rejected. Validation is not an application security proof.</td>
+</tr>
+<tr>
+<td><code>app deploy</code></td>
+<td>Validates/snapshots declared ordinary files, rejects changed Compose, deploys declared secrets, transfers the bundle, and runs <code>docker stack deploy --prune</code> on the existing platform. Then it checks runtime convergence and declared endpoints.</td>
+</tr>
+<tr>
+<td><code>app release</code></td>
+<td>Composes publish → validate → deploy. Deploy already performs release/HTTPS verification; release does not invoke the fuller <code>diagnose</code> collector.</td>
+</tr>
+<tr>
+<td><code>app diagnose</code></td>
+<td>Adds read-only release/task/endpoint diagnosis, sanitized failed-task categories and actionable hints. An empty check list performs no HTTPS validation.</td>
+</tr>
+<tr>
+<td><code>app rollback</code></td>
+<td>Requires immutable previous service images, requests and verifies recovery, and writes a unique private image patch. Compose/Git stay unchanged. Review/apply the patch to accept the recovered image as desired state, or a later deploy can request the bad image again.</td>
+</tr>
+</tbody></table>
+<p>Release proof compares the <strong>requested digest</strong>, the <strong>service-spec digest</strong>
+and <strong>every running-task digest</strong>, along with declared replicas, ready task
+counts and update/rollback state. Outcomes are <code>deployed</code>, <code>pending</code>,
+<code>rolled_back</code> or <code>failed</code>. An HTTP 200 from a recovered old release cannot
+establish that the requested new image shipped.</p>
+<p>App data is separate from replication. A local named-volume service requires
+one replica, a pinned stateful node and explicit volume/backup declarations.
+<code>backup: none</code> is a valid declaration; it is not recovery evidence. Cinder,
+object/external storage and distributed data need their own implementation,
+application integration and tests. The current local-volume contract does not
+provide automatic data replication or node-loss failover.</p>
+<p>Sources: <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/project.ts">existing-repo init</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/app-image.ts">build and publish</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/app.ts">release / deploy / rollback</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/app-runtime.ts">runtime digest proof</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/app-manifest.ts">manifest policy</a>,
+<a href="/storage.html">storage choices</a>.</p>
+<h2 id="trust-and-secrets">Trust and secrets</h2>
+<table>
+<thead>
+<tr>
+<th>Boundary</th>
+<th>Current implementation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Operator</td>
+<td>Holds OpenStack credentials, SSH key, admin CA private key and age identity. Use the selected private operator context; the public project site never reads it.</td>
+</tr>
+<tr>
+<td>Platform certificate automation</td>
+<td>The restricted Infomaniak DNS token becomes a content-addressed immutable Swarm secret. Traefik reads it from a secret file. It is intentionally delivered to the cluster.</td>
+</tr>
+<tr>
+<td>App secrets</td>
+<td>Age ciphertext is decrypted operator-side, then streamed into content-addressed Swarm secrets mounted as files for declared services. Secrets are not all local-only.</td>
+</tr>
+<tr>
+<td>Admin TLS</td>
+<td>Traefik&#39;s <code>admin-mtls@file</code> option has TLS 1.2 minimum, strict SNI and <code>RequireAndVerifyClientCert</code>. The cluster gets the public client CA, not the CA private key. Default client lifetime is 90 days, configurable within 1–397 days.</td>
+</tr>
+<tr>
+<td>Admin versus app access</td>
+<td>Admin routes share the public HTTPS entry but add client-certificate verification. They are not VPN-only. App routes do not inherit that requirement automatically; app-user authorization remains an application decision.</td>
+</tr>
+<tr>
+<td>Root-equivalent access</td>
+<td>Swarm-manager access and Docker socket access are privileged trust boundaries. Traefik and Alloy use the Docker socket as part of the platform. Application manifests reject that mount.</td>
+</tr>
+<tr>
+<td>Existing trust</td>
+<td>Restore the existing CA/bundle from escrow. Never rotate trust, restore data, reboot nodes or destroy stacks merely to get a diagram or diagnosis to succeed.</td>
+</tr>
+</tbody></table>
+<p>Sources: <a href="/security.html">security policy</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/ansible/playbooks/deployTraefik.yaml">DNS-secret deployment</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/router/dynamic.yaml">admin TLS option</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/admin-pki.ts">PKI generation</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/app-secrets.ts">app secret transfer</a>.</p>
+<h2 id="monitoring-and-operation-evidence">Monitoring and operation evidence</h2>
+<p>Prometheus scrapes and evaluates every <strong>30 seconds</strong>. It discovers Traefik
+metrics on <code>9100</code>, node-exporter on <code>9100</code>, cAdvisor on <code>8080</code>, Alloy on <code>12345</code>
+and Loki on <code>3100</code>; the different <code>9100</code> endpoints have different service DNS
+names. Blackbox exporter on <code>9115</code> probes the bundled public platform URLs.
+Alloy discovers local Docker containers and pushes their labelled logs to Loki.</p>
+<p>Prometheus (<code>9090</code>), Grafana (<code>3000</code>) and Alertmanager (<code>9093</code>) have protected
+Traefik admin routes. Loki and the collectors are internal services. Stateful
+monitoring components use the manager labelled <code>toad.monitoring-state=true</code>;
+Alloy, node-exporter and cAdvisor are global services. Prometheus retention is
+7 days with a 5 GB size limit. Notification destinations and successful delivery
+need explicit configuration and validation.</p>
+<table>
+<thead>
+<tr>
+<th>Evidence channel</th>
+<th>Exact scope</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>observe</code></td>
+<td>Swarm node identity/address/role/state/reachability/availability/leader, app release evidence, declared HTTPS results, sanitized task issues, authenticated Prometheus target/alert counts and local operation history.</td>
+</tr>
+<tr>
+<td>Capture time</td>
+<td><code>generatedAt</code> is set before collection. Expiry is 60 seconds from that start, so slow collection can already be stale when it finishes.</td>
+</tr>
+<tr>
+<td>Watch cadence</td>
+<td>Waits 15 seconds after collection, then collects again. The private page reloads every 15 seconds. This does not promise observations are always 15 seconds old.</td>
+</tr>
+<tr>
+<td>Missing access</td>
+<td>Explicit gaps / unknown state, not zero alerts or a healthy infrastructure claim.</td>
+</tr>
+<tr>
+<td>Overall <code>ok</code></td>
+<td>Requires no gaps, at least three managers all ready/reachable, successful observed apps, nonempty healthy monitoring targets and zero firing alerts.</td>
+</tr>
+<tr>
+<td>Local operation journal</td>
+<td>Newest 20 context operations, identities, coordinator host/PID, local worker PIDs, timestamps and phase events. This is not a cross-machine audit service.</td>
+</tr>
+<tr>
+<td>Interrupted lock</td>
+<td>Reconciliation checks process ownership and acknowledges interruption. It does not undo or resume arbitrary remote changes.</td>
+</tr>
+</tbody></table>
+<p>The explanatory route is not a discovered DNS, load-balancer, container-placement,
+storage or backup graph. The HTML export does not contain raw logs or time-series
+charts. Notification delivery remains unverified by that observation. Keep the
+private <code>0600</code> export off public hosting and use declared checks plus app-specific
+tests to assess a release.</p>
+<p>Sources: <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/docker-compose.yaml">monitoring stack</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/prometheus.yml.j2">Prometheus configuration</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/monitoring/alloy/config.alloy">Alloy log collection</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/observation.ts">observation collection</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/observe.ts">watch/export handler</a>,
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/infrastructure/operation-lock.ts">operation journal</a>.</p>
+<h2 id="failure-boundaries-and-recovery">Failure boundaries and recovery</h2>
+<table>
+<thead>
+<tr>
+<th>Event or design choice</th>
+<th>What the architecture does and does not provide</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>One manager unavailable</td>
+<td>Two of three managers can retain control-plane quorum. This does not establish that ingress, every app or every dataset remains available.</td>
+</tr>
+<tr>
+<td>Pinned ingress host lost</td>
+<td>One Traefik replica plus its local ACME store is an ingress availability limit. Restoring trust/state and scheduling is separate from preserving Swarm quorum.</td>
+</tr>
+<tr>
+<td>Monitoring state host lost</td>
+<td>Pinned monitoring volumes have a node-local recovery boundary. A dashboard&#39;s previous green state is not proof the current platform is reachable.</td>
+</tr>
+<tr>
+<td>Stateful app host lost</td>
+<td>One pinned replica and local volume need a restore/replacement procedure; Swarm replicas do not synchronously copy that data.</td>
+</tr>
+<tr>
+<td>Bad app release</td>
+<td>Automatic rollback can recover the old image. Delivery of the requested new digest is still unsuccessful.</td>
+</tr>
+<tr>
+<td>Backup declared</td>
+<td>A policy field or captured archive does not prove offsite delivery, application consistency or a successful restore. The fresh-cluster app-recovery drill remains pending.</td>
+</tr>
+<tr>
+<td>Very small servers</td>
+<td>Manager 1&#39;s declared monitoring-container memory limits sum to <code>2176M</code> in Compose notation before OS, Docker, Traefik and apps. That is a sum of limits, not measured usage or a validated minimum flavor.</td>
+</tr>
+<tr>
+<td>More capacity</td>
+<td>App replicas can be changed within existing capacity. The maintained workflow does not automatically provision extra workers, migrate local data or turn the proposed one-node IPv6 design into the three-manager profile.</td>
+</tr>
+</tbody></table>
+<p>Recovery has three independent inputs: desired state in Git, private operator
+escrow, and encrypted data archives. Restore only the exact human-approved
+target. See <a href="/recovery.html">the recovery procedure</a>,
+<a href="/storage.html">storage profiles</a>, <a href="/costs.html">costs and growth</a> and
+<a href="/launch.html">the validation record</a>. No recovery-time or data-loss
+guarantee is inferred from this drawing.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>
