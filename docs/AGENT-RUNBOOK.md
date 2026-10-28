@@ -1,7 +1,40 @@
 # Agent runbook
 
-This runbook gives a person or automation a safe, evidence-first path through
-TOAD. Commands run from `openstackV3` unless stated otherwise.
+TOAD is designed to be operated by a person and their coding agent together.
+The agent inspects structured evidence, proposes a bounded action, uses the
+human's authorization, verifies the actual result, and explains what changed.
+Commands run from `openstackV3` unless stated otherwise.
+
+## Discover commands and make the target explicit
+
+```sh
+pnpm run capabilities -- --json
+pnpm run doctor -- --for app-deploy --context my-cloud --json
+pnpm run operation -- status --context my-cloud --json
+pnpm run observe -- --context my-cloud --app my-app --json
+```
+
+`--context NAME` selects only this invocation and never changes the saved
+context. `--project DIR` selects an existing application repository. You can
+also invoke `node /path/to/TOAD-infra/toad.mjs` from that repository, without
+moving source into TOAD. Read `COMMAND --help` for supported options. Unknown
+options fail before a lock, state write or remote operation; there is no
+implicit `--dry-run` mode.
+
+For the person supervising an agent, [open the private operation view](OBSERVABILITY.md).
+It combines topology, exact releases, checks, metrics and local operation
+stages. The public site contains examples, not private live infrastructure.
+
+The default doctor checks workstation health only. Use `--for cloud-apply`,
+`app-publish`, or `app-deploy` when deciding whether that action is ready.
+`cloud plan --json` is a read-only configuration review, not a provider-side
+Heat change-set or a price quote.
+
+JSON output is versioned and failures set a nonzero exit code. Sensitive
+remote failure text stays outside structured output. Use local trusted logs
+when diagnosis identifies a failure that requires deeper inspection.
+Missing monitoring access remains an evidence gap. Do not infer permission,
+health, or successful recovery from missing data.
 
 ## Diagnose before changing anything
 
@@ -29,8 +62,10 @@ pnpm run app -- diagnose APP --json
 Before deployment, review the generated `apps/APP/toad.yaml` and Compose file.
 Use an immutable image digest. The validator must continue to
 enforce Traefik-only ingress, rollback, memory limits, `no-new-privileges`, and
-the restricted stateful-volume contract. A deployment is complete only when
-the service converges and every declared HTTPS check passes.
+the restricted stateful-volume contract. A deployment is complete only when the service spec and running-task image
+digests match the requested release, replicas converge, update state permits
+success, and every declared HTTPS check passes. An automatic rollback to an
+old healthy version is reported as a failed delivery of the new release.
 
 ## Investigate an unhealthy application
 
@@ -41,7 +76,8 @@ the service converges and every declared HTTPS check passes.
    container port, `traefik-public` network membership, DNS, and certificate
    resolver.
 4. If a new update is bad and the prior service spec is known-good, request
-   `app rollback APP [SERVICE]`.
+   `app rollback APP [SERVICE]`. Verify the recovered result and review the
+   generated Compose patch before the next deployment.
 5. Re-run both app diagnosis and the platform verifier.
 
 Do not use `docker service update` for ordinary configuration changes: that

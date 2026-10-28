@@ -1,8 +1,25 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deploy an app — TOAD</title><meta name="description" content="TOAD: Deploy an app. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/first-app.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html" aria-current="page">Deploy an app</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / DEPLOY AN APP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/FIRST-APP.md">Markdown source ↗</a></div><h1 id="from-source-to-your-first-live-app">From source to your first live app</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Deploy an app — TOAD</title><meta name="description" content="TOAD: Deploy an app. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/first-app.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html" aria-current="page">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / DEPLOY AN APP</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/FIRST-APP.md">Markdown source ↗</a></div><h1 id="from-source-to-your-first-live-app">From source to your first live app</h1>
 <p>This guide deploys a frontend and a Node HTTP API as one stateless service.
 Start after <a href="/quickstart.html">provisioning and verifying your cloud platform</a>.
 An optional <a href="/local-starter.html">local preview</a> lets you explore the sample app.
 Commands run in <code>openstackV3</code> unless a step says otherwise.</p>
+<h2 id="bring-an-existing-app">Bring an existing app</h2>
+<p>Keep your source where it is. From your application repository, using a
+verified TOAD platform and an authenticated registry:</p>
+<pre><code class="language-sh">node /path/to/TOAD-infra/toad.mjs init my-app --project . --image ghcr.io/YOUR-OWNER/my-app:v1 --port 3000 --files Dockerfile,server.mjs
+node /path/to/TOAD-infra/toad.mjs app validate my-app --project .
+node /path/to/TOAD-infra/toad.mjs app release my-app --project . --context my-cloud
+</code></pre>
+<p>List every required build file explicitly; the example above is for a small
+Node app. Init preserves existing source and refuses existing TOAD metadata.
+Review <code>toad.yaml</code>, <code>compose.toad.yaml</code> and <code>build.yaml</code> before publication.
+The generated image is a routing placeholder until the first successful build.
+Registry/image/platform defaults persist in <code>build.yaml</code>, so later releases
+can reuse the same command. Images stay pinned by digest even when a tag is
+reused. Private registry pull authentication must still exist on the nodes.</p>
+<p>If CI already published an image, pass its full <code>REGISTRY/APP@sha256:...</code>
+reference to init, then run <code>app deploy my-app --project . --context my-cloud</code>.
+No local build is required. The existing sample workflow follows below.</p>
 <h2 id="1-check-your-workstation-and-target">1. Check your workstation and target</h2>
 <pre><code class="language-sh">pnpm install --frozen-lockfile
 pnpm run doctor -- --json
@@ -58,9 +75,11 @@ requests rollback on failure. To request rollback explicitly:</p>
 <pre><code class="language-sh">pnpm run app -- rollback my-app
 pnpm run app -- diagnose my-app --json
 </code></pre>
-<p>Rollback changes the live service, not Git. Restore the known-good digest in
-Compose before deploying again, or the next deployment requests the bad image.
-Inspect failed tasks and logs before retrying.</p>
+<p>Rollback verifies the recovered service and running-task digests and HTTPS
+checks, then writes a uniquely named Compose patch without editing your source
+or Git. Review and apply that patch from the reported base directory before
+deploying again, or the next deployment requests the bad image. Inspect failed
+tasks and <code>app logs my-app --follow --since 15m --tail 100</code> before retrying.</p>
 <h2 id="6-add-a-secret-when-your-app-needs-one">6. Add a secret when your app needs one</h2>
 <p>The starter accepts <code>API_TOKEN_FILE</code> for <code>/api/private</code>. Without a configured
 token this endpoint returns 401. Keep <code>/api/health</code> public.</p>
@@ -92,6 +111,10 @@ pnpm run app -- diagnose my-app --json
 </code></pre>
 <p>Only age ciphertext belongs in Git. Back up the age identity separately.
 The deployment creates an immutable Swarm secret and mounts it as a file.</p>
+<h2 id="follow-the-operation">Follow the operation</h2>
+<p>Use <code>operation status --json</code> and <code>operation history --json</code> in the same
+explicit context to see stages and worker ownership. <code>observe --app my-app --output /private/path/view.html --watch</code> produces a private visual view from
+the same evidence an agent sees. See <a href="/observability.html">understand operations</a>.</p>
 <h2 id="ci-and-reviewable-deployment">CI and reviewable deployment</h2>
 <p>The manually triggered <strong>Starter application image</strong> workflow builds
 <code>examples/node-web</code>, publishes <code>ghcr.io/OWNER/toad-starter</code>, and records its

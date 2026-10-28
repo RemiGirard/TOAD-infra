@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Understand operations — TOAD</title><meta name="description" content="TOAD: Understand operations. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/observability.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html" aria-current="page">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / UNDERSTAND OPERATIONS</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/OBSERVABILITY.md">Markdown source ↗</a></div><h1 id="understand-what-your-infrastructure-and-agent-are-doing">Understand what your infrastructure and agent are doing</h1>
+<p>TOAD gives a person and their coding agent the same evidence: manager quorum,
+requested and running application images, HTTPS checks, metric and alert state,
+and the stages of the current operation. The agent uses JSON; you can open a
+private visual view generated from that same observation.</p>
+<p><span class="illustration"><picture><source media="(max-width:760px)" srcset="/observability-mobile.svg" width="360" height="790"><img src="/observability.svg" width="1120" height="350" alt="Signals and operation history feed a shared evidence view" loading="lazy"></picture></span></p>
+<h2 id="open-your-private-operation-view">Open your private operation view</h2>
+<p>From <code>openstackV3</code>, in the intended operator context:</p>
+<pre><code class="language-sh">pnpm run observe -- --context my-cloud --app my-app --output /private/path/toad-view.html
+pnpm run observe -- --context my-cloud --app my-app --json
+</code></pre>
+<p>Open the generated HTML file locally. To keep it current while an agent works:</p>
+<pre><code class="language-sh">pnpm run observe -- --context my-cloud --app my-app --output /private/path/toad-view.html --watch
+</code></pre>
+<p>The collector refreshes the file every fifteen seconds, after collection
+finishes; the page reloads it. Each observation has a capture time and a
+one-minute expiry. Slow collection, a stopped collector, or unavailable access
+can make evidence stale. A point-in-time export is not a continuous monitoring
+service. Keep the operator running if you need this local view to refresh.</p>
+<p>The file is created with mode <code>0600</code> and contains private topology and release
+information. Keep it off public hosting, Git, tickets, and shared folders.
+The public project&#39;s interactive examples are explicitly illustrative; they
+never load your cluster credentials or private state.</p>
+<h2 id="read-the-view">Read the view</h2>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What it proves</th>
+<th>What it does not prove</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Managers</td>
+<td>Readiness, reachability, role and quorum at capture time</td>
+<td>Application data replication or future availability</td>
+</tr>
+<tr>
+<td>Application release</td>
+<td>Expected image digest versus service and running-task digests; update state; declared replicas</td>
+<td>Correct business behavior beyond declared checks</td>
+</tr>
+<tr>
+<td>HTTPS checks</td>
+<td>Declared endpoints returned the expected status over validated TLS</td>
+<td>Every app workflow works</td>
+</tr>
+<tr>
+<td>Metrics and alerts</td>
+<td>Authenticated Prometheus target and firing-alert state</td>
+<td>An alert reached a person</td>
+</tr>
+<tr>
+<td>Operation timeline</td>
+<td>Local operation ID, coordinator, workers and fixed phase names</td>
+<td>Every remote action was undone if the coordinator stopped</td>
+</tr>
+<tr>
+<td>Evidence gaps</td>
+<td>Which observations could not be collected</td>
+<td>That missing observations are healthy</td>
+</tr>
+</tbody></table>
+<p>A healthy old release after automatic rollback is reported as a failed delivery
+of the requested new release. To accept a recovered release as desired state,
+review and apply the generated Compose patch. <code>app diagnose</code> then compares
+against that explicit desired state.</p>
+<h2 id="monitoring-layers">Monitoring layers</h2>
+<p>Prometheus receives host, container, ingress and public-probe metrics. Loki
+receives service logs through Alloy. Grafana&#39;s protected overview includes
+signal flow, CPU, memory, disk, HTTP behavior, scrape age, and recent logs.
+Use <code>app logs APP --follow --since 15m --tail 100</code> for a focused investigation.</p>
+<p>Admin interfaces remain behind mTLS. Missing the original operator certificate
+or key makes those observations unknown; restore the original identity from
+escrow. Do not create a replacement CA to make a dashboard turn green.</p>
+<p>The Swarm-hosted monitor shares the platform&#39;s failure domain. Run the existing
+external HTTPS probe independently to detect total platform outages. See
+<a href="https://github.com/RemiGirard/TOAD-infra/blob/main/monitoring/README.md">monitoring configuration</a>.</p>
+<p>Alertmanager initially uses a dashboard-only receiver. Outbound alert delivery
+and the offsite backup notification need a chosen destination and an actual
+test. The operation view explicitly does not claim notification delivery.
+See <a href="/backups.html">backup automation</a> for the existing secret-backed
+notification and remote verification workflow.</p>
+<h2 id="follow-or-reconcile-an-agent-operation">Follow or reconcile an agent operation</h2>
+<pre><code class="language-sh">pnpm run operation -- status --context my-cloud --json
+pnpm run operation -- history --context my-cloud --json
+</code></pre>
+<p>Mutation history records stage names and process ownership, not command
+arguments, secret values or raw service logs. Records live privately in the
+selected context&#39;s <code>operations/</code> directory; they are local operator evidence,
+not a cross-machine audit service.</p>
+<p>An interrupted coordinator&#39;s lock is retained. Inspect worker processes and
+remote cloud/Swarm state before acknowledging it:</p>
+<pre><code class="language-sh">pnpm run operation -- reconcile --context my-cloud --acknowledge-interrupted
+</code></pre>
+<p>Reconciliation refuses a live coordinator or recorded worker. Acknowledging
+interrupted work does not undo or resume any remote mutation. Diagnose again,
+then choose the narrowest authorized next action. Never start another deploy
+because a caller stopped waiting.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

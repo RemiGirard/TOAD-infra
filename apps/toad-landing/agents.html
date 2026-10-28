@@ -1,6 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent runbook — TOAD</title><meta name="description" content="TOAD: Agent runbook. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/agents.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html" aria-current="page">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / AGENT RUNBOOK</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/AGENT-RUNBOOK.md">Markdown source ↗</a></div><h1 id="agent-runbook">Agent runbook</h1>
-<p>This runbook gives a person or automation a safe, evidence-first path through
-TOAD. Commands run from <code>openstackV3</code> unless stated otherwise.</p>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent runbook — TOAD</title><meta name="description" content="TOAD: Agent runbook. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/agents.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html" aria-current="page">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / AGENT RUNBOOK</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/AGENT-RUNBOOK.md">Markdown source ↗</a></div><h1 id="agent-runbook">Agent runbook</h1>
+<p>TOAD is designed to be operated by a person and their coding agent together.
+The agent inspects structured evidence, proposes a bounded action, uses the
+human&#39;s authorization, verifies the actual result, and explains what changed.
+Commands run from <code>openstackV3</code> unless stated otherwise.</p>
+<h2 id="discover-commands-and-make-the-target-explicit">Discover commands and make the target explicit</h2>
+<pre><code class="language-sh">pnpm run capabilities -- --json
+pnpm run doctor -- --for app-deploy --context my-cloud --json
+pnpm run operation -- status --context my-cloud --json
+pnpm run observe -- --context my-cloud --app my-app --json
+</code></pre>
+<p><code>--context NAME</code> selects only this invocation and never changes the saved
+context. <code>--project DIR</code> selects an existing application repository. You can
+also invoke <code>node /path/to/TOAD-infra/toad.mjs</code> from that repository, without
+moving source into TOAD. Read <code>COMMAND --help</code> for supported options. Unknown
+options fail before a lock, state write or remote operation; there is no
+implicit <code>--dry-run</code> mode.</p>
+<p>For the person supervising an agent, <a href="/observability.html">open the private operation view</a>.
+It combines topology, exact releases, checks, metrics and local operation
+stages. The public site contains examples, not private live infrastructure.</p>
+<p>The default doctor checks workstation health only. Use <code>--for cloud-apply</code>,
+<code>app-publish</code>, or <code>app-deploy</code> when deciding whether that action is ready.
+<code>cloud plan --json</code> is a read-only configuration review, not a provider-side
+Heat change-set or a price quote.</p>
+<p>JSON output is versioned and failures set a nonzero exit code. Sensitive
+remote failure text stays outside structured output. Use local trusted logs
+when diagnosis identifies a failure that requires deeper inspection.
+Missing monitoring access remains an evidence gap. Do not infer permission,
+health, or successful recovery from missing data.</p>
 <h2 id="diagnose-before-changing-anything">Diagnose before changing anything</h2>
 <pre><code class="language-sh">pnpm run doctor -- --json
 pnpm run maintenance -- status --json
@@ -20,8 +46,10 @@ pnpm run app -- diagnose APP --json
 <p>Before deployment, review the generated <code>apps/APP/toad.yaml</code> and Compose file.
 Use an immutable image digest. The validator must continue to
 enforce Traefik-only ingress, rollback, memory limits, <code>no-new-privileges</code>, and
-the restricted stateful-volume contract. A deployment is complete only when
-the service converges and every declared HTTPS check passes.</p>
+the restricted stateful-volume contract. A deployment is complete only when the service spec and running-task image
+digests match the requested release, replicas converge, update state permits
+success, and every declared HTTPS check passes. An automatic rollback to an
+old healthy version is reported as a failed delivery of the new release.</p>
 <h2 id="investigate-an-unhealthy-application">Investigate an unhealthy application</h2>
 <ol>
 <li>Run <code>app diagnose APP --json</code>.</li>
@@ -31,7 +59,8 @@ failed-task error. Fix the manifest or image before redeploying.</li>
 container port, <code>traefik-public</code> network membership, DNS, and certificate
 resolver.</li>
 <li>If a new update is bad and the prior service spec is known-good, request
-<code>app rollback APP [SERVICE]</code>.</li>
+<code>app rollback APP [SERVICE]</code>. Verify the recovered result and review the
+generated Compose patch before the next deployment.</li>
 <li>Re-run both app diagnosis and the platform verifier.</li>
 </ol>
 <p>Do not use <code>docker service update</code> for ordinary configuration changes: that

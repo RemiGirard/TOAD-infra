@@ -32,7 +32,12 @@
     "ssh": "tsx scripts/index.ts ssh",
     "inventory": "tsx scripts/index.ts inventory",
     "os": "tsx scripts/index.ts os",
-    "site:diagrams": "tsx scripts/site-diagrams.ts"
+    "site:diagrams": "tsx scripts/site-diagrams.ts",
+    "cloud": "tsx scripts/index.ts cloud",
+    "observe": "tsx scripts/index.ts observe",
+    "operation": "tsx scripts/index.ts operation",
+    "init": "tsx scripts/index.ts init",
+    "capabilities": "tsx scripts/index.ts capabilities"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

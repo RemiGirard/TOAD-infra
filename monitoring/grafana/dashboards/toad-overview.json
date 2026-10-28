@@ -1,89 +1,358 @@
 {
-  "annotations": {"list": []},
+  "annotations": {
+    "list": []
+  },
   "editable": false,
   "graphTooltip": 1,
   "panels": [
     {
+      "type": "text",
+      "title": "Understand the platform and agent activity",
+      "id": 10,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "![TOAD signal flow](https://toad.remigirard.dev/observability.svg)\n\n**Read \u2192 plan \u2192 authorized action \u2192 verify \u2192 explain.** Metrics describe infrastructure health; `toad observe` adds exact app releases, quorum and local agent operation history. Unknown or expired evidence requires a new observation.\n\n[Operator and agent guide](https://toad.remigirard.dev/agents.html) \u00b7 [Signal coverage and limits](https://toad.remigirard.dev/observability.html)\n\nAlertmanager initially uses a dashboard-only receiver. Validate a notification destination before relying on outbound alerts."
+      }
+    },
+    {
       "type": "stat",
       "title": "Healthy scrape targets",
       "id": 1,
-      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
-      "targets": [{"expr": "sum(up)", "refId": "A"}],
-      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 18}]}}}
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(up)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 18
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "type": "stat",
       "title": "Public endpoints healthy",
       "id": 2,
-      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
-      "targets": [{"expr": "sum(probe_success{job=\"public-https\"})", "refId": "A"}],
-      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 4}]}}}
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(probe_success{job=\"public-https\"})",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 4
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "type": "stat",
       "title": "Firing alerts",
       "id": 3,
-      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
-      "targets": [{"expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)", "refId": "A"}],
-      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}}
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(ALERTS{alertstate=\"firing\"}) or vector(0)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
     },
     {
       "type": "stat",
       "title": "Traefik requests / second",
       "id": 4,
-      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
-      "targets": [{"expr": "sum(rate(traefik_entrypoint_requests_total[5m]))", "refId": "A"}],
-      "fieldConfig": {"defaults": {"decimals": 2, "unit": "reqps"}}
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 7
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(traefik_entrypoint_requests_total[5m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "reqps"
+        }
+      }
     },
     {
       "type": "timeseries",
       "title": "Node CPU usage",
       "id": 5,
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
-      "targets": [{"expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "{{instance}}", "refId": "A"}],
-      "fieldConfig": {"defaults": {"min": 0, "max": 100, "unit": "percent"}}
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        }
+      }
     },
     {
       "type": "timeseries",
       "title": "Node memory usage",
       "id": 6,
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
-      "targets": [{"expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "{{instance}}", "refId": "A"}],
-      "fieldConfig": {"defaults": {"min": 0, "max": 100, "unit": "percent"}}
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        }
+      }
     },
     {
       "type": "timeseries",
       "title": "Traefik responses by status",
       "id": 7,
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
-      "targets": [{"expr": "sum by (code) (rate(traefik_entrypoint_requests_total[5m]))", "legendFormat": "HTTP {{code}}", "refId": "A"}],
-      "fieldConfig": {"defaults": {"unit": "reqps"}}
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "sum by (code) (rate(traefik_entrypoint_requests_total[5m]))",
+          "legendFormat": "HTTP {{code}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      }
     },
     {
       "type": "timeseries",
       "title": "Public HTTPS probe duration",
       "id": 8,
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
-      "targets": [{"expr": "probe_duration_seconds{job=\"public-https\"}", "legendFormat": "{{instance}}", "refId": "A"}],
-      "fieldConfig": {"defaults": {"unit": "s"}}
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"public-https\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
     },
     {
       "type": "logs",
       "title": "Recent Swarm logs",
       "id": 9,
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 21},
-      "datasource": {"type": "loki", "uid": "loki"},
-      "targets": [{"expr": "{job=\"docker\"}", "refId": "A"}],
-      "options": {"showTime": true, "showLabels": false, "wrapLogMessage": true, "enableLogDetails": true}
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "expr": "{job=\"docker\"}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Host disk available",
+      "id": 11,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "targets": [
+        {
+          "expr": "100 * node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs\"}",
+          "legendFormat": "{{instance}} {{mountpoint}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Age of most recent scrape sample",
+      "id": 12,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "targets": [
+        {
+          "expr": "time() - max(timestamp(up))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 120
+              }
+            ]
+          }
+        }
+      }
     }
   ],
   "refresh": "30s",
   "schemaVersion": 41,
-  "tags": ["toad", "swarm"],
-  "templating": {"list": []},
-  "time": {"from": "now-3h", "to": "now"},
+  "tags": [
+    "toad",
+    "swarm"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
   "timezone": "browser",
   "title": "TOAD Overview",
   "uid": "toad-overview",
-  "version": 1
+  "version": 2
 }

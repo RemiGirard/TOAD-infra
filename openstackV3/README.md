@@ -95,7 +95,7 @@ Customize `contexts/acme-prod/router/config.yaml` and
 `contexts/acme-prod/credentials/`. Inventory and backups are written inside the
 same ignored context directory. `context clear` returns to the legacy paths.
 
-Every state-changing command obtains `.operation.lock` inside the selected
+Cloud and application deployment commands obtain `.operation.lock` inside the selected
 context. A second local process or agent is refused while the first mutation is
 running; read-only status, verification, logs, and backup verification remain
 available. In automation, set `TOAD_CONTEXT` explicitly instead of relying on

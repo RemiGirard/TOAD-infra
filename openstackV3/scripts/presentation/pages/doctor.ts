@@ -12,7 +12,8 @@ import {
   SSH_KEY_PATH,
   INFOMANIAK_DNS_TOKEN_PATH,
 } from '../../infrastructure/paths.js';
-import { programExists } from '../../infrastructure/shell.js';
+import { programExists, runProgramCheck } from '../../infrastructure/shell.js';
+import { ACTIVE_CONTEXT, CREDENTIALS_DIR, INVENTORY_PATH, PRODUCTION_ENV_PATH, ROUTER_CONFIG_PATH } from '../../infrastructure/paths.js';
 import { testConnection, venvExists } from '../../infrastructure/openstack.js';
 
 type CheckStatus = 'pass' | 'warn' | 'fail';
@@ -50,9 +51,9 @@ function collectChecks(checkCloud: boolean): Check[] {
   add(
     checks,
     'node',
-    nodeMajor >= 20 ? 'pass' : 'fail',
+    nodeMajor >= 22 ? 'pass' : 'fail',
     `Node.js ${process.versions.node}`,
-    nodeMajor >= 20 ? undefined : 'Install Node.js 20 or newer.',
+    nodeMajor >= 22 ? undefined : 'Install Node.js 22 or newer.',
   );
 
   const cloudsMode = fileMode(findCloudsYaml());
@@ -62,7 +63,7 @@ function collectChecks(checkCloud: boolean): Check[] {
       'clouds-permissions',
       cloudsMode === 0o600 ? 'pass' : 'fail',
       `clouds.yaml mode is ${cloudsMode.toString(8)}`,
-      'Run: chmod 600 credentials/clouds.yaml',
+      `Run: chmod 600 ${findCloudsYaml()}`,
     );
   }
 
@@ -94,7 +95,7 @@ function collectChecks(checkCloud: boolean): Check[] {
     'admin-mtls-pki',
     adminPkiReady ? 'pass' : 'warn',
     adminPkiReady ? 'Admin mTLS PKI is ready' : 'Admin mTLS PKI has not been initialized',
-    'Run: pnpm run admin-pki -- issue operator',
+    'For a new platform, apply initializes the PKI. For an existing platform, restore its original CA and operator bundle from escrow; do not replace trust.',
   );
   const dnsTokenMode = fileMode(INFOMANIAK_DNS_TOKEN_PATH);
   add(
@@ -109,14 +110,14 @@ function collectChecks(checkCloud: boolean): Check[] {
     'openstack-cli',
     venvExists() ? 'pass' : 'warn',
     venvExists() ? 'OpenStack CLI environment is ready' : 'OpenStack CLI environment is not set up',
-    'Run: pnpm run setup after adding credentials/clouds.yaml.',
+    `Run: pnpm run setup after adding ${CREDENTIALS_DIR}/clouds.yaml.`,
   );
   add(
     checks,
     'credentials',
     credentialsExist() ? 'pass' : 'warn',
     credentialsExist() ? `Credentials found (${findCloudsYaml()})` : 'OpenStack credentials are incomplete',
-    'Place the downloaded clouds.yaml in credentials/ and run: pnpm run setup.',
+    `Place the downloaded clouds.yaml in ${CREDENTIALS_DIR}/ and run: pnpm run setup.`,
   );
   add(
     checks,
@@ -133,7 +134,7 @@ function collectChecks(checkCloud: boolean): Check[] {
       'password-permissions',
       mode === 0o600 ? 'pass' : 'fail',
       `credentials/password mode is ${mode.toString(8)}`,
-      'Run: chmod 600 credentials/password',
+      `Run: chmod 600 ${PASSWORD_FILE}`,
     );
   }
 
@@ -159,6 +160,31 @@ export async function run(args: string[]): Promise<void> {
   const json = args.includes('--json');
   const checkCloud = args.includes('--cloud');
   const checks = collectChecks(checkCloud);
+  const forIndex = args.indexOf('--for');
+  const purpose = forIndex >= 0 ? args[forIndex + 1] : 'workstation';
+  if (!['workstation', 'cloud-apply', 'app-publish', 'app-deploy'].includes(purpose ?? '')) throw new Error('--for must be workstation, cloud-apply, app-publish, or app-deploy.');
+  if (purpose === 'app-publish') {
+    for (let index = checks.length - 1; index >= 0; index -= 1) if (!['node', 'dependencies'].includes(checks[index]!.id)) checks.splice(index, 1);
+    const dockerReady = runProgramCheck('docker', ['info']);
+    add(checks, 'docker-daemon', dockerReady ? 'pass' : 'fail', dockerReady ? 'Docker is ready' : 'Docker daemon is unavailable', 'Start Docker.');
+    const buildxReady = runProgramCheck('docker', ['buildx', 'version']);
+    add(checks, 'docker-buildx', buildxReady ? 'pass' : 'fail', buildxReady ? 'Docker Buildx is ready' : 'Docker Buildx is unavailable', 'Install Docker with Buildx.');
+  }
+  if (purpose === 'cloud-apply') {
+    for (const id of ['credentials', 'ssh-key', 'openstack-cli', 'infomaniak-dns-token']) {
+      const check = checks.find(value => value.id === id); if (check && check.status !== 'pass') check.status = 'fail';
+    }
+    for (const [id, path] of [['production-config', PRODUCTION_ENV_PATH], ['router-config', ROUTER_CONFIG_PATH]]) {
+      const ready = existsSync(path!); add(checks, id!, ready ? 'pass' : 'fail', ready ? `${id} exists` : `${id} is missing`, 'Run cloud init and cloud configure in the selected context.');
+    }
+    const legacy = runProgramCheck('openssl', ['list', '-providers', '-provider', 'legacy']);
+    add(checks, 'openssl-legacy', legacy ? 'pass' : 'fail', legacy ? 'OpenSSL legacy provider is available' : 'OpenSSL legacy provider is unavailable', 'Use OpenSSL 3 with its legacy provider.');
+  }
+  if (purpose === 'app-deploy') {
+    add(checks, 'platform-inventory', existsSync(INVENTORY_PATH) ? 'pass' : 'fail', existsSync(INVENTORY_PATH) ? 'Platform inventory exists' : 'Platform inventory is missing', 'Provision the cloud platform first.');
+    add(checks, 'ansible-runtime', existsSync(join(ROOT_DIR, '..', 'ansible', 'venv', 'bin', 'ansible-playbook')) ? 'pass' : 'fail', 'Application deployment requires the Ansible runtime', 'Run cloud setup using the supported operator runtime.');
+    const key = checks.find(value => value.id === 'ssh-key'); if (key && key.status !== 'pass') key.status = 'fail';
+  }
   const summary = {
     passed: checks.filter((check) => check.status === 'pass').length,
     warnings: checks.filter((check) => check.status === 'warn').length,
@@ -166,7 +192,7 @@ export async function run(args: string[]): Promise<void> {
   };
 
   if (json) {
-    console.log(JSON.stringify({ version: 1, ok: summary.failed === 0, summary, checks }, null, 2));
+    console.log(JSON.stringify({ version: 1, ok: summary.failed === 0, purpose, context: ACTIVE_CONTEXT ?? 'legacy', readiness: purpose === 'workstation' ? 'workstation-only' : summary.failed === 0 ? 'ready' : 'blocked', summary, checks }, null, 2));
   } else {
     banner('TOAD Doctor');
     for (const check of checks) {

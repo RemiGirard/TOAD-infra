@@ -24,7 +24,8 @@ export async function run(args: string[]): Promise<void> {
       if (!name) throw new Error('create requires a context name.');
       const directory = createContext(name);
       if (args.includes('--use')) useContext(name);
-      success(`Created context ${name} at ${directory}. Add credentials and customize its generated files.`);
+      if (json) console.log(JSON.stringify({ version: 1, ok: true, context: args.includes('--use') ? name : currentContext(), name, directory, outcome: 'created' }));
+      else success(`Created context ${name} at ${directory}. Add credentials and customize its generated files.`);
       return;
     }
     if (command === 'list') {
@@ -44,12 +45,12 @@ export async function run(args: string[]): Promise<void> {
       const name = args[1];
       if (!name) throw new Error('use requires a context name.');
       useContext(name);
-      success(`Selected context ${name}.`);
+      if (json) console.log(JSON.stringify({ version: 1, ok: true, context: name, outcome: 'selected' })); else success(`Selected context ${name}.`);
       return;
     }
     if (command === 'clear') {
       clearContext();
-      success('Selected the legacy context.');
+      if (json) console.log(JSON.stringify({ version: 1, ok: true, context: 'legacy', outcome: 'selected' })); else success('Selected the legacy context.');
       return;
     }
     help();

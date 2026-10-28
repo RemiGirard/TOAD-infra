@@ -1,6 +1,7 @@
 /** Process execution without an intermediary shell. */
 
 import { spawn, spawnSync } from 'node:child_process';
+import { trackOperationWorker, assertOperationRunning } from './operation-lock.js';
 
 const MAX_OUTPUT_LINES = 3;
 const DIM = '\x1b[2m';
@@ -15,6 +16,7 @@ interface ProcessOptions {
   displayCommand?: string | undefined;
   spinner?: string | undefined;
   detached?: boolean | undefined;
+  stream?: boolean | undefined;
 }
 
 function printable(program: string, args: readonly string[]): string {
@@ -22,10 +24,12 @@ function printable(program: string, args: readonly string[]): string {
 }
 
 function showCommand(program: string, args: readonly string[], displayCommand?: string): void {
+  if (process.env.TOAD_JSON === '1') return;
   console.log(`${DIM}$ ${displayCommand ?? printable(program, args)}${RESET}`);
 }
 
 function showOutput(output: string): void {
+  if (process.env.TOAD_JSON === '1') return;
   if (!output.trim()) return;
   const lines = output.trim().split('\n');
   for (const line of lines.slice(0, MAX_OUTPUT_LINES)) {
@@ -41,6 +45,7 @@ export function runProgram(
   args: readonly string[],
   options: ProcessOptions = {},
 ): string {
+  assertOperationRunning();
   if (options.showCommand !== false) showCommand(program, args, options.displayCommand);
   const result = spawnSync(program, args, {
     cwd: options.cwd,
@@ -51,7 +56,7 @@ export function runProgram(
 
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    const message = result.stderr.trim() || `${program} exited with status ${result.status}`;
+    const message = process.env.TOAD_JSON === '1' ? `Process failed with status ${result.status}. Inspect protected operator logs.` : result.stderr.trim() || `${program} exited with status ${result.status}`;
     throw new Error(message);
   }
   if (options.showOutput !== false) showOutput(result.stdout);
@@ -64,6 +69,7 @@ export function runProgramInput(
   input: string | Buffer,
   options: ProcessOptions = {},
 ): string {
+  assertOperationRunning();
   if (options.showCommand !== false) showCommand(program, args, options.displayCommand);
   const result = spawnSync(program, args, {
     cwd: options.cwd,
@@ -75,7 +81,7 @@ export function runProgramInput(
 
   if (result.error) throw result.error;
   if (result.status !== 0) {
-    const message = result.stderr.trim() || `${program} exited with status ${result.status}`;
+    const message = process.env.TOAD_JSON === '1' ? `Process failed with status ${result.status}. Inspect protected operator logs.` : result.stderr.trim() || `${program} exited with status ${result.status}`;
     throw new Error(message);
   }
   if (options.showOutput !== false) showOutput(result.stdout);
@@ -97,9 +103,12 @@ export function runProgramStream(
   args: readonly string[],
   options: Pick<ProcessOptions, 'cwd' | 'env' | 'displayCommand' | 'showCommand'> = {},
 ): Promise<number> {
+  assertOperationRunning();
   if (options.showCommand !== false) showCommand(program, args, options.displayCommand);
   return new Promise((resolve, reject) => {
-    const child = spawn(program, args, { cwd: options.cwd, env: options.env, stdio: 'inherit' });
+    const child = spawn(program, args, { cwd: options.cwd, env: options.env, detached: process.platform !== 'win32', stdio: process.env.TOAD_JSON === '1' ? ['ignore', 'pipe', 'pipe'] : 'inherit' });
+    child.stdout?.resume(); child.stderr?.resume();
+    trackOperationWorker(child);
     child.once('error', reject);
     child.once('close', (code) => resolve(code ?? 1));
   });
@@ -110,10 +119,11 @@ export function runProgramAsync(
   args: readonly string[],
   options: ProcessOptions = {},
 ): Promise<string> {
+  assertOperationRunning();
   if (options.showCommand !== false) showCommand(program, args, options.displayCommand);
   let frame = 0;
   const spinnerText = options.spinner ?? 'Running';
-  const spinnerInterval = process.stdout.isTTY
+  const spinnerInterval = process.stdout.isTTY && process.env.TOAD_JSON !== '1'
     ? setInterval(() => {
         process.stdout.write(`\r${DIM}${SPINNER[frame]} ${spinnerText}...${RESET}`);
         frame = (frame + 1) % SPINNER.length;
@@ -124,15 +134,16 @@ export function runProgramAsync(
     const child = spawn(program, args, {
       cwd: options.cwd,
       env: options.env,
-      detached: options.detached ?? false,
+      detached: process.platform !== 'win32',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    trackOperationWorker(child);
     let stdout = '';
     let stderr = '';
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
-    child.stdout.on('data', (chunk: string) => { stdout += chunk; });
-    child.stderr.on('data', (chunk: string) => { stderr += chunk; });
+    child.stdout.on('data', (chunk: string) => { stdout += chunk; if (options.stream && process.env.TOAD_JSON !== '1') process.stderr.write(chunk); });
+    child.stderr.on('data', (chunk: string) => { stderr += chunk; if (options.stream && process.env.TOAD_JSON !== '1') process.stderr.write(chunk); });
     child.once('error', (error) => {
       if (spinnerInterval) clearInterval(spinnerInterval);
       reject(error);
@@ -143,7 +154,7 @@ export function runProgramAsync(
         process.stdout.write('\r\x1b[K');
       }
       if (code !== 0) {
-        reject(new Error(stderr.trim() || `${program} exited with status ${code}`));
+        reject(new Error(process.env.TOAD_JSON === '1' ? `Process failed with status ${code}. Inspect protected operator logs.` : stderr.trim() || `${program} exited with status ${code}`));
         return;
       }
       if (options.showOutput !== false) showOutput(stdout);

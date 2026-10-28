@@ -15,7 +15,7 @@ const dockerBuilder: ImageBuilder = {
     await runProgramAsync('docker', [
       'buildx', 'build', '--platform', platform, '--tag', image,
       '--metadata-file', metadata, '--push', context,
-    ], { showOutput: false, spinner: 'Building and publishing image' });
+    ], { showOutput: false, stream: true, spinner: 'Building and publishing image' });
     const output = JSON.parse(readFileSync(metadata, 'utf8')) as Record<string, unknown>;
     const digest = output['containerimage.digest'];
     if (typeof digest !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(digest)) {
@@ -55,7 +55,7 @@ export async function publishAppImage(
   if (!service || !app.manifest.services.includes(service)) throw new Error('Select a declared service with --service.');
   const configPath = join(app.directory, 'build.yaml');
   if (!existsSync(configPath)) throw new Error('build.yaml is missing. Start with app create NAME --template node-web.');
-  const build = parseYaml(readFileSync(configPath, 'utf8')) as { version?: unknown; files?: unknown; port?: unknown };
+  const build = parseYaml(readFileSync(configPath, 'utf8')) as { version?: unknown; files?: unknown; port?: unknown; source?: unknown; image?: string; platform?: string };
   if (build?.version !== 1 || !Array.isArray(build.files) || !build.files.every((file) => typeof file === 'string')
     || !build.files.includes('Dockerfile') || !Number.isInteger(build.port) || Number(build.port) < 1 || Number(build.port) > 65535) {
     throw new Error('build.yaml requires version: 1, an explicit files allow-list including Dockerfile, and a valid port.');
@@ -75,7 +75,8 @@ export async function publishAppImage(
     const context = join(staging, 'context');
     mkdirSync(context);
     for (const file of build.files as string[]) {
-      const source = sourceFile(join(app.directory, 'source'), file);
+      if (build.source !== undefined && build.source !== '.') throw new Error('build.source may only be "." for an existing application repository.');
+      const source = sourceFile(build.source === '.' ? app.directory : join(app.directory, 'source'), file);
       const target = join(context, file);
       mkdirSync(dirname(target), { recursive: true });
       copyFileSync(source, target);
@@ -94,6 +95,8 @@ export async function publishAppImage(
     writeFileSync(composePath, document.toString(), { mode: 0o640 });
     try { loadApp(name, options.appsDirectory ?? APPS_DIR); }
     catch (cause) { writeFileSync(composePath, original); throw cause; }
+    build.image = image; build.platform = platform;
+    writeFileSync(configPath, (await import('yaml')).stringify(build), { mode: 0o640 });
     return pinned;
   } finally { rmSync(staging, { recursive: true, force: true }); }
 }

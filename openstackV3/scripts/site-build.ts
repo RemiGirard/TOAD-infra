@@ -14,7 +14,7 @@ const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const pages = [
   ['QUICKSTART', 'quickstart', 'Get started'], ['DEPLOYMENT', 'deployment', 'Cloud setup'],
-  ['FIRST-APP', 'first-app', 'Deploy an app'],
+  ['FIRST-APP', 'first-app', 'Deploy an app'], ['OBSERVABILITY', 'observability', 'Understand operations'],
   ['ARCHITECTURE', 'architecture', 'Visual architecture'],
   ['LOCAL-STARTER', 'local-starter', 'Optional local preview'], ['EVALUATION', 'evaluation', 'Heat experiment'],
   ['COSTS', 'costs', 'Cost worksheet'], ['OPERATIONS', 'operations', 'Operations'],
@@ -74,8 +74,8 @@ for (const [name, slug, label] of pages) {
     return `<figure class="doc-diagram ${diagram.layout}${token.text.startsWith('sequenceDiagram') ? ' sequence' : ''}"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture>${diagram.mobile ? `<source media="(max-width:760px)" srcset="/${diagram.mobile}">` : ''}<img src="/${diagram.file}" alt="${escape(diagram.description)}" loading="lazy"></picture></div>${diagram.layout ? '<p class="diagram-hint">Scroll sideways to explore the diagram.</p>' : ''}<figcaption><span>${escape(diagram.description)}.</span><a href="/${diagram.file}">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>${escape(token.text)}</code></pre></details></figure>\n`;
   };
   renderer.image = ({ href: target, text: description }) => {
-    const illustration = ['delivery', 'platform', 'journey'].find((asset) => target === `../website/${asset}.svg`);
-    if (illustration) return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${illustration === 'delivery' ? 864 : illustration === 'journey' ? 960 : 890}"><img src="/${illustration}.svg" width="1120" height="${illustration === 'delivery' ? 258 : illustration === 'journey' ? 320 : 318}" alt="${escape(description)}" loading="lazy"></picture></span>`;
+    const illustration = ['delivery', 'platform', 'journey', 'observability'].find((asset) => target === `../website/${asset}.svg`);
+    if (illustration) return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${illustration === 'delivery' ? 864 : illustration === 'journey' ? 960 : illustration === 'observability' ? 790 : 890}"><img src="/${illustration}.svg" width="1120" height="${illustration === 'delivery' ? 258 : illustration === 'journey' ? 320 : illustration === 'observability' ? 350 : 318}" alt="${escape(description)}" loading="lazy"></picture></span>`;
     return `<img src="${escape(href(target, `${name}.md`))}" alt="${escape(description)}" loading="lazy">`;
   };
   renderer.link = function ({ href: target, tokens }) { return `<a href="${escape(href(target, `${name}.md`))}">${this.parser.parseInline(tokens)}</a>`; };
@@ -91,7 +91,7 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
+  'diagrams.css', 'agent-view.mjs', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   copyFileSync(join(source, asset), join(output, asset));

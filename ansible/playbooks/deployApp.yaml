@@ -34,12 +34,38 @@
       when: toad_app_has_state | default(false) | bool
       changed_when: false
 
-    - name: Copy only manifest-declared application files
-      ansible.builtin.copy:
-        src: "{{ toad_app_source }}/{{ item }}"
-        dest: "{{ remote_dir }}/{{ item }}"
-        mode: '0640'
-      loop: "{{ toad_app_files }}"
+    - name: Transfer the reviewed application file bundle
+      block:
+        - name: Allocate a private controller archive
+          ansible.builtin.tempfile:
+            state: file
+            prefix: toad-app-
+            suffix: .tar.gz
+          delegate_to: localhost
+          become: false
+          register: app_archive
+
+        - name: Archive only manifest-declared application files
+          ansible.builtin.command:
+            argv: "{{ ['tar', '-czf', app_archive.path, '-C', toad_app_source, '--'] + toad_app_files }}"
+          delegate_to: localhost
+          become: false
+          changed_when: false
+
+        - name: Upload and extract the single reviewed bundle
+          ansible.builtin.unarchive:
+            src: "{{ app_archive.path }}"
+            dest: "{{ remote_dir }}"
+            mode: 'u=rwX,g=rX,o='
+            extra_opts: [--no-same-owner]
+      always:
+        - name: Remove the private controller archive
+          ansible.builtin.file:
+            path: "{{ app_archive.path }}"
+            state: absent
+          delegate_to: localhost
+          become: false
+          when: app_archive.path is defined
 
     - name: Validate the rendered Swarm stack
       ansible.builtin.command:

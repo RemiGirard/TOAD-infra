@@ -48,7 +48,8 @@ The normal deployment and verification commands are:
 
 ```sh
 cd openstackV3
-pnpm run apply -- toad-prod heat/env/production.yaml
+pnpm run cloud -- plan toad-prod --context toad-prod
+pnpm run cloud -- apply toad-prod --context toad-prod
 pnpm run verify -- toad-prod --json
 ```
 
@@ -85,3 +86,12 @@ or mTLS credential. The bundled `External availability probe` GitHub Actions
 workflow runs it every fifteen minutes from outside Infomaniak after the
 workflow reaches the default branch. A failing probe fails the workflow, so
 standard GitHub Actions notifications work without a webhook secret.
+
+## Shared human and agent evidence
+
+Use `pnpm run observe -- --context NAME --app APP --output /private/path/view.html --watch`
+for a private, timestamped topology and operation view. It combines quorum,
+exact release checks, HTTPS results, authenticated metric/alert state and the
+local agent operation timeline. The Grafana overview explains signal flow and
+adds disk and scrape-age panels. See [understand operations](../docs/OBSERVABILITY.md).
+Unknown monitoring access stays unknown; no notification delivery is inferred.

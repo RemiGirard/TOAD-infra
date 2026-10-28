@@ -1,29 +1,60 @@
 /** Generic lifecycle commands for manifest-driven Swarm applications. */
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { stringify as stringifyYaml } from 'yaml';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
+import { dirname, join, resolve } from 'node:path';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { ask, banner, closeReadline, error, success } from '../../infrastructure/cli.js';
 import {
   APP_API_VERSION,
   APPS_DIR,
-  expandAppValue,
   listAppNames,
   loadApp,
-  readRouterConfig,
 } from '../../infrastructure/app-manifest.js';
-import { INVENTORY_PATH, ROOT_DIR, ROUTER_CONFIG_PATH } from '../../infrastructure/paths.js';
+import { ACTIVE_CONTEXT, INVENTORY_PATH, ROOT_DIR, ROUTER_CONFIG_PATH } from '../../infrastructure/paths.js';
 import { runProgram, runProgramStream } from '../../infrastructure/shell.js';
 import { deployAppSecrets, encryptAppSecret, ensureAgeIdentity, managerSshArgs } from '../../infrastructure/app-secrets.js';
 import { backupVolume, restoreVolume } from '../../infrastructure/app-backup.js';
 import { publishAppImage } from '../../infrastructure/app-image.js';
+import { parseAppArguments } from '../../infrastructure/app-arguments.js';
+import { evaluateRelease, expectedRelease, imageDigest } from '../../infrastructure/app-runtime.js';
+import { appTargetMetadata, checkEndpoints, collectAppDiagnosis, dockerFromManager, serviceStatus, statusResult } from '../../infrastructure/app-observation.js';
+export { collectAppDiagnosis } from '../../infrastructure/app-observation.js';
+import { writeRollbackPatch } from '../../infrastructure/app-release-patch.js';
+import { stageAppFiles } from '../../infrastructure/app-transfer.js';
+import { assertOperationRunning, setOperationPhase } from '../../infrastructure/operation-lock.js';
 
 const ANSIBLE_DIR = resolve(ROOT_DIR, '..', 'ansible');
 const INVENTORY = INVENTORY_PATH;
 const ANSIBLE = join(ANSIBLE_DIR, 'venv', 'bin', 'ansible');
 const ANSIBLE_PLAYBOOK = join(ANSIBLE_DIR, 'venv', 'bin', 'ansible-playbook');
 
-function help(): void {
+function emitAppJson(result: Record<string, unknown>): void {
+  console.log(JSON.stringify({ ...result, ...appTargetMetadata() }, null, 2));
+}
+
+export function showAppHelp(command?: string): void {
+  const details: Record<string, string> = {
+    publish: 'publish NAME [--image REGISTRY/OWNER/APP:TAG] [--service SERVICE] [--platform linux/amd64|linux/arm64] [--json]\nBuild reviewed source, push, and pin the returned digest. Image/platform defaults come from build.yaml. Does not deploy.',
+    release: 'release NAME [--image REGISTRY/OWNER/APP:TAG] [--service SERVICE] [--platform linux/amd64|linux/arm64] [--json]\nPublish, validate, deploy, and prove that the requested release is running. Requires an existing platform.',
+    deploy: 'deploy NAME [--json]\nValidate and deploy existing immutable images. Success requires the requested service/task digests, replica counts, completed update, and HTTPS checks.',
+    rollback: 'rollback NAME [SERVICE] [--output PATH] [--json]\nRecover PreviousSpec images, verify replicas and HTTPS, and write a new reviewable image patch. Does not overwrite Compose or Git. Output files must not already exist.',
+    logs: 'logs NAME [SERVICE] [--follow] [--since DURATION|TIMESTAMP] [--tail NUMBER|all]\nStream Docker service logs; defaults to the first declared service and 100 lines. Log output is sensitive and is not available as --json.',
+    diagnose: 'diagnose NAME [--json]\nRead-only release state, intended/actual digests, replicas, endpoint checks, failed-task categories, and next actions.',
+    status: 'status NAME [--json]\nRead-only release state and intended/actual service/task digests.',
+    verify: 'verify NAME [--json]\nCheck declared HTTPS endpoints with bounded concurrent retries.',
+    validate: 'validate [NAME|--all] [--json]\nValidate manifest, immutable images, declared files, secrets, and Compose guardrails locally.',
+    create: 'create NAME [--template node-web] [--json]\nScaffold an app. The starter image is a routing placeholder until publication.',
+    backup: 'backup NAME VOLUME [--output PATH]\nCreate an encrypted archive for a volume declared with backup: required.',
+    restore: 'restore NAME VOLUME --from ARCHIVE [--yes]\nRestore into the declared empty detached volume. Requires explicit authorization for the exact target.',
+    remove: 'remove NAME [--yes]\nRemove the live Swarm stack, preserving local files. Without --yes, requires typing the exact stack name.',
+    secret: 'secret init | recipient | encrypt NAME SECRET --from-file PATH\nKeep plaintext in protected local files. Encryption writes only declared ciphertext.',
+    list: 'list [--json]\nList application manifests in the selected project or apps directory.',
+  };
+  if (command && details[command]) {
+    console.log(`Usage: pnpm run app -- ${details[command]}\n\nGlobal options: --context NAME, --project DIR. Unsupported options are rejected.`);
+    return;
+  }
   console.log(`Usage: pnpm run app -- <command> [app] [options]
 
 Commands:
@@ -32,12 +63,13 @@ Commands:
     --template node-web        Include a working frontend + Node API source
   publish <app> --image REGISTRY/OWNER/APP:TAG [--service SERVICE]
                                Build allow-listed source, push, pin its digest
+  release <app> [--image ...]  Publish, validate, deploy, and verify one release
   validate [app|--all]         Validate manifests and Compose policies
   deploy <app>                 Copy, deploy, and verify an application
   verify <app>                 Check declared HTTPS endpoints
   status <app> [--json]        Show services and replicas
   diagnose <app> --json        Combine replicas, checks, failed tasks, and hints
-  logs <app> [service]         Show the last 100 service log lines
+  logs <app> [service]         Logs with --follow, --since, and --tail
   rollback <app> [service]     Roll back one service (or every service)
   backup <app> <volume>        Stream an age-encrypted volume backup off-host
   restore <app> <volume> --from <archive> [--yes]
@@ -48,8 +80,12 @@ Secret commands:
   secret init                  Create an ignored local age identity
   secret recipient             Print its safe-to-share public recipient
   secret encrypt <app> <name> --from-file <path>
-                               Encrypt a manifest-declared secret for Git`);
+                               Encrypt a manifest-declared secret for Git
+
+Use app COMMAND --help for exact options. Global: --context NAME, --project DIR.`);
 }
+
+export function validateAppArguments(args: string[]): void { parseAppArguments(args); }
 
 function requireRuntime(): void {
   if (!existsSync(INVENTORY)) throw new Error('No platform inventory in the selected context. Provision and configure the cloud with pnpm run apply -- YOUR-STACK before deploying apps. See ../docs/QUICKSTART.md.');
@@ -71,10 +107,11 @@ function remote(command: string, showCommand = true): string {
 }
 
 function serviceName(stack: string, service: string): string {
+  if (!/^[a-z][a-z0-9-]{0,31}$/.test(stack) || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(service)) throw new Error('Invalid Swarm service target.');
   return `${stack}_${service}`;
 }
 
-function create(name: string | undefined, template?: string): void {
+function create(name: string | undefined, template?: string, quiet = false): string {
   if (!name || !/^[a-z][a-z0-9-]{0,31}$/.test(name)) {
     throw new Error('Provide an app name using lowercase letters, numbers, and hyphens.');
   }
@@ -136,10 +173,13 @@ networks:
       files: ['Dockerfile', 'server.mjs', 'public/index.html', 'public/style.css', 'public/app.mjs'],
     }), { mode: 0o640 });
   }
-  success(`Created ${directory}`);
-  console.log(template
-    ? `Next: edit source/, then run pnpm run app -- publish ${name} --image ghcr.io/YOUR-OWNER/${name}:v1. The current Compose image is only a routing placeholder.`
-    : `Next: edit the image and labels, then run pnpm run app -- validate ${name}`);
+  if (!quiet) {
+    success(`Created ${directory}`);
+    console.log(template
+      ? `Next: edit source/, then run pnpm run app -- publish ${name} --image ghcr.io/YOUR-OWNER/${name}:v1. The current Compose image is only a routing placeholder.`
+      : `Next: edit the image and labels, then run pnpm run app -- validate ${name}`);
+  }
+  return directory;
 }
 
 function validate(names: string[]): void {
@@ -151,186 +191,93 @@ function validate(names: string[]): void {
   }
 }
 
-interface ServiceInspect {
-  ID?: string;
-  Spec?: { Name?: string; TaskTemplate?: { ContainerSpec?: { Image?: string } } };
-  UpdateStatus?: { State?: string; Message?: string };
-}
-
-interface TaskInspect {
-  ID?: string;
-  DesiredState?: string;
-  Status?: { State?: string; Err?: string; Message?: string; Timestamp?: string };
-}
-
-interface ServiceRuntime {
-  service: ServiceInspect;
-  running: number;
-  desired: number;
-  tasks: TaskInspect[];
-}
-
-function dockerFromManager(args: string[]): string {
-  return runProgram('ssh', [...managerSshArgs(), 'sudo', 'docker', ...args], {
-    showCommand: false,
-    showOutput: false,
-  });
-}
-
-function serviceStatus(manifest: ReturnType<typeof loadApp>['manifest']): ServiceRuntime[] {
-  let rawIds = '';
-  try {
-    rawIds = dockerFromManager(['stack', 'services', manifest.stack, '--quiet']);
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : String(cause);
-    if (/nothing found in stack|no such stack/i.test(message)) return [];
-    throw cause;
-  }
-  const ids = rawIds.split('\n').map((id) => id.trim()).filter(Boolean);
-  if (ids.length === 0) return [];
-  const services = JSON.parse(dockerFromManager(['service', 'inspect', ...ids])) as ServiceInspect[];
-  return services.map((service) => {
-    const taskIds = dockerFromManager(['service', 'ps', service.ID ?? '', '--quiet'])
-      .split('\n').map((id) => id.trim()).filter(Boolean);
-    const tasks = taskIds.length > 0
-      ? JSON.parse(dockerFromManager(['inspect', ...taskIds])) as TaskInspect[]
-      : [];
-    return {
-      service,
-      running: tasks.filter((task) => task.DesiredState === 'running' && task.Status?.State === 'running').length,
-      desired: tasks.filter((task) => task.DesiredState === 'running').length,
-      tasks,
-    };
-  });
-}
-
-function serializedServices(runtimes: ServiceRuntime[]) {
-  return runtimes.map(({ service, running, desired }) => ({
-    id: service.ID,
-    name: service.Spec?.Name,
-    image: service.Spec?.TaskTemplate?.ContainerSpec?.Image,
-    running,
-    desired,
-    updateState: service.UpdateStatus?.State ?? 'none',
-    updateMessage: service.UpdateStatus?.Message ?? '',
-  }));
-}
-
-function statusResult(manifest: ReturnType<typeof loadApp>['manifest'], runtimes = serviceStatus(manifest)) {
-  const services = serializedServices(runtimes);
-  return {
-    version: 1,
-    ok: services.length === manifest.services.length
-      && services.every((service) => service.running === service.desired && service.desired > 0),
-    app: manifest.name,
-    stack: manifest.stack,
-    services,
-  };
-}
-
 function status(name: string | undefined, json = false): void {
   if (!name) throw new Error('Usage: pnpm run app -- status <app>');
-  const { manifest } = loadApp(name);
+  const app = loadApp(name);
+  const result = statusResult(app);
   if (json) {
-    console.log(JSON.stringify(statusResult(manifest), null, 2));
+    emitAppJson(result);
     return;
   }
-  const output = remote(`docker stack services ${manifest.stack}`);
-  console.log(output.trim());
+  console.log(`${name}: ${result.outcome}`);
+  for (const service of result.services) console.log(`${service.name}: ${service.running}/${service.desired}; expected ${service.expectedDigest}; actual ${service.actualDigest || 'unknown'}; ${service.updateState}`);
 }
 
-async function waitForServices(name: string): Promise<void> {
-  const { manifest } = loadApp(name);
-  let detail = '';
-  let stable = 0;
-  for (let attempt = 1; attempt <= 24; attempt += 1) {
-    detail = remote(`docker stack services ${manifest.stack}`, false);
-    const replicas = [...detail.matchAll(/(\d+)\/(\d+)/g)].map((match) => ({
-      running: Number(match[1]),
-      desired: Number(match[2]),
-    }));
-    const converged = replicas.length >= manifest.services.length
-      && replicas.every((replica) => replica.running === replica.desired && replica.desired > 0);
-    stable = converged ? stable + 1 : 0;
-    if (stable >= 3) return;
-    if (attempt < 24) await new Promise((resolveDelay) => setTimeout(resolveDelay, 5_000));
+class AppReleaseError extends Error {
+  constructor(message: string, readonly result: Record<string, unknown>) { super(message); }
+}
+
+async function waitForServices(app: ReturnType<typeof loadApp>, options: Parameters<typeof evaluateRelease>[2] = {}) {
+  const name = app.manifest.name;
+  let result = evaluateRelease(app, [], options);
+  for (let attempt = 1; attempt <= 120; attempt += 1) {
+    assertOperationRunning();
+    result = evaluateRelease(app, serviceStatus(app.manifest), options);
+    if (result.ok) return result;
+    if (result.outcome === 'rolled_back' || result.outcome === 'failed') {
+      throw new AppReleaseError(`The requested release ${result.outcome === 'rolled_back' ? 'rolled back' : 'failed'}. Inspect app diagnose before retrying.`, { ...result, app: name });
+    }
+    if (attempt % 6 === 0 && process.env.TOAD_JSON !== '1') console.error(`Waiting for ${name}: ${result.services.map((service) => `${service.name} ${service.running}/${service.desired} ${service.updateState}`).join('; ')}`);
+    if (attempt < 120) await new Promise((resolveDelay) => setTimeout(resolveDelay, 5_000));
   }
-  throw new Error(`${name} services did not converge:\n${detail.trim()}`);
+  throw new AppReleaseError('Timed out waiting for requested release digests and completed update. Inspect app diagnose before retrying.', { ...result, app: name });
 }
 
-function logs(name: string | undefined, requestedService: string | undefined): void {
+async function logs(name: string | undefined, requestedService: string | undefined, options: Record<string, string | true>): Promise<void> {
   if (!name) throw new Error('Usage: pnpm run app -- logs <app> [service]');
   const { manifest } = loadApp(name);
   const service = requestedService ?? manifest.services[0];
   if (!service || !manifest.services.includes(service)) throw new Error(`Unknown service "${service ?? ''}".`);
-  const output = remote(`docker service logs --tail 100 --timestamps ${serviceName(manifest.stack, service)}`);
-  console.log(output.trim());
+  const args = ['service', 'logs', '--tail', String(options['--tail'] ?? '100'), '--timestamps'];
+  if (options['--since']) args.push('--since', String(options['--since']));
+  if (options['--follow']) args.push('--follow');
+  args.push(serviceName(manifest.stack, service));
+  const code = await runProgramStream('ssh', [...managerSshArgs(), 'sudo', 'docker', ...args], { showCommand: false });
+  if (code !== 0) throw new Error('Service log streaming failed.');
 }
 
-async function rollback(name: string | undefined, requestedService: string | undefined): Promise<void> {
+async function rollback(name: string | undefined, requestedService: string | undefined, output?: string) {
   if (!name) throw new Error('Usage: pnpm run app -- rollback <app> [service]');
-  const { manifest } = loadApp(name);
+  const app = loadApp(name);
+  const { manifest } = app;
   const services = requestedService ? [requestedService] : manifest.services;
+  const before = serviceStatus(manifest);
+  const images = expectedRelease(app);
+  const recovered: Record<string, string> = {};
   for (const service of services) {
     if (!manifest.services.includes(service)) throw new Error(`Unknown service "${service}".`);
-    console.log(remote(`docker service update --rollback ${serviceName(manifest.stack, service)}`).trim());
+    const runtime = before.find((candidate) => candidate.service.Spec?.Name === serviceName(manifest.stack, service));
+    const previous = runtime?.service.PreviousSpec?.TaskTemplate?.ContainerSpec?.Image;
+    if (!previous || !imageDigest(previous)) throw new Error(`No immutable previous release exists for ${service}.`);
+    images[serviceName(manifest.stack, service)] = previous;
+    recovered[service] = previous;
   }
-  success(`Rollback requested for ${services.join(', ')}.`);
+  if (output && existsSync(resolve(output))) throw new Error('Rollback patch output already exists. Choose a new path.');
+  setOperationPhase('rollback');
+  for (const service of services) dockerFromManager(['service', 'update', '--rollback', serviceName(manifest.stack, service)]);
+  const runtime = await waitForServices(app, { expectedImages: images, allowCompletedRollback: true });
+  setOperationPhase('https');
+  const checks = await checkEndpoints(manifest);
+  if (checks.some((check) => !check.ok)) throw new AppReleaseError('Rollback reached its expected images but HTTPS checks failed.', { ...runtime, app: name, checks, ok: false });
+  const patch = writeRollbackPatch(join(app.directory, manifest.compose), recovered, output);
+  return { version: 1, ok: true, outcome: 'rolled_back', app: name, stack: manifest.stack, services: runtime.services, checks, patch: patch ?? null, patchBaseDirectory: dirname(join(app.directory, manifest.compose)), nextAction: patch ? 'Review the image-only patch and apply it from patchBaseDirectory, then validate before another deployment.' : 'Desired images already match the recovered release. Validate before another deployment.' };
 }
 
-interface EndpointResult {
-  name: string;
-  url: string;
-  expectedStatus: number;
-  actualStatus?: number;
-  durationMs: number;
-  ok: boolean;
-  detail: string;
-}
-
-async function checkEndpoints(manifest: ReturnType<typeof loadApp>['manifest'], attempts = 12): Promise<EndpointResult[]> {
-  if (manifest.checks.length === 0) return [];
-  const config = readRouterConfig();
-  const results: EndpointResult[] = [];
-  for (const check of manifest.checks) {
-    const url = expandAppValue(check.url, config);
-    let result = '';
-    let ok = false;
-    let actualStatus: number | undefined;
-    const startedAt = Date.now();
-    for (let attempt = 1; attempt <= attempts; attempt += 1) {
-      try {
-        const response = await fetch(url, { redirect: 'follow', signal: AbortSignal.timeout(15_000) });
-        result = `HTTP ${response.status}`;
-        actualStatus = response.status;
-        ok = response.status === check.status;
-      } catch (cause) {
-        result = cause instanceof Error ? cause.message : String(cause);
-      }
-      if (ok || attempt === attempts) break;
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 5_000));
-    }
-    results.push({
-      name: check.name,
-      url,
-      expectedStatus: check.status,
-      ...(actualStatus === undefined ? {} : { actualStatus }),
-      durationMs: Date.now() - startedAt,
-      ok,
-      detail: result,
-    });
-  }
-  return results;
-}
-
-async function verify(name: string | undefined): Promise<void> {
+async function verify(name: string | undefined, json = false): Promise<void> {
   if (!name) throw new Error('Usage: pnpm run app -- verify <app>');
   const { manifest } = loadApp(name);
   if (manifest.checks.length === 0) {
-    console.log(`${name} declares no endpoint checks.`);
+    if (json) emitAppJson({ version: 1, ok: true, app: name, checks: [], warning: 'No endpoint checks declared.' });
+    else console.log(`${name} declares no endpoint checks.`);
     return;
   }
   const results = await checkEndpoints(manifest);
+  if (json) {
+    const ok = results.every((check) => check.ok);
+    emitAppJson({ version: 1, ok, app: name, checks: results });
+    if (!ok) process.exitCode = 1;
+    return;
+  }
   for (const check of results) {
     console.log(`${check.ok ? '✓' : '✗'} ${check.name}: ${check.url} — ${check.detail}`);
   }
@@ -340,67 +287,49 @@ async function verify(name: string | undefined): Promise<void> {
 
 async function diagnose(name: string | undefined): Promise<boolean> {
   if (!name) throw new Error('Usage: pnpm run app -- diagnose <app> --json');
-  const { manifest } = loadApp(name);
-  const runtimes = serviceStatus(manifest);
-  const runtime = statusResult(manifest, runtimes);
-  const checks = await checkEndpoints(manifest, 1);
-  const failedStates = new Set(['failed', 'rejected', 'orphaned']);
-  const failedTasks = runtimes.flatMap(({ service, tasks }) => tasks
-    .filter((task) => Boolean(task.Status?.Err) || failedStates.has(task.Status?.State ?? ''))
-    .map((task) => ({
-      service: service.Spec?.Name,
-      taskId: task.ID,
-      desiredState: task.DesiredState,
-      state: task.Status?.State,
-      error: task.Status?.Err ?? '',
-      message: task.Status?.Message ?? '',
-      timestamp: task.Status?.Timestamp,
-    })));
-  const hints: string[] = [];
-  if (runtime.services.length === 0) hints.push(`Deploy the stack with: pnpm run app -- deploy ${manifest.name}`);
-  if (!runtime.ok && runtime.services.length > 0) hints.push(`Inspect recent tasks and logs with: pnpm run app -- logs ${manifest.name}`);
-  if (checks.some((check) => !check.ok)) hints.push('Check Traefik router labels, service port, DNS, and certificate issuance.');
-  if (failedTasks.length > 0) hints.push('Use the failed task error before retrying or requesting a rollback.');
-  const ok = runtime.ok && checks.every((check) => check.ok);
-  console.log(JSON.stringify({
-    version: 1,
-    ok,
-    app: manifest.name,
-    stack: manifest.stack,
-    validation: { ok: true },
-    services: runtime.services,
-    checks,
-    failedTasks,
-    hints,
-  }, null, 2));
+  const result = await collectAppDiagnosis(name);
+  emitAppJson(result);
+  const { ok } = result;
   return ok;
 }
 
-async function deploy(name: string | undefined): Promise<void> {
+async function deploy(name: string | undefined) {
   if (!name) throw new Error('Usage: pnpm run app -- deploy <app>');
+  setOperationPhase('validate');
   requireRuntime();
-  const { directory, manifest } = loadApp(name);
-  const secretEnvironment = deployAppSecrets(manifest);
-  const extraVars = JSON.stringify({
-    toad_app_name: manifest.name,
-    toad_app_stack: manifest.stack,
-    toad_app_compose: manifest.compose,
-    toad_app_source: directory,
-    toad_app_files: manifest.files,
-    toad_app_environment: secretEnvironment,
-    toad_app_has_state: manifest.volumes.length > 0,
-    toad_router_config_path: ROUTER_CONFIG_PATH,
-  });
-  const code = await runProgramStream(ANSIBLE_PLAYBOOK, [
-    '-i', INVENTORY,
-    'playbooks/deployApp.yaml',
-    '--extra-vars', extraVars,
-  ], { cwd: ANSIBLE_DIR });
-  if (code !== 0) throw new Error(`Deployment failed with exit code ${code}.`);
-  await waitForServices(name);
-  status(name);
-  await verify(name);
-  success(`${name} deployed and verified.`);
+  const app = loadApp(name);
+  const { directory, manifest } = app;
+  setOperationPhase('stage-files');
+  const transfer = stageAppFiles(directory, manifest.files);
+  try {
+    if (!isDeepStrictEqual(app.compose, parseYaml(readFileSync(join(transfer.directory, manifest.compose), 'utf8')))) throw new Error('Compose changed after validation. Review and validate it again before deploying.');
+    await new Promise<void>(done => setImmediate(done));
+    assertOperationRunning();
+    const secretEnvironment = deployAppSecrets(manifest);
+    const extraVars = JSON.stringify({
+      toad_app_name: manifest.name,
+      toad_app_stack: manifest.stack,
+      toad_app_compose: manifest.compose,
+      toad_app_source: transfer.directory,
+      toad_app_files: manifest.files,
+      toad_app_environment: secretEnvironment,
+      toad_app_has_state: manifest.volumes.length > 0,
+      toad_router_config_path: ROUTER_CONFIG_PATH,
+    });
+    setOperationPhase('transfer');
+    const code = await runProgramStream(ANSIBLE_PLAYBOOK, [
+      '-i', INVENTORY,
+      'playbooks/deployApp.yaml',
+      '--extra-vars', extraVars,
+    ], { cwd: ANSIBLE_DIR });
+    if (code !== 0) throw new Error(`Deployment failed with exit code ${code}.`);
+    setOperationPhase('rollout');
+    const runtime = await waitForServices(app);
+    setOperationPhase('https');
+    const checks = await checkEndpoints(manifest);
+    if (checks.some((check) => !check.ok)) throw new AppReleaseError('Requested images are running, but HTTPS checks failed.', { ...runtime, app: name, checks, ok: false, outcome: 'failed' });
+    return { version: 1, ...runtime, app: name, stack: manifest.stack, checks, urls: checks.map((check) => check.url) };
+  } finally { transfer.cleanup(); }
 }
 
 function secret(args: string[]): void {
@@ -489,65 +418,123 @@ async function restore(args: string[]): Promise<void> {
 }
 
 export async function run(args: string[]): Promise<void> {
-  const command = args[0];
-  const positional: string[] = [];
-  const valuedOptions = new Set(['--template', '--image', '--service', '--platform', '--output', '--from', '--from-file']);
-  for (let index = 1; index < args.length; index += 1) {
-    const arg = args[index]!;
-    if (valuedOptions.has(arg)) { index += 1; continue; }
-    if (!arg.startsWith('--')) positional.push(arg);
-    else if (command === 'create' || command === 'publish') throw new Error(`Unknown option: ${arg}`);
-  }
-  const json = args.includes('--json') && (command === 'status' || command === 'diagnose');
-  if (!json) banner('TOAD Application Lifecycle');
+  const json = args.includes('--json');
+  const previousJson = process.env.TOAD_JSON;
+  if (json) process.env.TOAD_JSON = '1';
+  let parsing = true;
   try {
-    const option = (flag: string): string | undefined => {
-      const index = args.indexOf(flag);
-      if (index === -1) return undefined;
-      const value = args[index + 1];
-      if (!value || value.startsWith('--')) throw new Error(`${flag} requires a value.`);
-      return value;
+    const parsed = parseAppArguments(args);
+    parsing = false;
+    const { command, positional, options } = parsed;
+    if (parsed.help) { showAppHelp(args[0] === 'help' ? args[1] : command); return; }
+    if (!json) banner('TOAD Application Lifecycle');
+    const option = (flag: string): string | undefined => typeof options[flag] === 'string' ? options[flag] : undefined;
+    const printResult = (result: Record<string, unknown>): void => {
+      if (json) emitAppJson(result);
+      else {
+        success(`${String(result.app ?? 'Application')}: ${String(result.outcome ?? 'complete')}`);
+        if (Array.isArray(result.urls)) for (const url of result.urls) console.log(String(url));
+        if (typeof result.patch === 'string') console.log(`Review rollback patch: ${result.patch}`);
+        if (typeof result.nextAction === 'string') console.log(result.nextAction);
+      }
     };
-    if ((command === 'create' || command === 'publish') && positional.length > 1) {
-      throw new Error('Provide exactly one application name.');
+    const publish = async (): Promise<string> => {
+      const name = positional[0]!;
+      const app = loadApp(name);
+      const buildPath = join(app.directory, 'build.yaml');
+      const config = existsSync(buildPath) ? parseYaml(readFileSync(buildPath, 'utf8')) as { image?: unknown; platform?: unknown } : {};
+      const image = option('--image') ?? (typeof config?.image === 'string' ? config.image : undefined);
+      if (!image) throw new Error('Set --image REGISTRY/OWNER/APP:TAG once or configure build.yaml.image.');
+      const service = option('--service');
+      const platform = option('--platform') ?? (typeof config?.platform === 'string' ? config.platform : undefined);
+      setOperationPhase('build');
+      return publishAppImage(name, image, { ...(service ? { service } : {}), ...(platform ? { platform } : {}) });
+    };
+    if (['deploy', 'release', 'rollback'].includes(command) && !json) {
+      const app = loadApp(positional[0]!);
+      console.log(`Target: context ${ACTIVE_CONTEXT ?? 'legacy'}, stack ${app.manifest.stack}, app ${app.manifest.name}`);
     }
     switch (command) {
-      case 'list':
-        for (const name of listAppNames()) {
+      case 'list': {
+        const apps = listAppNames().map((name) => {
           const { manifest } = loadApp(name);
-          console.log(`${name.padEnd(18)} ${manifest.description}`);
-        }
-        break;
-      case 'create': create(positional[0], option('--template')); break;
-      case 'publish': {
-        const name = positional[0];
-        const image = option('--image');
-        if (!name || !image) throw new Error('Usage: app publish NAME --image REGISTRY/OWNER/APP:TAG');
-        const service = option('--service');
-        const platform = option('--platform');
-        const pinned = await publishAppImage(name, image, {
-          ...(service ? { service } : {}), ...(platform ? { platform } : {}),
+          return { name, description: manifest.description, stack: manifest.stack };
         });
-        success(`Published and pinned ${pinned}`);
-        console.log(`Next: pnpm run app -- validate ${name}, then pnpm run app -- deploy ${name}`);
+        if (json) emitAppJson({ version: 1, ok: true, apps });
+        else for (const app of apps) console.log(`${app.name.padEnd(18)} ${app.description}`);
         break;
       }
-      case 'validate': validate(args.slice(1)); break;
-      case 'deploy': await deploy(positional[0]); break;
-      case 'verify': await verify(positional[0]); break;
+      case 'create': {
+        const directory = create(positional[0], option('--template'), json);
+        if (json) emitAppJson({ version: 1, ok: true, app: positional[0], directory });
+        break;
+      }
+      case 'publish': {
+        const pinned = await publish();
+        if (json) emitAppJson({ version: 1, ok: true, app: positional[0], outcome: 'published', image: pinned, nextAction: 'Validate and deploy this immutable release.' });
+        else {
+          success(`Published and pinned ${pinned}`);
+          console.log(`Next: pnpm run app -- validate ${positional[0]}, then pnpm run app -- deploy ${positional[0]}`);
+        }
+        break;
+      }
+      case 'release': {
+        const pinned = await publish();
+        setOperationPhase('validate');
+        loadApp(positional[0]!);
+        printResult({ ...await deploy(positional[0]), publishedImage: pinned });
+        break;
+      }
+      case 'validate': {
+        if (json) {
+          const selected = positional[0] ? [positional[0]] : listAppNames();
+          if (selected.length === 0) throw new Error('No application manifests found.');
+          const apps = selected.map((name) => {
+            const { manifest } = loadApp(name);
+            return { app: name, services: manifest.services.length, files: manifest.files.length };
+          });
+          emitAppJson({ version: 1, ok: true, apps });
+        } else validate(positional);
+        break;
+      }
+      case 'deploy': printResult(await deploy(positional[0])); break;
+      case 'verify': await verify(positional[0], json); break;
       case 'status': status(positional[0], json); break;
-      case 'diagnose': if (!await diagnose(positional[0])) process.exitCode = 1; break;
-      case 'logs': logs(positional[0], positional[1]); break;
-      case 'rollback': await rollback(positional[0], positional[1]); break;
+      case 'diagnose': {
+        if (json) { if (!await diagnose(positional[0])) process.exitCode = 1; }
+        else {
+          const result = await collectAppDiagnosis(positional[0]!);
+          console.log(`${result.app}: ${result.outcome}; ${result.ok ? 'healthy requested release' : 'attention required'}`);
+          for (const service of result.services) console.log(`${service.name}: ${service.running}/${service.desired}; ${service.updateState}; ${service.issues.join(', ') || 'verified'}`);
+          for (const hint of result.hints) console.log(`Next: ${hint}`);
+          if (!result.ok) process.exitCode = 1;
+        }
+        break;
+      }
+      case 'logs': await logs(positional[0], positional[1], options); break;
+      case 'rollback': printResult(await rollback(positional[0], positional[1], option('--output'))); break;
       case 'backup': await backup(args.slice(1)); break;
       case 'restore': await restore(args.slice(1)); break;
       case 'remove': await remove(positional[0], args.includes('--yes')); break;
       case 'secret': secret(args.slice(1)); break;
-      default: help(); if (command) process.exitCode = 1;
+      default: showAppHelp(); if (command) process.exitCode = 1;
     }
   } catch (cause) {
     closeReadline();
-    error(cause instanceof Error ? cause.message : String(cause));
+    if (json) {
+      const message = cause instanceof AppReleaseError ? cause.message
+        : parsing && cause instanceof Error ? cause.message
+          : 'Application command failed. Inspect local validation or operator diagnostics for details.';
+      emitAppJson({
+        version: 1, ok: false,
+        ...(cause instanceof AppReleaseError ? cause.result : {}),
+        error: { code: parsing ? 'INVALID_ARGUMENTS' : cause instanceof AppReleaseError ? 'RELEASE_NOT_DELIVERED' : 'APP_COMMAND_FAILED', message },
+        nextAction: parsing ? 'Run app COMMAND --help and correct the arguments.' : 'Run app validate NAME, then app diagnose NAME --json. Inspect sensitive logs only in your trusted operator environment.',
+      });
+    } else error(cause instanceof Error ? cause.message : String(cause));
     process.exitCode = 1;
+  } finally {
+    if (previousJson === undefined) delete process.env.TOAD_JSON;
+    else process.env.TOAD_JSON = previousJson;
   }
 }

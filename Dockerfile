@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TOAD_STATE_DIR=/state
 ENV TOAD_BACKUP_DIR=/backups
 RUN apt-get update \
-    && apt-get install --yes --no-install-recommends age ca-certificates openssh-client python3 python3-pip python3-venv rclone \
+    && apt-get install --yes --no-install-recommends age ca-certificates curl openssl tar openssh-client python3 python3-pip python3-venv rclone \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable
 

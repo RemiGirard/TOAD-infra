@@ -1,0 +1,16 @@
+TOAD: infrastructure and application delivery for humans and coding agents.
+Canonical workflow: https://toad.remigirard.dev/agents.html
+Observability and private visual view: https://toad.remigirard.dev/observability.html
+Cloud-first setup: https://toad.remigirard.dev/quickstart.html
+Application delivery: https://toad.remigirard.dev/first-app.html
+
+Discover the current CLI: node /path/to/TOAD-infra/toad.mjs capabilities --json
+Use an explicit --context NAME and --project DIR where appropriate.
+Read before mutation: doctor --for ACTION --json; operation status --json; observe --json.
+Cloud setup creates billable resources and changes explicitly reviewed DNS ownership.
+App release validates, publishes an immutable image, deploys, and proves the requested release.
+Unknown flags are rejected. --dry-run is not a supported deploy flag.
+Unknown or expired evidence is not healthy. A rollback is not successful delivery of a new image.
+Inspect interrupted workers and remote state before acknowledging an operation lock.
+Keep credentials, private topology exports and service logs in the local operator environment.
+Destroy, restore, node reboot, CA rotation and DNS changes require exact human authorization.

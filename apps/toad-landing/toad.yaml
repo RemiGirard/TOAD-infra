@@ -13,6 +13,10 @@ files:
   - walkthrough.json
   - walkthrough.css
   - diagrams.css
+  - agent-view.mjs
+  - observability.svg
+  - observability-mobile.svg
+  - agent-guide.txt
   - journey.svg
   - journey-mobile.svg
   - delivery.svg
@@ -39,6 +43,7 @@ files:
   - quickstart.html
   - deployment.html
   - first-app.html
+  - observability.html
   - architecture.html
   - local-starter.html
   - evaluation.html

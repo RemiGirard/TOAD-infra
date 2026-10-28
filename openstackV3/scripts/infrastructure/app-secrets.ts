@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { readFileSync } from 'node:fs';
-import { AppManifest, APPS_DIR } from './app-manifest.js';
+import { AppManifest, appDirectory, appSecretPath } from './app-manifest.js';
 import { APP_AGE_IDENTITY_PATH, INVENTORY_PATH, SSH_KEY_PATH } from './paths.js';
 import { programExists, runProgram, runProgramInput } from './shell.js';
 
@@ -50,8 +50,9 @@ export function ensureAgeIdentity(): string {
 export function encryptAppSecret(appName: string, secret: SecretSpec, source: string): string {
   const recipient = ensureAgeIdentity();
   if (!existsSync(source)) throw new Error(`Secret input file does not exist: ${source}`);
-  const destination = resolve(APPS_DIR, appName, secret.source);
+  const destination = appSecretPath(appDirectory(appName), secret.source, true);
   mkdirSync(dirname(destination), { recursive: true, mode: 0o750 });
+  appSecretPath(appDirectory(appName), secret.source, true);
   runProgram('age', ['--encrypt', '--recipient', recipient, '--output', destination, source], {
     showOutput: false,
     displayCommand: `age --encrypt --recipient <TOAD-recipient> --output ${secret.source} <secret-input>`,
@@ -100,7 +101,7 @@ export function deployAppSecrets(manifest: AppManifest): Record<string, string> 
 
   const environment: Record<string, string> = {};
   for (const secret of manifest.secrets) {
-    const encryptedPath = resolve(APPS_DIR, manifest.name, secret.source);
+    const encryptedPath = appSecretPath(appDirectory(manifest.name), secret.source);
     const plaintext = runProgram('age', ['--decrypt', '--identity', APP_AGE_IDENTITY_PATH, encryptedPath], {
       showCommand: false,
       showOutput: false,

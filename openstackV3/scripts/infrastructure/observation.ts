@@ -1,0 +1,52 @@
+/** Private, timestamped infrastructure evidence shared by humans and agents. */
+import { existsSync } from 'node:fs';
+import { hostname } from 'node:os';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
+import { inspectSwarm } from './swarm-maintenance.js';
+import { readRouterConfig, listAppNames } from './app-manifest.js';
+import { ADMIN_PKI_DIR, ACTIVE_CONTEXT } from './paths.js';
+import { runProgram } from './shell.js';
+import { readOperation, operationHistory, processExists } from './operation-lock.js';
+import { collectAppDiagnosis } from './app-observation.js';
+
+export async function observe(appName?: string) {
+  const generatedAt = new Date().toISOString();
+  let nodes: ReturnType<typeof inspectSwarm> = [];
+  const gaps: string[] = [];
+  try { nodes = inspectSwarm(); } catch { gaps.push('Swarm state unavailable; check operator SSH access and inventory.'); }
+  const apps: Array<Awaited<ReturnType<typeof collectAppDiagnosis>>> = [];
+  for (const name of appName ? [appName] : listAppNames()) {
+    try { apps.push(await collectAppDiagnosis(name)); } catch { gaps.push(`Application ${name}: observation unavailable. Run app validate and diagnose in the selected context.`); }
+  }
+  let monitoring: { state: string; healthyTargets?: number; totalTargets?: number; firingAlerts?: number; links?: Record<string, string> } = { state: 'unknown' };
+  try {
+    const domain = readRouterConfig().base_domain;
+    monitoring.links = { grafana: `https://grafana.${domain}/d/toad-overview`, metrics: `https://prometheus.${domain}/`, alerts: `https://alerts.${domain}/` };
+    const certificate = join(ADMIN_PKI_DIR, 'operator.crt'); const key = join(ADMIN_PKI_DIR, 'operator.key');
+    if (!existsSync(certificate) || !existsSync(key)) throw new Error('No operator identity.');
+    const get = (path: string) => JSON.parse(runProgram('curl', ['--fail', '--silent', '--show-error', '--max-time', '8', '--cert', certificate, '--key', key, `https://prometheus.${domain}${path}`], { showCommand: false, showOutput: false })) as { status?: string; data?: { activeTargets?: Array<{ health?: string }>; alerts?: Array<{ state?: string }> } };
+    const targets = get('/api/v1/targets'); const alerts = get('/api/v1/alerts');
+    if (targets.status !== 'success' || alerts.status !== 'success' || !Array.isArray(targets.data?.activeTargets) || !Array.isArray(alerts.data?.alerts)) throw new Error('Monitoring response incomplete.');
+    monitoring = { ...monitoring, state: 'observed', healthyTargets: targets.data.activeTargets.filter(item => item.health === 'up').length, totalTargets: targets.data.activeTargets.length, firingAlerts: alerts.data.alerts.filter(item => item.state === 'firing').length };
+  } catch { gaps.push('Metrics and alert state unavailable. Restore the original admin mTLS identity; unknown does not mean healthy.'); }
+  const current = readOperation() ?? null;
+  if (current && (current.state === 'interrupted' || current.host !== hostname() || !processExists(current.pid))) gaps.push('An interrupted or unverified operation still holds the lock. Inspect workers and remote state before reconciling.');
+  const expiresAt = new Date(Date.parse(generatedAt) + 60_000).toISOString();
+  if (Date.now() >= Date.parse(expiresAt)) gaps.push('This collection exceeded the freshness budget; refresh before relying on the oldest checks.');
+  const managers = nodes.filter(node => node.role === 'manager');
+  const healthyManagers = managers.filter(node => node.state === 'ready' && node.reachability === 'reachable');
+  return { version: 1, generatedAt, expiresAt, context: ACTIVE_CONTEXT ?? 'legacy', ok: gaps.length === 0 && managers.length >= 3 && healthyManagers.length === managers.length && apps.every(app => app.ok) && monitoring.state === 'observed' && monitoring.totalTargets! > 0 && monitoring.healthyTargets === monitoring.totalTargets && monitoring.firingAlerts === 0,
+    nodes, quorum: { healthy: healthyManagers.length, managers: managers.length, required: Math.floor(managers.length / 2) + 1, state: managers.length === 0 ? 'unknown' : healthyManagers.length >= Math.floor(managers.length / 2) + 1 ? 'available' : 'degraded' }, apps, monitoring, operation: current, history: operationHistory(), gaps, notifications: 'Not verified by this snapshot. An Alertmanager dashboard alone does not establish notification delivery.' };
+}
+export type Observation = Awaited<ReturnType<typeof observe>>;
+const escape = (value: unknown): string => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+export function renderObservation(data: Observation, refresh = false): string {
+  const staleScript = `const expiry=document.querySelector('[data-expiry]');const status=document.querySelector('[data-freshness]');function update(){if(Date.now()>Date.parse(expiry.dataset.expiry)){status.textContent='Stale evidence — refresh before acting';status.className='badge warn';}}update();setInterval(update,1000);`;
+  const scriptHash = createHash('sha256').update(staleScript).digest('base64');
+  const panel = (title: string, body: string) => `<section><h2>${escape(title)}</h2>${body}</section>`;
+  const nodes = data.nodes.map(node => `<article class="node ${node.state === 'ready' && node.reachability === 'reachable' ? 'good' : 'warn'}"><strong>${escape(node.hostname)}</strong><span>${escape(node.role)}${node.leader ? ' · leader' : ''}</span><span>${escape(node.state)} / ${escape(node.reachability)}</span><span>${escape(node.availability)}</span></article>`).join('');
+  const apps = data.apps.map(app => `<article><h3>${escape(app.app)} <span class="badge ${app.ok ? 'good' : 'warn'}">${escape(app.outcome)}</span></h3>${app.services.map(service => `<p><strong>${escape(service.name)}</strong> · ${service.running}/${service.desired} · ${escape(service.updateState)}</p><p class="digest">Expected ${escape(service.expectedImage)}<br>Running ${escape(service.image)}</p>`).join('')}<ul>${app.checks.map(check => `<li>${check.ok ? 'Pass' : 'Fail'} · ${escape(check.name)} · ${escape(check.detail)}</li>`).join('')}</ul>${app.hints.map(hint => `<p class="hint">${escape(hint)}</p>`).join('')}</article>`).join('');
+  const history = data.history.map(item => `<li><strong>${escape(item.operation)}</strong> · ${escape(item.state)}<ol>${(item.events ?? []).map(event => `<li>${escape(event.phase)} <time>${escape(event.at)}</time></li>`).join('')}</ol></li>`).join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-${scriptHash}'; base-uri 'none'; form-action 'none'">${refresh ? '<meta http-equiv="refresh" content="15">' : ''}<title>TOAD · Operation view</title><style>body{margin:0;background:#f2f3ea;color:#22342c;font:16px/1.55 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:32px 24px}header{border-bottom:1px solid #ccd2c4;padding-bottom:24px}h1{font-size:clamp(30px,5vw,52px);line-height:1.08;margin:12px 0}h2{font-size:23px}small,time{color:#546454}section{background:#fffef7;border:1px solid #d7ddcf;border-radius:16px;padding:22px;margin:24px 0}article{border-top:1px solid #ddd;padding:16px 0}.topology{display:flex;gap:14px;align-items:stretch;flex-wrap:wrap}.topology article{padding:18px;border:1px solid #9bac8d;border-radius:12px;flex:1;min-width:170px}.topology span{display:block}.rail{border-left:3px solid #92a573;padding:12px 18px;margin:14px 0}.good{background:#e3edd5}.warn{background:#fff0d3}.badge{padding:4px 10px;border-radius:20px;font-size:14px}.digest{font:12px/1.8 monospace;overflow-wrap:anywhere}.hint{padding:10px;background:#eef1e4}a{color:#294722}li{margin:8px 0}time{font-size:12px}footer{font-size:14px;color:#58634e}</style></head><body><main><header><strong>TOAD / PRIVATE OPERATION VIEW</strong><h1>Your infrastructure.<br>What is happening now.</h1><p>Context <strong>${escape(data.context)}</strong> · <span data-freshness class="badge ${data.ok ? 'good' : 'warn'}">${data.ok ? 'All observed checks passed' : 'Attention or missing evidence'}</span></p><p>Observed <time>${escape(data.generatedAt)}</time> · evidence expires <time data-expiry="${escape(data.expiresAt)}">${escape(data.expiresAt)}</time>.</p><small>${refresh ? 'The local collector refreshes this file every 15 seconds while it is running.' : 'Point-in-time snapshot. Rerun observe for fresh evidence.'} A timestamp beyond expiry is stale evidence.</small></header>${panel('Traffic and control plane', `<p class="rail">Public DNS → load balancer → Traefik → your application services</p><p>This route describes the platform topology; component health comes only from the checks below.</p><div class="topology">${nodes || '<p>Node state unknown.</p>'}</div><p>Manager quorum: ${escape(data.quorum.state)} · ${data.quorum.healthy}/${data.quorum.managers} reachable; ${data.quorum.required} required.</p>`)}${panel('Applications and exact releases', apps || '<p>No application evidence available.</p>')}${panel('Metrics, alerts and logs', `<p>Monitoring: <strong>${escape(data.monitoring.state)}</strong></p><p>${data.monitoring.healthyTargets ?? '?'} / ${data.monitoring.totalTargets ?? '?'} scrape targets healthy · ${data.monitoring.firingAlerts ?? '?'} firing alerts.</p>${Object.entries(data.monitoring.links ?? {}).map(([name, url]) => `<a href="${escape(url)}">${escape(name)}</a>`).join(' · ')}<p>${escape(data.notifications)}</p>`)}${panel('Agent operation and history', `<p>${data.operation ? `${escape(data.operation.operation)} · ${escape(data.operation.phase)} · ${escape(data.operation.state)}` : 'No local mutation holds the context lock.'}</p><ol>${history || '<li>No recorded operations.</li>'}</ol>`)}${panel('Evidence gaps and next actions', `<ul>${data.gaps.map(gap => `<li>${escape(gap)}</li>`).join('') || '<li>No collection gaps.</li>'}</ul>`)}<footer>Local operator evidence. Contains private topology and deployment details; keep this file private. A snapshot does not authorize an agent to mutate infrastructure.</footer></main><script>${staleScript}</script></body></html>`;
+}

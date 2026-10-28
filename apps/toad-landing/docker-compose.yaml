@@ -23,88 +23,98 @@ services:
       - source: asset-7
         target: /usr/share/nginx/html/diagrams.css
       - source: asset-8
-        target: /usr/share/nginx/html/journey.svg
+        target: /usr/share/nginx/html/agent-view.mjs
       - source: asset-9
-        target: /usr/share/nginx/html/journey-mobile.svg
+        target: /usr/share/nginx/html/observability.svg
       - source: asset-10
-        target: /usr/share/nginx/html/delivery.svg
+        target: /usr/share/nginx/html/observability-mobile.svg
       - source: asset-11
-        target: /usr/share/nginx/html/delivery-mobile.svg
+        target: /usr/share/nginx/html/agent-guide.txt
       - source: asset-12
-        target: /usr/share/nginx/html/platform.svg
+        target: /usr/share/nginx/html/journey.svg
       - source: asset-13
-        target: /usr/share/nginx/html/platform-mobile.svg
+        target: /usr/share/nginx/html/journey-mobile.svg
       - source: asset-14
-        target: /usr/share/nginx/html/diagram-deployment-1.svg
+        target: /usr/share/nginx/html/delivery.svg
       - source: asset-15
-        target: /usr/share/nginx/html/diagram-deployment-1-mobile.svg
+        target: /usr/share/nginx/html/delivery-mobile.svg
       - source: asset-16
-        target: /usr/share/nginx/html/diagram-deployment-2.svg
+        target: /usr/share/nginx/html/platform.svg
       - source: asset-17
-        target: /usr/share/nginx/html/diagram-deployment-3.svg
+        target: /usr/share/nginx/html/platform-mobile.svg
       - source: asset-18
-        target: /usr/share/nginx/html/diagram-deployment-4.svg
+        target: /usr/share/nginx/html/diagram-deployment-1.svg
       - source: asset-19
-        target: /usr/share/nginx/html/diagram-deployment-4-mobile.svg
+        target: /usr/share/nginx/html/diagram-deployment-1-mobile.svg
       - source: asset-20
-        target: /usr/share/nginx/html/diagram-deployment-5.svg
+        target: /usr/share/nginx/html/diagram-deployment-2.svg
       - source: asset-21
-        target: /usr/share/nginx/html/diagram-deployment-5-mobile.svg
+        target: /usr/share/nginx/html/diagram-deployment-3.svg
       - source: asset-22
-        target: /usr/share/nginx/html/diagram-deployment-6.svg
+        target: /usr/share/nginx/html/diagram-deployment-4.svg
       - source: asset-23
-        target: /usr/share/nginx/html/diagram-deployment-6-mobile.svg
+        target: /usr/share/nginx/html/diagram-deployment-4-mobile.svg
       - source: asset-24
-        target: /usr/share/nginx/html/diagram-operations-1.svg
+        target: /usr/share/nginx/html/diagram-deployment-5.svg
       - source: asset-25
-        target: /usr/share/nginx/html/diagram-operations-2.svg
+        target: /usr/share/nginx/html/diagram-deployment-5-mobile.svg
       - source: asset-26
-        target: /usr/share/nginx/html/diagram-operations-3.svg
+        target: /usr/share/nginx/html/diagram-deployment-6.svg
       - source: asset-27
-        target: /usr/share/nginx/html/diagram-operations-3-mobile.svg
+        target: /usr/share/nginx/html/diagram-deployment-6-mobile.svg
       - source: asset-28
-        target: /usr/share/nginx/html/diagram-recovery-1.svg
+        target: /usr/share/nginx/html/diagram-operations-1.svg
       - source: asset-29
-        target: /usr/share/nginx/html/diagram-recovery-1-mobile.svg
+        target: /usr/share/nginx/html/diagram-operations-2.svg
       - source: asset-30
-        target: /usr/share/nginx/html/diagram-recovery-2.svg
+        target: /usr/share/nginx/html/diagram-operations-3.svg
       - source: asset-31
-        target: /usr/share/nginx/html/quickstart.html
+        target: /usr/share/nginx/html/diagram-operations-3-mobile.svg
       - source: asset-32
-        target: /usr/share/nginx/html/deployment.html
+        target: /usr/share/nginx/html/diagram-recovery-1.svg
       - source: asset-33
-        target: /usr/share/nginx/html/first-app.html
+        target: /usr/share/nginx/html/diagram-recovery-1-mobile.svg
       - source: asset-34
-        target: /usr/share/nginx/html/architecture.html
+        target: /usr/share/nginx/html/diagram-recovery-2.svg
       - source: asset-35
-        target: /usr/share/nginx/html/local-starter.html
+        target: /usr/share/nginx/html/quickstart.html
       - source: asset-36
-        target: /usr/share/nginx/html/evaluation.html
+        target: /usr/share/nginx/html/deployment.html
       - source: asset-37
-        target: /usr/share/nginx/html/costs.html
+        target: /usr/share/nginx/html/first-app.html
       - source: asset-38
-        target: /usr/share/nginx/html/operations.html
+        target: /usr/share/nginx/html/observability.html
       - source: asset-39
-        target: /usr/share/nginx/html/recovery.html
+        target: /usr/share/nginx/html/architecture.html
       - source: asset-40
-        target: /usr/share/nginx/html/launch.html
+        target: /usr/share/nginx/html/local-starter.html
       - source: asset-41
-        target: /usr/share/nginx/html/backups.html
+        target: /usr/share/nginx/html/evaluation.html
       - source: asset-42
-        target: /usr/share/nginx/html/drill-plan.html
+        target: /usr/share/nginx/html/costs.html
       - source: asset-43
-        target: /usr/share/nginx/html/agents.html
+        target: /usr/share/nginx/html/operations.html
       - source: asset-44
-        target: /usr/share/nginx/html/storage.html
+        target: /usr/share/nginx/html/recovery.html
       - source: asset-45
-        target: /usr/share/nginx/html/security.html
+        target: /usr/share/nginx/html/launch.html
       - source: asset-46
-        target: /usr/share/nginx/html/license.html
+        target: /usr/share/nginx/html/backups.html
       - source: asset-47
-        target: /usr/share/nginx/html/robots.txt
+        target: /usr/share/nginx/html/drill-plan.html
       - source: asset-48
-        target: /usr/share/nginx/html/sitemap.xml
+        target: /usr/share/nginx/html/agents.html
       - source: asset-49
+        target: /usr/share/nginx/html/storage.html
+      - source: asset-50
+        target: /usr/share/nginx/html/security.html
+      - source: asset-51
+        target: /usr/share/nginx/html/license.html
+      - source: asset-52
+        target: /usr/share/nginx/html/robots.txt
+      - source: asset-53
+        target: /usr/share/nginx/html/sitemap.xml
+      - source: asset-54
         target: /etc/nginx/conf.d/default.conf
     healthcheck:
       test:
@@ -139,10 +149,10 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-de70501f1d70a74d
+    name: toad-web-0-17964944e9f96b72
     file: ./index.html
   asset-1:
-    name: toad-web-1-ec3f0bd5d15ece46
+    name: toad-web-1-46b3c0dffdf551fd
     file: ./style.css
   asset-2:
     name: toad-web-2-8a8105955dd2b846
@@ -163,130 +173,145 @@ configs:
     name: toad-web-7-4df8e984376c4d93
     file: ./diagrams.css
   asset-8:
-    name: toad-web-8-a83ee0cd889bb1ef
-    file: ./journey.svg
+    name: toad-web-8-c5d6862f05361047
+    file: ./agent-view.mjs
   asset-9:
-    name: toad-web-9-ae35cefa5284f1dc
-    file: ./journey-mobile.svg
+    name: toad-web-9-399a30eca4179c06
+    file: ./observability.svg
   asset-10:
-    name: toad-web-10-cc0f97c301d9cae7
-    file: ./delivery.svg
+    name: toad-web-10-60ef9c4777338ad8
+    file: ./observability-mobile.svg
   asset-11:
-    name: toad-web-11-b00c9639332ac278
-    file: ./delivery-mobile.svg
+    name: toad-web-11-3529c6d3d0962d6e
+    file: ./agent-guide.txt
   asset-12:
-    name: toad-web-12-c6c73d0bc86c9a66
-    file: ./platform.svg
+    name: toad-web-12-a83ee0cd889bb1ef
+    file: ./journey.svg
   asset-13:
-    name: toad-web-13-d03de8e1b32171e6
-    file: ./platform-mobile.svg
+    name: toad-web-13-ae35cefa5284f1dc
+    file: ./journey-mobile.svg
   asset-14:
-    name: toad-web-14-fab4e1c7a087a094
-    file: ./diagram-deployment-1.svg
+    name: toad-web-14-cc0f97c301d9cae7
+    file: ./delivery.svg
   asset-15:
-    name: toad-web-15-0bca3295263e1c68
-    file: ./diagram-deployment-1-mobile.svg
+    name: toad-web-15-b00c9639332ac278
+    file: ./delivery-mobile.svg
   asset-16:
-    name: toad-web-16-349f61a94ed4c94d
-    file: ./diagram-deployment-2.svg
+    name: toad-web-16-c6c73d0bc86c9a66
+    file: ./platform.svg
   asset-17:
-    name: toad-web-17-4711f556841b37b7
-    file: ./diagram-deployment-3.svg
+    name: toad-web-17-d03de8e1b32171e6
+    file: ./platform-mobile.svg
   asset-18:
-    name: toad-web-18-a2b03c678fc32cea
-    file: ./diagram-deployment-4.svg
+    name: toad-web-18-fab4e1c7a087a094
+    file: ./diagram-deployment-1.svg
   asset-19:
-    name: toad-web-19-e5835639b08f76dc
-    file: ./diagram-deployment-4-mobile.svg
+    name: toad-web-19-0bca3295263e1c68
+    file: ./diagram-deployment-1-mobile.svg
   asset-20:
-    name: toad-web-20-24ae8e3afbce9d70
-    file: ./diagram-deployment-5.svg
+    name: toad-web-20-349f61a94ed4c94d
+    file: ./diagram-deployment-2.svg
   asset-21:
-    name: toad-web-21-3ba6566cf79628b4
-    file: ./diagram-deployment-5-mobile.svg
+    name: toad-web-21-4711f556841b37b7
+    file: ./diagram-deployment-3.svg
   asset-22:
-    name: toad-web-22-15da837b3b19af12
-    file: ./diagram-deployment-6.svg
+    name: toad-web-22-a2b03c678fc32cea
+    file: ./diagram-deployment-4.svg
   asset-23:
-    name: toad-web-23-44c1a3b0f24d0065
-    file: ./diagram-deployment-6-mobile.svg
+    name: toad-web-23-e5835639b08f76dc
+    file: ./diagram-deployment-4-mobile.svg
   asset-24:
-    name: toad-web-24-fdf78416c98f06fa
-    file: ./diagram-operations-1.svg
+    name: toad-web-24-24ae8e3afbce9d70
+    file: ./diagram-deployment-5.svg
   asset-25:
-    name: toad-web-25-61aa7e8dddd264c7
-    file: ./diagram-operations-2.svg
+    name: toad-web-25-3ba6566cf79628b4
+    file: ./diagram-deployment-5-mobile.svg
   asset-26:
-    name: toad-web-26-7499150b44fa195c
-    file: ./diagram-operations-3.svg
+    name: toad-web-26-15da837b3b19af12
+    file: ./diagram-deployment-6.svg
   asset-27:
-    name: toad-web-27-ab56b5a4105297a5
-    file: ./diagram-operations-3-mobile.svg
+    name: toad-web-27-44c1a3b0f24d0065
+    file: ./diagram-deployment-6-mobile.svg
   asset-28:
-    name: toad-web-28-4dd84426587bba3e
-    file: ./diagram-recovery-1.svg
+    name: toad-web-28-fdf78416c98f06fa
+    file: ./diagram-operations-1.svg
   asset-29:
-    name: toad-web-29-6b5ad99523724055
-    file: ./diagram-recovery-1-mobile.svg
+    name: toad-web-29-61aa7e8dddd264c7
+    file: ./diagram-operations-2.svg
   asset-30:
-    name: toad-web-30-785a55dfbcd81bf6
-    file: ./diagram-recovery-2.svg
+    name: toad-web-30-7499150b44fa195c
+    file: ./diagram-operations-3.svg
   asset-31:
-    name: toad-web-31-26104b4bc154f922
-    file: ./quickstart.html
+    name: toad-web-31-ab56b5a4105297a5
+    file: ./diagram-operations-3-mobile.svg
   asset-32:
-    name: toad-web-32-b1256138369f6f26
-    file: ./deployment.html
+    name: toad-web-32-4dd84426587bba3e
+    file: ./diagram-recovery-1.svg
   asset-33:
-    name: toad-web-33-567119e276e72fdc
-    file: ./first-app.html
+    name: toad-web-33-6b5ad99523724055
+    file: ./diagram-recovery-1-mobile.svg
   asset-34:
-    name: toad-web-34-699d10eedbe7977d
-    file: ./architecture.html
+    name: toad-web-34-785a55dfbcd81bf6
+    file: ./diagram-recovery-2.svg
   asset-35:
-    name: toad-web-35-0e73033e12a69cae
-    file: ./local-starter.html
+    name: toad-web-35-e7985c102304b104
+    file: ./quickstart.html
   asset-36:
-    name: toad-web-36-b25644c1882593a6
-    file: ./evaluation.html
+    name: toad-web-36-567f41a4cfea4498
+    file: ./deployment.html
   asset-37:
-    name: toad-web-37-8a6a439b45f1f35b
-    file: ./costs.html
+    name: toad-web-37-4a62b18ac228e6a9
+    file: ./first-app.html
   asset-38:
-    name: toad-web-38-df8fff41503a1153
-    file: ./operations.html
+    name: toad-web-38-1b0c035edad1d9f5
+    file: ./observability.html
   asset-39:
-    name: toad-web-39-c0e118af3dc1a878
-    file: ./recovery.html
+    name: toad-web-39-801e915fb69a96df
+    file: ./architecture.html
   asset-40:
-    name: toad-web-40-5d509baf46cd7cb0
-    file: ./launch.html
+    name: toad-web-40-066d5450e6039fff
+    file: ./local-starter.html
   asset-41:
-    name: toad-web-41-8a0e7f0513fbf359
-    file: ./backups.html
+    name: toad-web-41-590ccfafa305d1aa
+    file: ./evaluation.html
   asset-42:
-    name: toad-web-42-48442b5616466307
-    file: ./drill-plan.html
+    name: toad-web-42-7891291a6d5672dd
+    file: ./costs.html
   asset-43:
-    name: toad-web-43-e8045387c21bf355
-    file: ./agents.html
+    name: toad-web-43-ce0bc23b8f51ee3e
+    file: ./operations.html
   asset-44:
-    name: toad-web-44-d926b0e66487e06e
-    file: ./storage.html
+    name: toad-web-44-4c11f1a6e74a7b68
+    file: ./recovery.html
   asset-45:
-    name: toad-web-45-2b8e8dc7b88b0148
-    file: ./security.html
+    name: toad-web-45-c80a56653086fc4b
+    file: ./launch.html
   asset-46:
-    name: toad-web-46-f77490c6c64e85be
-    file: ./license.html
+    name: toad-web-46-65e5bd02952d3da4
+    file: ./backups.html
   asset-47:
-    name: toad-web-47-72e05da304522bb6
-    file: ./robots.txt
+    name: toad-web-47-5034937bf0578544
+    file: ./drill-plan.html
   asset-48:
-    name: toad-web-48-e5952f447cb719ef
-    file: ./sitemap.xml
+    name: toad-web-48-da162880b695052d
+    file: ./agents.html
   asset-49:
-    name: toad-web-49-547a3261c8a9e667
+    name: toad-web-49-490fc7dc00e8ab22
+    file: ./storage.html
+  asset-50:
+    name: toad-web-50-38ed0b1eade12ea6
+    file: ./security.html
+  asset-51:
+    name: toad-web-51-8064ec0ac01de79a
+    file: ./license.html
+  asset-52:
+    name: toad-web-52-72e05da304522bb6
+    file: ./robots.txt
+  asset-53:
+    name: toad-web-53-e7f115ccbd9baa28
+    file: ./sitemap.xml
+  asset-54:
+    name: toad-web-54-547a3261c8a9e667
     file: ./nginx.conf
 networks:
   traefik-public:

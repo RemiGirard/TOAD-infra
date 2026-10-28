@@ -1,6 +1,6 @@
 # Launch validation record
 
-Updated 2026-10-27. This page separates implementation, local checks, recorded
+Updated 2026-10-28. This page separates implementation, local checks, recorded
 production acceptance, and outstanding live work. No outside-user onboarding
 or adoption study has been performed.
 
@@ -70,3 +70,22 @@ verification, and a test notification to the intended operator destination.
 The live production stack is not a recovery-drill target. Destruction,
 volume restore, CA rotation, node reboot, and parent-DNS changes need exact
 target authorization. A published landing page does not satisfy this gate.
+
+## Agent operation and DX validation
+
+Verified locally on 2026-10-28: TypeScript, 30 YAML files, five application
+manifests and 50 tests passed. Ansible syntax checks passed for application
+transfer and monitoring deployment. Existing-repository initialization preserved
+source; validation passed; unsupported deployment flags were rejected before
+mutation. The public agent scenarios were checked in the browser, including
+rollback, missing evidence, and mobile reflow.
+
+The CLI now checks exact release/task digests, records private operation stages
+and worker ownership, retains interrupted locks, generates rollback patches,
+and supports guided cloud configuration and DNS resume bound to the original
+stack identity and domains. The private operation view exposes evidence gaps
+and expiry. Public scenarios contain explicitly labelled example data.
+
+These checks do not establish a new-provider onboarding run, a fresh cloud
+provisioning/recovery drill, admin identity recovery, or outbound notification
+delivery. The existing recovery and operator-identity gates above still apply.

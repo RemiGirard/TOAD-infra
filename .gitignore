@@ -51,6 +51,7 @@ openstackV3/contexts/
 openstackV3/.toad-context
 openstackV3/pki/
 **/.operation.lock
+**/.operation.lock.guard
 
 # -- Logs & Temp --
 *.log
@@ -61,3 +62,8 @@ openstackV3/pki/
 # -- Old versions (removed from tracking, kept locally) --
 openstack/
 openstackV2/
+
+# Private local operator evidence
+openstackV3/operations/
+openstackV3/observe.html
+**/.cloud-dns-wait.json

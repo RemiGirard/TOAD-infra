@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Get started — TOAD</title><meta name="description" content="TOAD: Get started. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / GET STARTED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="get-started-cloud-first-then-your-app">Get started: cloud first, then your app</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Get started — TOAD</title><meta name="description" content="TOAD: Get started. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / GET STARTED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="get-started-cloud-first-then-your-app">Get started: cloud first, then your app</h1>
 <p>TOAD first creates and configures your cloud platform. You then publish and
 deploy applications onto it. Provision the platform once; repeat the app
 workflow for each app and update.</p>
@@ -14,7 +14,7 @@ Review the <a href="/costs.html">cost worksheet</a> before creating billable res
 cd TOAD-infra/openstackV3
 pnpm install --frozen-lockfile
 pnpm run doctor -- --json
-pnpm run context -- create my-cloud --use
+pnpm run cloud -- init my-cloud
 </code></pre>
 <p>The context command creates isolated configuration templates and selects them.
 Use a different name for each client or cloud environment. From <code>openstackV3</code>:</p>
@@ -24,7 +24,8 @@ Use a different name for each client or cloud environment. From <code>openstackV
 <li>Run <code>pnpm run setup</code> to install the OpenStack CLI, authenticate, and verify
 that the cloud SSH keypair matches your local key. A missing password is
 requested without echoing it.</li>
-<li>Run <code>pnpm run discover</code>, then fill in
+<li>Run <code>pnpm run discover</code>, then use <code>pnpm run cloud -- configure</code> for guided
+configuration, or fill in
 <code>contexts/my-cloud/heat/production.yaml</code> with your resource choices.</li>
 <li>Set your domains and certificate email in
 <code>contexts/my-cloud/router/config.yaml</code>.</li>
@@ -39,21 +40,22 @@ balancer, networking, and a delegated DNS zone. Ansible configures Docker Swarm,
 Traefik HTTPS, monitoring, and the platform test services.</p>
 <pre><code class="language-sh">pnpm run context -- current --json
 pnpm run check
-pnpm run doctor -- --cloud
-pnpm run apply -- my-cloud
+pnpm run doctor -- --for cloud-apply --cloud
+pnpm run cloud -- plan my-cloud
+pnpm run cloud -- apply my-cloud
 </code></pre>
 <p>Review the selected context, domain ownership, and target stack before <code>apply</code>:
 it creates or updates billable resources and the parent apex/wildcard DNS
 records. Omitting an environment argument selects this context&#39;s configuration.
 Keep using the same stack name for this cloud.</p>
-<p>On the first run, verification may stop while the child DNS zone awaits manual
-delegation. Read its nameservers:</p>
+<p>On the first run, setup reports <code>waiting_for_dns</code> while the child zone awaits manual
+delegation. It retains the existing resources and prints the required records. Read its nameservers:</p>
 <pre><code class="language-sh">pnpm run os -- recordset list YOUR-PLATFORM-DOMAIN.
 </code></pre>
 <p>Create the matching child <code>NS</code> records in your parent DNS zone, using the
 <a href="/deployment.html#6-delegate-the-platform-child-zone-once">one-time delegation instructions</a>.
-Keep the existing stack and rerun:</p>
-<pre><code class="language-sh">pnpm run apply -- my-cloud
+Keep the existing stack and resume the DNS/verification stage:</p>
+<pre><code class="language-sh">pnpm run cloud -- resume my-cloud
 pnpm run verify -- my-cloud --json
 </code></pre>
 <p>Continue when verification passes. The lower-level <code>deploy</code> command creates
@@ -83,4 +85,6 @@ Run <code>apply</code> when changing the platform configuration. Follow
 <a href="/operations.html">operations</a> and <a href="/recovery.html">recovery</a> for stateful
 data and backups. Complete backup and restore validation before relying on
 the platform for important data.</p>
+<p>Use <a href="/agents.html">TOAD with your coding agent</a>, and open the
+<a href="/observability.html">private operation view</a> to understand its current stage.</p>
 </main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">AGPL-3.0-or-later</a></div></footer></body></html>

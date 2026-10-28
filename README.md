@@ -5,12 +5,14 @@
 TOAD is an open-source deployment toolkit for independent developers and small
 teams who want their own Infomaniak Public Cloud. It provisions the servers,
 configures Docker Swarm, routes HTTPS, and gives you one CLI for applications,
-diagnosis, updates, and recovery. Its JSON diagnostics work well with an AI
-coding assistant; manifests keep deployment reproducible and reviewable.
+diagnosis, updates, and recovery. It is built for people and coding agents:
+versioned JSON, explicit targets, strict commands, exact release checks, and
+a private visual operation view keep actions understandable and reviewable.
 
 [Project site](https://toad.remigirard.dev) ·
 [Get started](docs/QUICKSTART.md) · [Cloud setup details](docs/DEPLOYMENT.md) ·
-[Deploy an app](docs/FIRST-APP.md)
+[Deploy an app](docs/FIRST-APP.md) · [Use with an agent](docs/AGENT-RUNBOOK.md) ·
+[Understand operations](docs/OBSERVABILITY.md)
 
 ## 1. Provision your cloud platform
 
@@ -60,6 +62,21 @@ workflow for updates; use `apply` for platform changes. See the
 | Understand the architecture | [Visual guide](docs/ARCHITECTURE.md) | No account required |
 | Preview the example frontend and API locally | [Optional local starter](docs/LOCAL-STARTER.md) | Node.js 22; no cloud spend |
 | Explore a one-VM Heat profile | [Evaluation](docs/EVALUATION.md) | Billable resources; not the complete platform |
+
+## Work in your existing application repository
+
+Keep application source in its own repository. Initialize TOAD metadata with
+an explicit file allow-list, then repeat one release command:
+
+~~~sh
+node /path/to/TOAD-infra/toad.mjs init my-app --project . --image ghcr.io/YOUR-OWNER/my-app:v1 --port 3000 --files Dockerfile,server.mjs
+node /path/to/TOAD-infra/toad.mjs app release my-app --project . --context my-cloud
+node /path/to/TOAD-infra/toad.mjs observe --app my-app --project . --context my-cloud --output /private/path/toad-view.html --watch
+~~~
+
+Review generated files before publishing. An existing immutable image can be
+initialized and deployed without a local build. The [first-app guide](docs/FIRST-APP.md)
+also documents explicit build/deploy phases for CI and review.
 
 ## What TOAD handles
 

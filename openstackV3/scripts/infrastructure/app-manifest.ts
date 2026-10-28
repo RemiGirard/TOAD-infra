@@ -1,11 +1,15 @@
 /** Declarative application manifests and safety validation. */
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, normalize, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, lstatSync, realpathSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, normalize, resolve, relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { ROOT_DIR, ROUTER_CONFIG_PATH } from './paths.js';
 
 export const APPS_DIR = resolve(ROOT_DIR, '..', 'apps');
+export function appDirectory(name: string, appsDirectory = APPS_DIR): string {
+  if (!/^[a-z][a-z0-9-]{0,31}$/.test(name)) throw new Error('Invalid application name.');
+  return process.env.TOAD_PROJECT_DIR && appsDirectory === APPS_DIR ? resolve(process.env.TOAD_PROJECT_DIR) : join(appsDirectory, name);
+}
 export const APP_API_VERSION = 'toad.dev/v1';
 
 export interface AppCheck {
@@ -70,8 +74,29 @@ function safeRelativeFile(file: string): boolean {
   return !isAbsolute(file)
     && normalized !== '..'
     && !normalized.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`)
-    && basename(normalized) !== '.env'
+    && !normalized.split(/[\\/]/).some(part => part.startsWith('.env'))
     && !normalized.split(/[\\/]/).includes('credentials');
+}
+
+/** Resolve ciphertext without following a symlink into another app's secret state. */
+export function appSecretPath(directory: string, file: string, allowMissing = false): string {
+  if (!safeRelativeFile(file) || !file.endsWith('.age') || file.includes('\\')) throw new Error('Secret source must be a safe relative .age file.');
+  const root = realpathSync(directory);
+  let path = root;
+  for (const part of file.split('/')) {
+    path = join(path, part);
+    try {
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink()) throw new Error('Secret source and its parent directories cannot be symlinks.');
+    } catch (cause) {
+      if (allowMissing && (cause as NodeJS.ErrnoException).code === 'ENOENT') continue;
+      throw cause;
+    }
+  }
+  const inside = relative(root, path);
+  if (!safeRelativeFile(inside)) throw new Error('Secret source escapes the application.');
+  if (existsSync(path) && !lstatSync(path).isFile()) throw new Error('Secret source must be an ordinary file.');
+  return path;
 }
 
 function labelsFor(service: Record<string, unknown>): string[] {
@@ -102,6 +127,12 @@ function parseCheck(value: unknown, index: number, errors: string[]): AppCheck |
 }
 
 export function listAppNames(appsDirectory = APPS_DIR): string[] {
+  if (process.env.TOAD_PROJECT_DIR && appsDirectory === APPS_DIR) {
+    const path = join(resolve(process.env.TOAD_PROJECT_DIR), 'toad.yaml');
+    if (!existsSync(path)) return [];
+    const raw = object(parseYaml(readFileSync(path, 'utf8')));
+    return typeof raw?.name === 'string' ? [raw.name] : [];
+  }
   if (!existsSync(appsDirectory)) return [];
   return readdirSync(appsDirectory, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && existsSync(join(appsDirectory, entry.name, 'toad.yaml')))
@@ -128,7 +159,7 @@ export function expandAppValue(value: string, config: RouterConfig): string {
 
 export function loadApp(name: string, appsDirectory = APPS_DIR, options: { allowMissingSecretFiles?: boolean } = {}): LoadedApp {
   if (!APP_NAME.test(name)) throw new Error(`Invalid app name "${name}". Use lowercase letters, numbers, and hyphens.`);
-  const directory = join(appsDirectory, name);
+  const directory = appDirectory(name, appsDirectory);
   const manifestPath = join(directory, 'toad.yaml');
   if (!existsSync(manifestPath)) throw new Error(`Application "${name}" does not exist (${manifestPath}).`);
 
@@ -156,6 +187,13 @@ export function loadApp(name: string, appsDirectory = APPS_DIR, options: { allow
   for (const file of safeFiles) {
     if (!safeRelativeFile(file)) errors.push(`files contains unsafe path "${file}".`);
     if (!existsSync(join(directory, file))) errors.push(`Declared file does not exist: ${file}.`);
+    else {
+      const resolved = realpathSync(join(directory, file));
+      const inside = relative(realpathSync(directory), resolved);
+      let ancestor = directory;
+      const symlink = file.split('/').some(part => { ancestor = join(ancestor, part); return lstatSync(ancestor).isSymbolicLink(); });
+      if (!safeRelativeFile(inside) || symlink || !lstatSync(join(directory, file)).isFile()) errors.push(`Declared file must be an ordinary safe file inside the application: ${file}.`);
+    }
   }
   if (typeof composeName === 'string' && !safeFiles.includes(composeName)) errors.push('The Compose file must be listed in files.');
 
@@ -178,6 +216,7 @@ export function loadApp(name: string, appsDirectory = APPS_DIR, options: { allow
       if (!safeRelativeFile(source) || !source.endsWith('.age')) errors.push(`secrets[${index}].source must be a safe .age path.`);
       if (!/^[A-Z][A-Z0-9_]*_SECRET$/.test(environment)) errors.push(`secrets[${index}].environment must be uppercase and end in _SECRET.`);
       if (source && !options.allowMissingSecretFiles && !existsSync(join(directory, source))) errors.push(`Encrypted secret does not exist: ${source}.`);
+      if (source) { try { appSecretPath(directory, source, options.allowMissingSecretFiles); } catch { errors.push('Encrypted secret path must remain inside this app without symlink ancestors.'); } }
       if (secretName && source && environment) secrets.push({ name: secretName, source, environment });
     }
     if (new Set(secrets.map((secret) => secret.name)).size !== secrets.length) errors.push('Secret names must be unique.');

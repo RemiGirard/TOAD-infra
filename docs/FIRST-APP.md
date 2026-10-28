@@ -5,6 +5,29 @@ Start after [provisioning and verifying your cloud platform](QUICKSTART.md).
 An optional [local preview](LOCAL-STARTER.md) lets you explore the sample app.
 Commands run in `openstackV3` unless a step says otherwise.
 
+## Bring an existing app
+
+Keep your source where it is. From your application repository, using a
+verified TOAD platform and an authenticated registry:
+
+```sh
+node /path/to/TOAD-infra/toad.mjs init my-app --project . --image ghcr.io/YOUR-OWNER/my-app:v1 --port 3000 --files Dockerfile,server.mjs
+node /path/to/TOAD-infra/toad.mjs app validate my-app --project .
+node /path/to/TOAD-infra/toad.mjs app release my-app --project . --context my-cloud
+```
+
+List every required build file explicitly; the example above is for a small
+Node app. Init preserves existing source and refuses existing TOAD metadata.
+Review `toad.yaml`, `compose.toad.yaml` and `build.yaml` before publication.
+The generated image is a routing placeholder until the first successful build.
+Registry/image/platform defaults persist in `build.yaml`, so later releases
+can reuse the same command. Images stay pinned by digest even when a tag is
+reused. Private registry pull authentication must still exist on the nodes.
+
+If CI already published an image, pass its full `REGISTRY/APP@sha256:...`
+reference to init, then run `app deploy my-app --project . --context my-cloud`.
+No local build is required. The existing sample workflow follows below.
+
 ## 1. Check your workstation and target
 
 ```sh
@@ -88,9 +111,11 @@ pnpm run app -- rollback my-app
 pnpm run app -- diagnose my-app --json
 ```
 
-Rollback changes the live service, not Git. Restore the known-good digest in
-Compose before deploying again, or the next deployment requests the bad image.
-Inspect failed tasks and logs before retrying.
+Rollback verifies the recovered service and running-task digests and HTTPS
+checks, then writes a uniquely named Compose patch without editing your source
+or Git. Review and apply that patch from the reported base directory before
+deploying again, or the next deployment requests the bad image. Inspect failed
+tasks and `app logs my-app --follow --since 15m --tail 100` before retrying.
 
 ## 6. Add a secret when your app needs one
 
@@ -137,6 +162,13 @@ pnpm run app -- diagnose my-app --json
 
 Only age ciphertext belongs in Git. Back up the age identity separately.
 The deployment creates an immutable Swarm secret and mounts it as a file.
+
+## Follow the operation
+
+Use `operation status --json` and `operation history --json` in the same
+explicit context to see stages and worker ownership. `observe --app my-app
+--output /private/path/view.html --watch` produces a private visual view from
+the same evidence an agent sees. See [understand operations](OBSERVABILITY.md).
 
 ## CI and reviewable deployment
 
