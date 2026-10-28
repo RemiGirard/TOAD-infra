@@ -43,7 +43,7 @@
     "@types/node": "^22.0.0",
     "marked": "18.1.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.2"
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "yaml": "^2.8.2"
