@@ -149,13 +149,13 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-17964944e9f96b72
+    name: toad-web-0-7f4fac81120bb5b5
     file: ./index.html
   asset-1:
-    name: toad-web-1-46b3c0dffdf551fd
+    name: toad-web-1-7541ea014174341c
     file: ./style.css
   asset-2:
-    name: toad-web-2-8a8105955dd2b846
+    name: toad-web-2-2d095bba43b8c01a
     file: ./app.mjs
   asset-3:
     name: toad-web-3-42bdfa741838204b
@@ -254,7 +254,7 @@ configs:
     name: toad-web-34-785a55dfbcd81bf6
     file: ./diagram-recovery-2.svg
   asset-35:
-    name: toad-web-35-e7985c102304b104
+    name: toad-web-35-cd3936d4cce49646
     file: ./quickstart.html
   asset-36:
     name: toad-web-36-567f41a4cfea4498

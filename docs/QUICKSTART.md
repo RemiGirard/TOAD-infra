@@ -7,6 +7,11 @@ workflow for each app and update.
 Already operate a verified TOAD platform? Go to [First app](FIRST-APP.md).
 For an optional frontend/API preview, [run the example locally](LOCAL-STARTER.md).
 
+The homepage uses the repository launcher `./toad` from the checkout root.
+After installing dependencies below, try `./toad --help` from that root.
+`node toad.mjs` is equivalent on platforms without executable symlinks.
+The commands below use package scripts from `openstackV3`; both reach the same CLI.
+
 ## 1. Prepare your operator context
 
 You need Node.js 22, pnpm, Git, Python 3 with `venv`, OpenSSH, OpenSSL 3 with

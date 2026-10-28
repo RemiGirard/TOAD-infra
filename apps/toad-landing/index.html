@@ -13,7 +13,38 @@
 <main id="main">
   <section class="hero wrap">
     <div class="hero-copy"><p class="eyebrow"><span class="tiny-dot"></span> FROM LOCAL IDEA TO YOUR OWN CLOUD</p><h1>You built it.<br>Now <em>run it.</em></h1><p class="lead">Ship your app on infrastructure you control.<br>TOAD connects your source, your cloud, and your AI assistant—with a deployment you can understand.</p><div class="actions"><a class="button" href="/quickstart.html">Deploy your cloud <span aria-hidden="true">↗</span></a><a class="text-link" href="/first-app.html">Already have a platform? →</a></div><p class="hero-note">Cloud first. Then your apps. Built for small teams.</p></div>
-    <div class="workflow" aria-label="Illustrative cloud-first deployment workflow"><div class="terminal-head"><span class="terminal-dots" aria-hidden="true">● ● ●</span><span>YOUR TERMINAL</span><span>01 / CLOUD → APP</span></div><div class="terminal-body"><p class="comment"># 1. Provision and verify your cloud</p><p><span class="prompt">❯</span> pnpm run apply <span class="muted">-- my-cloud</span></p><p class="comment gap"># 2. Publish an app. Pin the exact image.</p><p><span class="prompt">❯</span> pnpm run app -- publish my-app <span class="muted">--image …:v1</span></p><div class="digest"><span class="tiny-dot"></span> image@sha256:<span>8a4d…</span></div><p class="comment gap"># 3. Validate → deploy → diagnose</p><p><span class="prompt">❯</span> pnpm run app -- deploy my-app</p><div class="terminal-link">https://my-app.your-domain.dev <span>↗</span></div></div><div class="terminal-foot">WORKFLOW PREVIEW <span>Setup and full commands in Get started</span></div></div>
+    <div class="workflow usage-preview" data-usage-preview aria-label="Illustrative terminal and agent workflows">
+      <div class="terminal-head"><span class="terminal-dots" aria-hidden="true">● ● ●</span><span>YOUR WORKFLOW</span><span>CLOUD → APP</span></div>
+      <div class="usage-tabs" role="tablist" aria-label="Choose how to use TOAD">
+        <button type="button" role="tab" id="usage-terminal-tab" aria-selected="true" aria-controls="usage-terminal" tabindex="0">Terminal</button>
+        <button type="button" role="tab" id="usage-agent-tab" aria-selected="false" aria-controls="usage-agent" tabindex="-1">With an agent</button>
+      </div>
+      <div id="usage-terminal" role="tabpanel" aria-labelledby="usage-terminal-tab" tabindex="0" data-usage-panel>
+        <div class="terminal-body">
+          <p class="comment"># 1. Apply your configured cloud</p>
+          <code class="usage-command"><span class="prompt" aria-hidden="true">❯</span> ./toad cloud apply my-cloud --context my-cloud</code>
+          <p class="comment gap"># 2. Ship a configured app. Verify what runs.</p>
+          <code class="usage-command"><span class="prompt" aria-hidden="true">❯</span> ./toad app release my-app --context my-cloud</code>
+          <div class="digest"><span class="tiny-dot"></span> image + replicas + HTTPS <span>verified</span></div>
+          <p class="comment gap"># 3. Inspect the result</p>
+          <code class="usage-command"><span class="prompt" aria-hidden="true">❯</span> ./toad app diagnose my-app --context my-cloud</code>
+          <a class="usage-guide" href="/first-app.html">Follow the terminal recipe <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="terminal-foot">WORKFLOW PREVIEW <span>From your TOAD checkout, after <a href="/quickstart.html">setup</a></span></div>
+      </div>
+      <div id="usage-agent" role="tabpanel" aria-labelledby="usage-agent-tab" tabindex="0" data-usage-panel hidden>
+        <div class="terminal-body agent-brief">
+          <p class="comment">YOU → YOUR CODING ASSISTANT</p>
+          <blockquote id="agent-brief-text">Deploy my-app on my-cloud. Inspect the platform and explain your plan first. Wait for my approval before making changes. Then verify the release and show me the result.</blockquote>
+          <button class="copy-brief" type="button" data-copy-agent-brief>Copy this brief</button><span class="copy-feedback" role="status" data-copy-feedback></span>
+          <p class="comment gap"># Your agent starts with read-only evidence</p>
+          <code class="usage-command">./toad observe --app my-app --context my-cloud --json</code>
+          <ol class="agent-usage-steps" aria-label="Agent workflow"><li>Inspect</li><li>Plan</li><li>Get approval</li><li>Deploy</li><li>Verify</li></ol>
+          <a class="usage-guide" href="/agents.html">Follow the agent guide <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="terminal-foot">EXAMPLE BRIEF <span>Your agent uses your local operator context.</span></div>
+      </div>
+    </div>
   </section>
   <div class="stack-line wrap"><span>YOUR CLOUD, WITH A SMALL OPERATIONAL SURFACE</span><p>Heat <i>→</i> Ansible <i>→</i> Docker Swarm <i>→</i> Traefik <i>→</i> Your app</p></div>
   <section id="how" class="section wrap how"><div class="section-intro"><p class="eyebrow">THE WAY THROUGH</p><h2>Your cloud first.<br>Your apps next.</h2><p>Prepare one platform, verify it, then use it for your apps. Keep the desired state in Git and use the same CLI for updates and diagnosis.</p></div><ol class="steps"><li><span class="step-number">01</span><div><h3>Provision your cloud.</h3><p>Create an operator context, configure credentials and DNS, then apply and verify the platform.</p><a href="/quickstart.html">Start with your cloud →</a></div></li><li><span class="step-number">02</span><div><h3>Deploy your app.</h3><p>On your verified platform, publish an image, pin its digest, validate the manifest, and deploy behind HTTPS.</p><a href="/first-app.html">Follow the first app →</a></div></li><li><span class="step-number">03</span><div><h3>Know what’s happening.</h3><p>Inspect replicas, failed tasks, and endpoint checks. Update or request a rollback with the same CLI.</p><a href="/operations.html">Read the operating guide →</a></div></li></ol><figure class="visual-overview"><picture><source media="(max-width:760px)" srcset="/journey-mobile.svg" width="360" height="960"><img src="/journey.svg" alt="Prepare an operator context, apply and verify the cloud platform, then publish and deploy applications onto it." width="1120" height="320" loading="lazy"></picture><figcaption><span>Set up the platform once. Repeat app delivery for each release.</span><a href="/quickstart.html">Follow the complete workflow →</a></figcaption></figure></section>

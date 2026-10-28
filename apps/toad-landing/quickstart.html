@@ -4,6 +4,10 @@ deploy applications onto it. Provision the platform once; repeat the app
 workflow for each app and update.</p>
 <p>Already operate a verified TOAD platform? Go to <a href="/first-app.html">First app</a>.
 For an optional frontend/API preview, <a href="/local-starter.html">run the example locally</a>.</p>
+<p>The homepage uses the repository launcher <code>./toad</code> from the checkout root.
+After installing dependencies below, try <code>./toad --help</code> from that root.
+<code>node toad.mjs</code> is equivalent on platforms without executable symlinks.
+The commands below use package scripts from <code>openstackV3</code>; both reach the same CLI.</p>
 <h2 id="1-prepare-your-operator-context">1. Prepare your operator context</h2>
 <p>You need Node.js 22, pnpm, Git, Python 3 with <code>venv</code>, OpenSSH, OpenSSL 3 with
 its legacy provider (for browser certificate bundles), Docker with Buildx,

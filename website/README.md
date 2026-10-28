@@ -51,3 +51,12 @@ The renderer must report version `11.12.0`. It uses its own headless browser;
 set `TOAD_DIAGRAM_BROWSER` to an installed Chromium executable if needed.
 Review changed SVGs, mobile layouts, and the diagram cache before committing.
 Normal builds and deployment do not install or launch the renderer.
+
+## Terminal and agent examples
+
+The hero separates terminal commands from a copyable coding-agent brief. Its
+commands use the repository's `./toad` launcher, a symlink to `toad.mjs`, after
+workstation, context and app setup. `node toad.mjs` remains the equivalent
+launcher on platforms without executable symlinks. The agent example uses the
+same local CLI and operator context; it does not imply a hosted agent service
+or ask users to paste credentials into chat. Both panels are illustrative.

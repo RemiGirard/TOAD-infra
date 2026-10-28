@@ -54,3 +54,34 @@ async function walkthrough() {
   } catch { title.textContent = 'The recorded run is unavailable. Open the first-app guide to follow the steps.'; }
 }
 walkthrough();
+
+const usage = document.querySelector('[data-usage-preview]');
+if (usage) {
+  const tabs = [...usage.querySelectorAll('[role="tab"]')];
+  function selectUsage(tab) {
+    for (const candidate of tabs) {
+      const selected = candidate === tab;
+      candidate.setAttribute('aria-selected', String(selected));
+      candidate.tabIndex = selected ? 0 : -1;
+      document.getElementById(candidate.getAttribute('aria-controls')).hidden = !selected;
+    }
+  }
+  for (const [index, tab] of tabs.entries()) {
+    tab.addEventListener('click', () => selectUsage(tab));
+    tab.addEventListener('keydown', event => {
+      let next;
+      if (event.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
+      else if (event.key === 'ArrowLeft') next = tabs[(index + tabs.length - 1) % tabs.length];
+      else if (event.key === 'Home') next = tabs[0];
+      else if (event.key === 'End') next = tabs[tabs.length - 1];
+      if (next) { event.preventDefault(); selectUsage(next); next.focus(); }
+    });
+  }
+  usage.querySelector('[data-copy-agent-brief]').addEventListener('click', async () => {
+    const feedback = usage.querySelector('[data-copy-feedback]');
+    try {
+      await navigator.clipboard.writeText(usage.querySelector('#agent-brief-text').textContent);
+      feedback.textContent = 'Brief copied.';
+    } catch { feedback.textContent = 'Select the brief above to copy it.'; }
+  });
+}
