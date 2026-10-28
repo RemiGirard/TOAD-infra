@@ -26,6 +26,19 @@ The starter demo is a separate `toad-demo` app routed at `/starter/`.
 
 ## Diagrams
 
+The global overview in [Your app explained](../docs/UNDERSTAND.md) connects
+code, agent, TOAD, registry, cloud servers, the visitor, DNS, HTTPS, app and
+read-only monitoring in one picture. It uses real Lucide pictograms and the
+existing TOAD mascot. Green delivery arrows, blue request arrows, dotted DNS
+lookup arrows and purple observation arrows have separate meanings.
+`openstackV3/scripts/presentation/overview.ts` generates desktop and mobile SVGs during
+the site build; the copies in this folder also render in GitHub Markdown.
+Icon sources are pinned in `vendor/lucide/`; their full ISC / Feather MIT
+notices are embedded in both SVGs and included as a public text asset.
+The diagram is illustrative and makes no infrastructure requests. SVG
+presentation attributes keep both image embeds and standalone diagrams
+compatible with the deployed Content Security Policy, without inline CSS.
+
 The quickstart and complete Infomaniak example embed the reviewed HTML teaching
 diagrams in `lessons/` using exact `TOAD_LESSON` comments. The build accepts
 only the named fragments in those two documents; all other raw Markdown HTML
@@ -39,8 +52,8 @@ where the visual comments do not render.
 The homepage's `learn.css` / `learn.mjs` teaching map introduces domains,
 DNS, cloud servers, load balancing, TLS, containers and persistent data before
 the technical workflow. It never reads private infrastructure. The static
-`app-map{,-mobile}.svg` pair provides the same visitor path in
-[Your app explained](../docs/UNDERSTAND.md). DNS lookup is separate from the
+`app-map{,-mobile}.svg` pair remains available as a smaller visitor-path
+illustration. DNS lookup is separate from the
 HTTPS route; Octavia passes TCP through and TLS terminates at Traefik.
 The private operation renderer shows a labelled route model beside actual
 observed server/application cards, without inventing placement or health.

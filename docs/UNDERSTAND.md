@@ -1,9 +1,20 @@
-# Your app online, without the infrastructure vocabulary
+# Your app, from code to a public link
 
 You built something on your computer. To let other people use it, it needs
 an address, somewhere to run, and a way to reach the right app securely.
 TOAD helps prepare those parts in your cloud account. You can work with a
 coding agent; you still choose the costs, access and responsibilities.
+
+![You and your agent use TOAD to prepare cloud servers and deploy a packaged app. Visitors look up its name in DNS, then connect to the public IP over HTTPS to reach the app. Read-only monitoring returns evidence to you and your agent.](../website/global-map.svg)
+
+**Read it in two directions.** The green arrows show you shipping the app:
+prepare the cloud once, publish a package, then deploy it. The blue arrows
+show a visitor reaching that same app. The dotted DNS arrows only find the
+address. The purple arrows bring observations back to you and your agent.
+
+Your computer can be off after deployment: the app runs on the rented servers.
+The [visual quickstart](QUICKSTART.md) explains each step, and the
+[complete Infomaniak example](INFOMANIAK-EXAMPLE.md) supplies the commands.
 
 **Not sure you want to operate a cloud platform?**
 [Compare the responsibilities first](#choose-your-level-of-responsibility).
@@ -11,8 +22,6 @@ You can also [preview the example locally](LOCAL-STARTER.md) without buying
 cloud resources.
 
 ## Follow one visit to your app
-
-![A browser looks up an app name in DNS, then connects over HTTPS through the public load balancer and Traefik to the app; storage is an explicit optional choice](../website/app-map.svg)
 
 This is a teaching map of the maintained TOAD setup, not a reading of your
 account or a health report. The public homepage lets you select each part
@@ -23,7 +32,7 @@ provider support alone does not make a TOAD deployment recipe ready.
 The [complete Infomaniak example](INFOMANIAK-EXAMPLE.md) connects these concepts
 to concrete names, reserved example IPs and the actual commands.
 
-1. A visitor opens **hello.platform.example.com**.
+1. A visitor opens **my-app.platform.example.com**.
 2. Their browser asks **DNS** for the name's address. DNS returns the public
    load-balancer address; it does not carry the website traffic.
 3. The browser connects to that address over **HTTPS**. The load balancer
@@ -38,7 +47,7 @@ to concrete names, reserved example IPs and the actual commands.
 
 | Term | Think of it as | What you need to decide |
 |---|---|---|
-| Domain | The name you control, such as `example.com`. An app can use a name below it, such as `hello.platform.example.com`. | Which name to use and who maintains its registration. It is separate from renting servers. |
+| Domain | The name you control, such as `example.com`. An app can use a name below it, such as `my-app.platform.example.com`. | Which name to use and who maintains its registration. It is separate from renting servers. |
 | DNS | A lookup that finds the public address for a name. | Which zone TOAD manages. Its first setup needs a one-time child-zone delegation; your agent can explain the exact records. |
 | Public cloud | Computers, networking and storage rented through your provider account. OpenStack is the API family TOAD uses to manage resources. | Owner, region, capacity, costs and access. Infomaniak is TOAD's verified path; other providers need adaptation and validation. |
 | Server / VM | One rented computer that runs part of your platform. | The maintained profile uses three. Three managers protect coordination after one manager loss, not every app or dataset. |

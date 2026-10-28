@@ -50,6 +50,9 @@ files:
   - learn.mjs
   - app-map.svg
   - app-map-mobile.svg
+  - global-map.svg
+  - global-map-mobile.svg
+  - lucide-LICENSE.txt
   - monitor.css
   - monitor.mjs
   - understand.html

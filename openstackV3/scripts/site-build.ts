@@ -10,11 +10,21 @@ import { diagramSources, digest } from './site-diagrams.js';
 import { renderMonitor } from './presentation/monitoring/view.js';
 import { monitorCss, monitorClient } from './presentation/monitoring/assets.js';
 import { monitoringExamples } from './presentation/monitoring/example.js';
+import { overviewIcons, renderOverview } from './presentation/overview.js';
 
 const root = resolve(ROOT_DIR, '..');
 const source = join(root, 'website');
 const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
+const iconLicense = readFileSync(join(source, 'vendor', 'lucide', 'LICENSE'), 'utf8');
+const overview = renderOverview(
+  Object.fromEntries(overviewIcons.map((name) => [name, readFileSync(join(source, 'vendor', 'lucide', `${name}.svg`), 'utf8')])),
+  readFileSync(join(source, 'toad.svg'), 'utf8'), iconLicense,
+);
+// Keep standalone Markdown illustrations and deployed assets in sync.
+writeFileSync(join(source, 'global-map.svg'), overview.desktop);
+writeFileSync(join(source, 'global-map-mobile.svg'), overview.mobile);
+writeFileSync(join(source, 'lucide-LICENSE.txt'), iconLicense);
 const pages = [
   ['UNDERSTAND', 'understand', 'Your app explained'],
   ['INFOMANIAK-EXAMPLE', 'infomaniak', 'Infomaniak example'],
@@ -63,6 +73,7 @@ const illustrations: Record<string, { desktopHeight: number; mobileHeight: numbe
   delivery: { desktopHeight: 258, mobileHeight: 864 }, platform: { desktopHeight: 318, mobileHeight: 890 },
   journey: { desktopHeight: 320, mobileHeight: 960 }, observability: { desktopHeight: 350, mobileHeight: 790 },
   'app-map': { desktopHeight: 470, mobileHeight: 1100 },
+  'global-map': { desktopHeight: 860, mobileHeight: 1570 },
 };
 const lessonNames = ['visit', 'access', 'context', 'cloud', 'dns', 'release', 'evidence'] as const;
 const lessons = new Map(lessonNames.map((name) => [name, readFileSync(join(source, 'lessons', `${name}.html`), 'utf8')]));
@@ -99,6 +110,7 @@ for (const [name, slug, label] of pages) {
     const illustration = Object.keys(illustrations).find((asset) => target === `../website/${asset}.svg`);
     if (illustration) {
       const size = illustrations[illustration]!;
+      if (illustration === 'global-map') return `<span id="global-map" class="illustration global-overview"><picture><source media="(max-width:760px)" srcset="/global-map-mobile.svg" width="360" height="${size.mobileHeight}"><img src="/global-map.svg" width="1120" height="${size.desktopHeight}" alt="${escape(description)}" loading="eager"></picture><span class="overview-caption"><span><span class="overview-key ship-key">Ship your app</span><span class="overview-key visit-key">Visit your app</span><span class="overview-key watch-key">Observe it</span></span><a href="/global-map.svg">Open the full diagram ↗</a></span><span class="overview-note">Teaching example · current three-server workflow · icons: <a href="/lucide-LICENSE.txt">Lucide / Feather notices</a></span></span>`;
       return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${size.mobileHeight}"><img src="/${illustration}.svg" width="1120" height="${size.desktopHeight}" alt="${escape(description)}" loading="lazy"></picture></span>`;
     }
     return `<img src="${escape(href(target, `${name}.md`))}" alt="${escape(description)}" loading="lazy">`;
@@ -116,7 +128,7 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg'];
+  'diagrams.css', 'lessons.css', 'lessons.mjs', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg', 'global-map.svg', 'global-map-mobile.svg', 'lucide-LICENSE.txt'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {

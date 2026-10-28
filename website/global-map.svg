@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="860" viewBox="0 0 1120 860" role="img" aria-labelledby="title desc">
+<title id="title">Your app: build it, publish it, visit it, understand it</title>
+<desc id="desc">You or your coding agent use TOAD to prepare a three-server cloud platform and publish a packaged app. A visitor looks up the app name in DNS, then connects to the public IP over HTTPS. Traefik handles encryption and routes to your running app. Read-only monitoring shows collected evidence. Data storage is optional and must be planned separately.</desc>
+<metadata>TOAD illustration: MIT, Remi Girard. Icon source: https://github.com/lucide-icons/lucide/tree/be09619c1c1124ad09c19fc3e87ee3b939409bbd
+ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+---
+
+The following Lucide icons are derived from the Feather project:
+
+airplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out
+
+The MIT License (MIT) (for the icons listed above)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</metadata>
+<defs><symbol id="laptop" viewBox="0 0 24 24"><path d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z" />
+  <path d="M20.054 15.987H3.946" /></symbol>
+<symbol id="bot" viewBox="0 0 24 24"><path d="M12 8V4H8" />
+  <rect width="16" height="12" x="4" y="8" rx="2" />
+  <path d="M2 14h2" />
+  <path d="M20 14h2" />
+  <path d="M15 13v2" />
+  <path d="M9 13v2" /></symbol>
+<symbol id="package" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" />
+  <path d="M12 22V12" />
+  <polyline points="3.29 7 12 12 20.71 7" />
+  <path d="m7.5 4.27 9 5.15" /></symbol>
+<symbol id="cloud" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" /></symbol>
+<symbol id="server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2" />
+  <rect width="20" height="8" x="2" y="14" rx="2" ry="2" />
+  <line x1="6" x2="6.01" y1="6" y2="6" />
+  <line x1="6" x2="6.01" y1="18" y2="18" /></symbol>
+<symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" />
+  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+  <path d="M2 12h20" /></symbol>
+<symbol id="lock-keyhole" viewBox="0 0 24 24"><circle cx="12" cy="16" r="1" />
+  <rect x="3" y="10" width="18" height="12" rx="2" />
+  <path d="M7 10V7a5 5 0 0 1 10 0v3" /></symbol>
+<symbol id="app-window" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" />
+  <path d="M10 4v4" />
+  <path d="M2 8h20" />
+  <path d="M6 4v4" /></symbol>
+<symbol id="activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" /></symbol>
+<symbol id="database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" />
+  <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+  <path d="M3 12A9 3 0 0 0 21 12" /></symbol><symbol id="toad" viewBox="0 0 64 64"><path fill="#243d2b" d="M12 29a12 12 0 0 1 20-13 12 12 0 0 1 20 13c7 7 6 18-3 23-9 6-25 6-34 0-9-5-10-16-3-23Z"/><circle cx="23" cy="24" r="6" fill="#d7ed99"/><circle cx="43" cy="24" r="6" fill="#d7ed99"/><circle cx="24" cy="24" r="2.8" fill="#243d2b"/><circle cx="42" cy="24" r="2.8" fill="#243d2b"/><path d="M21 41q11 8 22 0" fill="none" stroke="#d7ed99" stroke-width="3" stroke-linecap="round"/></symbol>
+<marker id="ship" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#69873e"/></marker><marker id="visit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#267b88"/></marker><marker id="lookup" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#7d8d89"/></marker><marker id="watch" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#827194"/></marker>
+</defs>
+<rect width="1120" height="860" rx="14" fill="#f8faf2"/>
+
+<text x="30" y="38" class="label" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#294332" letter-spacing="1.2">ONE APP. THE WHOLE PICTURE.</text>
+<text x="30" y="75" class="title green" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#567530">You ship it</text>
+<text x="1090" y="38" class="tiny" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">Current three-server TOAD platform · teaching example</text>
+<circle cx="130" cy="156" r="46" fill="#e7efda"/><use href="#laptop" x="88" y="119" width="84" height="84" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="199" cy="182" r="28" fill="#e8eee2"/><use href="#bot" x="178" y="161" width="42" height="42" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="145" y="235" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">Your code + your agent</text><text x="145" y="259" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Your app stays in your repository</text>
+<path d="M244 156H342" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/><text x="294" y="139" class="small green" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#567530">ask / type</text>
+<circle cx="400" cy="156" r="50" fill="#dceabf"/><use href="#toad" x="361" y="115" width="78" height="78"/>
+<text x="400" y="235" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">TOAD</text><text x="400" y="259" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">One CLI for you or your agent</text>
+<path d="M458 156H622" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/><text x="540" y="138" class="body green" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#567530">2 · publish</text><text x="540" y="183" class="tiny" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">build &amp; upload</text>
+<circle cx="680" cy="156" r="46" fill="#e7efda"/><use href="#package" x="647" y="123" width="66" height="66" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="680" y="235" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">Your app, packaged</text><text x="680" y="259" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Image stored in a registry</text>
+<path d="M400 278V326" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/><text x="418" y="305" class="body green" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#567530">1 · prepare your cloud</text>
+<rect x="340" y="334" width="750" height="395" rx="24" class="cloud" fill="#edf3e3" stroke="#acbf98" stroke-width="1.5" stroke-dasharray="6 5"/>
+<path d="M738 156H974Q1004 156 1004 186V486" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/><text x="986" y="276" class="body green" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#567530">3 · deploy</text>
+<use href="#cloud" x="365" y="353" width="42" height="42" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><text x="420" y="376" class="heading" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="700" fill="#294332">Your cloud account</text><text x="420" y="399" class="small" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Infomaniak Public Cloud · OpenStack underneath</text>
+<text x="30" y="318" class="title blue" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#246f7c">People visit it</text>
+<circle cx="120" cy="376" r="33" fill="#e9f0ee"/><use href="#globe" x="96" y="352" width="48" height="48" fill="none" stroke="#47747b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="173" y="367" class="title" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">DNS</text><text x="173" y="390" class="small" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Name → IP</text>
+<path d="M90 493V426" class="arrow lookup" fill="none" stroke="#7d8d89" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 5" marker-end="url(#lookup)"/><path d="M148 426V493" class="arrow lookup" fill="none" stroke="#7d8d89" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 5" marker-end="url(#lookup)"/>
+<text x="64" y="465" class="tiny" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">ask</text><text x="167" y="465" class="tiny" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">address</text>
+<circle cx="120" cy="540" r="46" fill="#e0eef0"/><use href="#app-window" x="84" y="504" width="72" height="72" fill="none" stroke="#267b88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="120" y="609" class="body" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#294332">A visitor opens your link</text><text x="120" y="634" class="code" text-anchor="middle" font-family="ui-monospace,monospace" font-size="14" font-weight="400" fill="#294332">my-app.platform.example.com</text>
+<path d="M174 540H418" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/><text x="288" y="521" class="small blue" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#246f7c">connect to that IP</text>
+<circle cx="470" cy="540" r="44" fill="#e0eef0"/><use href="#cloud" x="438" y="508" width="64" height="64" fill="none" stroke="#267b88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="470" y="609" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">Public IP</text><text x="470" y="633" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Your internet entrance</text>
+<path d="M522 540H647" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/><text x="586" y="521" class="small blue" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#246f7c">HTTPS</text>
+<circle cx="700" cy="540" r="44" fill="#e0eef0"/><use href="#lock-keyhole" x="670" y="510" width="60" height="60" fill="none" stroke="#267b88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="700" y="609" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">HTTPS gateway</text><text x="700" y="633" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Traefik decrypts &amp; routes</text>
+<path d="M752 540H925" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/><text x="838" y="521" class="small blue" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#246f7c">app request</text>
+<circle cx="980" cy="540" r="46" fill="#dceabf"/><use href="#app-window" x="947" y="507" width="66" height="66" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="980" y="609" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">Your running app</text><text x="980" y="633" class="code" text-anchor="middle" font-family="ui-monospace,monospace" font-size="14" font-weight="400" fill="#294332">my-app</text>
+<path d="M374 662H1057" class="rule" stroke="#cbd7bf" stroke-width="1"/>
+<use href="#server" x="409" y="680" width="30" height="30" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><use href="#server" x="449" y="680" width="30" height="30" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><use href="#server" x="489" y="680" width="30" height="30" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="542" y="701" class="small" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Three servers run this platform · app placement is simplified</text>
+<text x="140" y="704" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">DNS finds the address.</text><text x="140" y="725" class="tiny" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">The page does not pass through DNS.</text>
+<path d="M707 732V766H467V780" class="arrow watch" fill="none" stroke="#827194" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 5" marker-end="url(#watch)"/>
+<circle cx="468" cy="811" r="31" fill="#eee9f2"/><use href="#activity" x="445" y="788" width="46" height="46" fill="none" stroke="#827194" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="515" y="802" class="title" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">You and your agent see what is running</text><text x="515" y="827" class="small" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Read-only evidence: version, app copies, HTTPS, freshness</text>
+<use href="#database" x="76" y="781" width="34" height="34" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><text x="121" y="797" class="small" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Data is optional.</text><text x="121" y="819" class="tiny" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="400" fill="#536951">Plan storage + backups.</text>
+
+</svg>

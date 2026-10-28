@@ -97,54 +97,60 @@ services:
       - source: asset-44
         target: /usr/share/nginx/html/app-map-mobile.svg
       - source: asset-45
-        target: /usr/share/nginx/html/monitor.css
+        target: /usr/share/nginx/html/global-map.svg
       - source: asset-46
-        target: /usr/share/nginx/html/monitor.mjs
+        target: /usr/share/nginx/html/global-map-mobile.svg
       - source: asset-47
-        target: /usr/share/nginx/html/understand.html
+        target: /usr/share/nginx/html/lucide-LICENSE.txt
       - source: asset-48
-        target: /usr/share/nginx/html/infomaniak.html
+        target: /usr/share/nginx/html/monitor.css
       - source: asset-49
-        target: /usr/share/nginx/html/quickstart.html
+        target: /usr/share/nginx/html/monitor.mjs
       - source: asset-50
-        target: /usr/share/nginx/html/account.html
+        target: /usr/share/nginx/html/understand.html
       - source: asset-51
-        target: /usr/share/nginx/html/deployment.html
+        target: /usr/share/nginx/html/infomaniak.html
       - source: asset-52
-        target: /usr/share/nginx/html/first-app.html
+        target: /usr/share/nginx/html/quickstart.html
       - source: asset-53
-        target: /usr/share/nginx/html/observability.html
+        target: /usr/share/nginx/html/account.html
       - source: asset-54
-        target: /usr/share/nginx/html/architecture.html
+        target: /usr/share/nginx/html/deployment.html
       - source: asset-55
-        target: /usr/share/nginx/html/local-starter.html
+        target: /usr/share/nginx/html/first-app.html
       - source: asset-56
-        target: /usr/share/nginx/html/evaluation.html
+        target: /usr/share/nginx/html/observability.html
       - source: asset-57
-        target: /usr/share/nginx/html/costs.html
+        target: /usr/share/nginx/html/architecture.html
       - source: asset-58
-        target: /usr/share/nginx/html/operations.html
+        target: /usr/share/nginx/html/local-starter.html
       - source: asset-59
-        target: /usr/share/nginx/html/recovery.html
+        target: /usr/share/nginx/html/evaluation.html
       - source: asset-60
-        target: /usr/share/nginx/html/launch.html
+        target: /usr/share/nginx/html/costs.html
       - source: asset-61
-        target: /usr/share/nginx/html/backups.html
+        target: /usr/share/nginx/html/operations.html
       - source: asset-62
-        target: /usr/share/nginx/html/drill-plan.html
+        target: /usr/share/nginx/html/recovery.html
       - source: asset-63
-        target: /usr/share/nginx/html/agents.html
+        target: /usr/share/nginx/html/launch.html
       - source: asset-64
-        target: /usr/share/nginx/html/storage.html
+        target: /usr/share/nginx/html/backups.html
       - source: asset-65
-        target: /usr/share/nginx/html/security.html
+        target: /usr/share/nginx/html/drill-plan.html
       - source: asset-66
-        target: /usr/share/nginx/html/license.html
+        target: /usr/share/nginx/html/agents.html
       - source: asset-67
-        target: /usr/share/nginx/html/robots.txt
+        target: /usr/share/nginx/html/storage.html
       - source: asset-68
-        target: /usr/share/nginx/html/sitemap.xml
+        target: /usr/share/nginx/html/security.html
       - source: asset-69
+        target: /usr/share/nginx/html/license.html
+      - source: asset-70
+        target: /usr/share/nginx/html/robots.txt
+      - source: asset-71
+        target: /usr/share/nginx/html/sitemap.xml
+      - source: asset-72
         target: /etc/nginx/conf.d/default.conf
     healthcheck:
       test:
@@ -179,7 +185,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-4cc3405bdaf81941
+    name: toad-web-0-e7357479c0aa3e19
     file: ./index.html
   asset-1:
     name: toad-web-1-294171d4baa9f6d6
@@ -200,7 +206,7 @@ configs:
     name: toad-web-6-a4566539e7a4bb32
     file: ./walkthrough.css
   asset-7:
-    name: toad-web-7-4df8e984376c4d93
+    name: toad-web-7-77e660a523a794eb
     file: ./diagrams.css
   asset-8:
     name: toad-web-8-50c092fcde37aee8
@@ -314,79 +320,88 @@ configs:
     name: toad-web-44-6282592218304c9c
     file: ./app-map-mobile.svg
   asset-45:
-    name: toad-web-45-f5c6bac8e5031b75
-    file: ./monitor.css
+    name: toad-web-45-1e9b183194e1835d
+    file: ./global-map.svg
   asset-46:
-    name: toad-web-46-db084c6466735075
-    file: ./monitor.mjs
+    name: toad-web-46-8ce22108ebf38175
+    file: ./global-map-mobile.svg
   asset-47:
-    name: toad-web-47-f8560fcfb1af9cc8
-    file: ./understand.html
+    name: toad-web-47-b495047bd93a9b06
+    file: ./lucide-LICENSE.txt
   asset-48:
-    name: toad-web-48-acabb21ec1e5dc1c
-    file: ./infomaniak.html
+    name: toad-web-48-f5c6bac8e5031b75
+    file: ./monitor.css
   asset-49:
-    name: toad-web-49-08f730601bef8591
-    file: ./quickstart.html
+    name: toad-web-49-db084c6466735075
+    file: ./monitor.mjs
   asset-50:
-    name: toad-web-50-9274f3d111c26db8
-    file: ./account.html
+    name: toad-web-50-2a6e75274437b540
+    file: ./understand.html
   asset-51:
-    name: toad-web-51-6d23f71ace011eed
-    file: ./deployment.html
+    name: toad-web-51-acabb21ec1e5dc1c
+    file: ./infomaniak.html
   asset-52:
-    name: toad-web-52-e9fa34cd764e0e43
-    file: ./first-app.html
+    name: toad-web-52-08f730601bef8591
+    file: ./quickstart.html
   asset-53:
-    name: toad-web-53-fa3e423ae792aa0e
-    file: ./observability.html
+    name: toad-web-53-9274f3d111c26db8
+    file: ./account.html
   asset-54:
-    name: toad-web-54-1ece8465b7a993a0
-    file: ./architecture.html
+    name: toad-web-54-6d23f71ace011eed
+    file: ./deployment.html
   asset-55:
-    name: toad-web-55-2cf6996fb46fe264
-    file: ./local-starter.html
+    name: toad-web-55-e9fa34cd764e0e43
+    file: ./first-app.html
   asset-56:
-    name: toad-web-56-291b80e4a8482469
-    file: ./evaluation.html
+    name: toad-web-56-fa3e423ae792aa0e
+    file: ./observability.html
   asset-57:
-    name: toad-web-57-0339c12efa338111
-    file: ./costs.html
+    name: toad-web-57-1ece8465b7a993a0
+    file: ./architecture.html
   asset-58:
-    name: toad-web-58-42b85050c50aed44
-    file: ./operations.html
+    name: toad-web-58-2cf6996fb46fe264
+    file: ./local-starter.html
   asset-59:
-    name: toad-web-59-aefcb841dc233cb7
-    file: ./recovery.html
+    name: toad-web-59-291b80e4a8482469
+    file: ./evaluation.html
   asset-60:
-    name: toad-web-60-8af8f330d477b9ee
-    file: ./launch.html
+    name: toad-web-60-0339c12efa338111
+    file: ./costs.html
   asset-61:
-    name: toad-web-61-12357d3583119f34
-    file: ./backups.html
+    name: toad-web-61-42b85050c50aed44
+    file: ./operations.html
   asset-62:
-    name: toad-web-62-443e35775a1fdbe1
-    file: ./drill-plan.html
+    name: toad-web-62-aefcb841dc233cb7
+    file: ./recovery.html
   asset-63:
-    name: toad-web-63-405d69fa2e0980ae
-    file: ./agents.html
+    name: toad-web-63-8af8f330d477b9ee
+    file: ./launch.html
   asset-64:
-    name: toad-web-64-4ecc28f2fc505913
-    file: ./storage.html
+    name: toad-web-64-12357d3583119f34
+    file: ./backups.html
   asset-65:
-    name: toad-web-65-2c65903c37ee41ef
-    file: ./security.html
+    name: toad-web-65-443e35775a1fdbe1
+    file: ./drill-plan.html
   asset-66:
-    name: toad-web-66-ee95e39889a9bf0a
-    file: ./license.html
+    name: toad-web-66-405d69fa2e0980ae
+    file: ./agents.html
   asset-67:
-    name: toad-web-67-72e05da304522bb6
-    file: ./robots.txt
+    name: toad-web-67-4ecc28f2fc505913
+    file: ./storage.html
   asset-68:
-    name: toad-web-68-5fec156f87f226d7
-    file: ./sitemap.xml
+    name: toad-web-68-2c65903c37ee41ef
+    file: ./security.html
   asset-69:
-    name: toad-web-69-547a3261c8a9e667
+    name: toad-web-69-0c5ca1567a6969a9
+    file: ./license.html
+  asset-70:
+    name: toad-web-70-72e05da304522bb6
+    file: ./robots.txt
+  asset-71:
+    name: toad-web-71-5fec156f87f226d7
+    file: ./sitemap.xml
+  asset-72:
+    name: toad-web-72-547a3261c8a9e667
     file: ./nginx.conf
 networks:
   traefik-public:
