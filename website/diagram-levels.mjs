@@ -36,21 +36,23 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     const web = reveal(value, 'dns');
     const cloud = reveal(value, 'cloud');
     const toad = reveal(value, 'runtime');
+    const delivery = reveal(value, 'delivery');
     // Make room just before the new parts arrive, so labels do not pile up mid-drag.
     const space = smooth((value - 24) / 8);
+    const intro = 180 * (1 - space);
     const points = mobile ? {
-      visitor: [mix(180, 85, web), 130 + 420 * space], internet: [180, 340 + 430 * space], app: [180, 580 + 960 * space],
-      dns: [270, 130 + 420 * space], 'dns-detail': [180, 678], lock: [mix(230, 180, space), 455 + 855 * space], entry: [180, 455 + 655 * space],
+      visitor: [mix(180, 85, web), 130 + 420 * space + intro], internet: [180, 340 + 430 * space + intro], app: [180, 580 + 960 * space + intro],
+      dns: [270, 130 + 420 * space + intro], 'dns-detail': [180, 678], lock: [mix(230, 180, space), 455 + 855 * space + intro], entry: [180, 455 + 655 * space],
       agent: [85, 85], toad: [270, 85], package: [85, 310], managers: [180, 735 + 990 * space], monitor: [180, 900 + 1040 * space],
-      'cloud-label': [180, 345 + 655 * space], 'other-paths': [180, 1100 + 1050 * space], 'return-label': [180, 730], 'route-label': [mix(85, 270, space), 475 + 435 * space],
+      'cloud-label': [180, 345 + 655 * space], 'other-paths': [180, 1100 + 1050 * space], 'return-label': [180, 730 + intro], 'route-label': [mix(85, 270, space), 475 + 435 * space + intro],
       'prepare-label': [264, 385], 'publish-label': [92, 230], 'deploy-label': [248, 565 + 895 * space],
-      'ingress-label': [270, 1250],
+      'ingress-label': [270, 1250], brief: [220, 220],
     } : {
       visitor: [110, 390], internet: [mix(455, 365, cloud), 390], app: [1000, 390], dns: [110, 235], 'dns-detail': [315, 272],
       lock: [mix(745, 795, toad), mix(350, 390, toad)], entry: [595, 390], agent: [110, 80], toad: [420, 80], package: [725, 80],
       managers: [795, 580], monitor: [795, 740], 'cloud-label': [795, 268], 'other-paths': [270, 590],
       'return-label': [555, 565], 'route-label': [mix(720, 462, toad), mix(300, 344, toad)],
-      'prepare-label': [320, 225], 'publish-label': [573, 65], 'deploy-label': [1005, 212], 'ingress-label': [695, 334],
+      'prepare-label': [320, 225], 'publish-label': [573, 65], 'deploy-label': [1005, 212], 'ingress-label': [695, 334], brief: [555, 65],
     };
     for (const [name, [x, y]] of Object.entries(points)) nodes.get(name).setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
     for (const node of layers) {
@@ -71,6 +73,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('request', `M${vx} ${vy + 115}L180 ${iy - 65}`);
       p('simple-route', `M180 ${iy + 115}V${ay - 56}`, 1 - toad);
       p('return', `M125 ${ay}H28V${vy}H${vx - 55}`, 1 - cloud);
+      p('simple-deploy', `M135 85H341V${ay}H235`, 1 - delivery);
       p('lookup-ask', `M${vx + 43} ${vy - 10}H226`);
       p('lookup-reply', `M226 ${vy + 15}H${vx + 43}`);
       const entryY = points.entry[1];
@@ -83,7 +86,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('prepare', `M320 95H341V${attrs.y - 20}H270V${attrs.y - 2}`);
       p('deploy', `M85 412V440H28V${ay - 5}H125`);
       p('observe', `M180 ${attrs.y + attrs.height + 3}V${points.monitor[1] - 35}`);
-      const height = mix(mix(790, 830, web), mix(2090, 2300, reveal(value, 'network')), space);
+      const height = mix(mix(790, 830, web) + intro, mix(2090, 2300, reveal(value, 'network')), space);
       svg.setAttribute('viewBox', `0 0 360 ${height.toFixed(2)}`);
       svg.setAttribute('width', '360');
       svg.setAttribute('height', height.toFixed(2));
@@ -91,6 +94,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('request', `M172 390H${ix - 67}`);
       p('simple-route', `M${ix + 67} 390H944`, 1 - toad);
       p('return', 'M1000 520V580H110V520', 1 - cloud);
+      p('simple-deploy', 'M165 80H1000V334', 1 - delivery);
       p('lookup-ask', 'M85 335V293');
       p('lookup-reply', 'M135 293V335');
       p('public-route', `M${ix + 67} 390H540`);
@@ -101,8 +105,8 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('prepare', 'M420 201V230H595V234');
       p('deploy', 'M780 80H1080V320H1000V334');
       p('observe', 'M795 680V703');
-      const top = mix(mix(230, 147, web), 0, space);
-      const height = mix(mix(400, 480, web), 880, space);
+      const top = 0;
+      const height = mix(640, 880, space);
       svg.setAttribute('viewBox', `0 ${top.toFixed(2)} 1120 ${height.toFixed(2)}`);
       svg.setAttribute('width', '1120');
       svg.setAttribute('height', height.toFixed(2));

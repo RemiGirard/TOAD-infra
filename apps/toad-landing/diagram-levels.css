@@ -48,13 +48,16 @@
 .evolving-map .map-small{font-size:14px;fill:#53694a}
 .evolving-map .map-code{font:12px ui-monospace,monospace;fill:#355440}
 .evolving-map .map-technical{font-size:12px;fill:#546c4e}
+.evolving-map .map-laptop-code{font:700 11px ui-monospace,monospace;fill:#355440}
+.evolving-map .map-brief-bubble{fill:#e6eed6;stroke:#b5c89e;stroke-width:1}
+.evolving-map .map-brief-text{font:15px Arial,Helvetica,sans-serif;fill:#486533}
 .evolving-map .map-disc{fill:#e0eef0}
 .evolving-map .map-disc.ship{fill:#e0ebcd}
 .evolving-map .map-disc.lookup{fill:#e8efea}
 .evolving-map .map-disc.watch{fill:#eee8f2}
 .evolving-map .map-cloud-boundary{fill:#edf3e3;stroke:#a7bc90;stroke-dasharray:6 5;stroke-width:1.4}
 .evolving-map .map-manager{fill:#f8faf2;stroke:#b0c397}
-.evolving-map .map-arrow{fill:none;stroke:#267b88;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.evolving-map .map-arrow{fill:none;stroke:#267b88;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transform:none}
 .evolving-map .map-arrow.ship{stroke:#69873e}
 .evolving-map .map-arrow.lookup{stroke:#7d8d89;stroke-dasharray:4 5;stroke-width:1.6}
 .evolving-map .map-arrow.watch{stroke:#827194;stroke-dasharray:6 5}

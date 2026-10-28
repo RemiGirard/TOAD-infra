@@ -133,30 +133,30 @@ ${dot(180, 1437, '#eee9f2', 27)}${icon('activity', 160, 1417, 40, '#827194')}
 ${text(180, 1490, 'Your monitoring, for you and your agent', 'body')}${text(180, 1512, 'Versions · copies · HTTPS · freshness', 'tiny')}
 ${text(180, 1545, 'Data? Plan storage + backups separately.', 'tiny')}
 `, true);
-  const simpleDescription = 'Your device asks another computer for a website page. The Internet carries the request and the reply. The cloud symbol means the Internet network, not the computer hosting the website. TOAD helps put your website on that other computer.';
+  const simpleDescription = 'Your website starts as code on your computer. Deploying puts it on another computer that stays online. A browser can then request its pages across the Internet. The cloud drawing represents the Internet network, not the hosting computer.';
   const simpleDesktop = wrap(1120, 450, `
 ${text(30, 38, 'JUST THE IDEA · NO TECHNICAL WORDS', 'label', 'start')}
-${dot(150, 170, '#e0eef0', 61)}${icon('laptop', 106, 126, 88, '#267b88')}
-${text(150, 270, 'You tap a link', 'title')}${text(150, 298, 'On your phone or computer', 'small')}
-${arrow('M225 170H475', 'visit')}${text(350, 150, 'Please send the page', 'body blue')}
+${dot(150, 170, '#e7efda', 61)}${icon('laptop', 106, 126, 88)}${text(150, 175, '</>', 'code')}
+${text(150, 270, 'My website', 'title')}${text(150, 298, 'Code on my computer', 'small')}
+${arrow('M225 170H475', 'ship')}${text(350, 150, 'Deploy my website', 'body green')}
 ${dot(560, 170, '#e0eef0', 67)}${icon('cloud', 508, 118, 104, '#267b88')}
 ${text(560, 270, 'The Internet', 'title')}${text(560, 298, 'Connects the two computers', 'small')}
-${arrow('M642 170H895', 'visit')}
+${arrow('M642 170H895', 'ship')}
 ${dot(970, 170, '#e7efda', 61)}${icon('server', 926, 126, 88)}
-${text(970, 270, 'The website computer', 'title')}${text(970, 298, 'Has a page to send back', 'small')}
+${text(970, 270, 'The website computer', 'title')}${text(970, 298, 'Stays online to serve visitors', 'small')}
 ${arrow('M970 318V350H150V318', 'visit')}${text(560, 338, 'The page comes back to your screen', 'body blue')}
 ${frog(323, 381, 36)}${text(370, 407, 'TOAD helps you put your website on that other computer.', 'body', 'start')}
-`, false, simpleDescription, 'How a website works: your device, the Internet and another computer');
+`, false, simpleDescription, 'From your code to an online website');
   const simpleMobile = wrap(360, 830, `
 ${text(20, 31, 'JUST THE IDEA', 'label', 'start')}
-${dot(180, 115, '#e0eef0', 48)}${icon('laptop', 144, 79, 72, '#267b88')}
-${text(180, 194, 'You tap a link', 'title')}
-${arrow('M156 217V278', 'visit')}${arrow('M204 278V217', 'visit')}
-${text(95, 251, 'ask', 'small blue')}${text(270, 251, 'reply', 'small blue')}
+${dot(180, 115, '#e7efda', 48)}${icon('laptop', 144, 79, 72)}${text(180, 120, '</>', 'code')}
+${text(180, 194, 'My website · my code', 'title')}
+${arrow('M156 217V278', 'ship')}${arrow('M204 278V217', 'visit')}
+${text(95, 251, 'deploy', 'small green')}${text(270, 251, 'page', 'small blue')}
 ${dot(180, 346, '#e0eef0', 52)}${icon('cloud', 138, 304, 84, '#267b88')}
 ${text(180, 430, 'The Internet connects them', 'title')}
-${arrow('M156 453V510', 'visit')}${arrow('M204 510V453', 'visit')}
-${text(95, 486, 'ask', 'small blue')}${text(270, 486, 'reply', 'small blue')}
+${arrow('M156 453V510', 'ship')}${arrow('M204 510V453', 'visit')}
+${text(95, 486, 'deploy', 'small green')}${text(270, 486, 'page', 'small blue')}
 ${dot(180, 577, '#e7efda', 48)}${icon('server', 144, 541, 72)}
 ${text(180, 659, 'The website computer', 'title')}${text(180, 685, 'Sends the page back to your screen', 'small')}
 ${frog(30, 727, 42)}${text(90, 746, 'TOAD helps you put', 'body', 'start')}${text(90, 770, 'your website on it.', 'body', 'start')}

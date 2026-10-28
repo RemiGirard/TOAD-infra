@@ -54,7 +54,7 @@ presentation attributes keep both image embeds and standalone diagrams
 compatible with the deployed Content Security Policy, without inline CSS.
 
 The homepage has one evolving SVG scene, rendered by `presentation/evolving-map.ts`.
-A native difficulty range has ten stops: **A link**, **Names & IPs**, **HTTPS**,
+A native difficulty range has ten stops: **Your code**, **Names & IPs**, **HTTPS**,
 **Your cloud**, **Shipping**, **Swarm** (the default), **Networking**, **Trust**,
 **Observation**, and **Full system**. The same device, Internet and app nodes
 persist throughout. `presentation/diagram-depth.ts` owns the step descriptions
@@ -62,6 +62,11 @@ and 42 advanced detail cards. Its four connected branches unfold below the core
 route in the same SVG: network paths, trust/secrets, observation, and the full
 provision/release/recovery lifecycle. Desktop cards use three columns; mobile
 uses a vertical layout with the same content.
+
+The developer's computer and code are present from the first stop, with a simple
+"Deploy my website" path to the online computer. That path unfolds into the
+CLI, registry and deployment workflow at Shipping; visitor traffic stays separate.
+
 `diagram-levels.mjs` gently interpolates SVG attributes and makes room before
 fading in new parts; it does not replace diagrams or inject inline styles.
 Motion stops when settled or hidden, and honors reduced-motion preferences.

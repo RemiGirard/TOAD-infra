@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="450" viewBox="0 0 1120 450" role="img" aria-labelledby="title desc">
-<title id="title">How a website works: your device, the Internet and another computer</title>
-<desc id="desc">Your device asks another computer for a website page. The Internet carries the request and the reply. The cloud symbol means the Internet network, not the computer hosting the website. TOAD helps put your website on that other computer.</desc>
+<title id="title">From your code to an online website</title>
+<desc id="desc">Your website starts as code on your computer. Deploying puts it on another computer that stays online. A browser can then request its pages across the Internet. The cloud drawing represents the Internet network, not the hosting computer.</desc>
 <metadata>TOAD illustration: MIT, Remi Girard. Icon source: https://github.com/lucide-icons/lucide/tree/be09619c1c1124ad09c19fc3e87ee3b939409bbd
 ISC License
 
@@ -82,14 +82,14 @@ SOFTWARE.
 <rect width="1120" height="450" rx="14" fill="#f8faf2"/>
 
 <text x="30" y="38" class="label" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#294332" letter-spacing="1.2">JUST THE IDEA · NO TECHNICAL WORDS</text>
-<circle cx="150" cy="170" r="61" fill="#e0eef0"/><use href="#laptop" x="106" y="126" width="88" height="88" fill="none" stroke="#267b88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="150" y="270" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">You tap a link</text><text x="150" y="298" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">On your phone or computer</text>
-<path d="M225 170H475" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/><text x="350" y="150" class="body blue" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#246f7c">Please send the page</text>
+<circle cx="150" cy="170" r="61" fill="#e7efda"/><use href="#laptop" x="106" y="126" width="88" height="88" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><text x="150" y="175" class="code" text-anchor="middle" font-family="ui-monospace,monospace" font-size="14" font-weight="400" fill="#294332">&lt;/&gt;</text>
+<text x="150" y="270" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">My website</text><text x="150" y="298" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Code on my computer</text>
+<path d="M225 170H475" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/><text x="350" y="150" class="body green" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#567530">Deploy my website</text>
 <circle cx="560" cy="170" r="67" fill="#e0eef0"/><use href="#cloud" x="508" y="118" width="104" height="104" fill="none" stroke="#267b88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="560" y="270" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">The Internet</text><text x="560" y="298" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Connects the two computers</text>
-<path d="M642 170H895" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/>
+<path d="M642 170H895" class="arrow ship" fill="none" stroke="#69873e" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ship)"/>
 <circle cx="970" cy="170" r="61" fill="#e7efda"/><use href="#server" x="926" y="126" width="88" height="88" fill="none" stroke="#355440" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="970" y="270" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">The website computer</text><text x="970" y="298" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Has a page to send back</text>
+<text x="970" y="270" class="title" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" fill="#294332">The website computer</text><text x="970" y="298" class="small" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#536951">Stays online to serve visitors</text>
 <path d="M970 318V350H150V318" class="arrow visit" fill="none" stroke="#267b88" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#visit)"/><text x="560" y="338" class="body blue" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#246f7c">The page comes back to your screen</text>
 <use href="#toad" x="323" y="381" width="36" height="36"/><text x="370" y="407" class="body" text-anchor="start" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="400" fill="#294332">TOAD helps you put your website on that other computer.</text>
 
