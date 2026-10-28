@@ -45,6 +45,7 @@ files:
   - agent-health-prompt.txt
   - agent-debug-prompt.txt
   - quickstart.html
+  - account.html
   - deployment.html
   - first-app.html
   - observability.html

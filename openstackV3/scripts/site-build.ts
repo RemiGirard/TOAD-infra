@@ -13,7 +13,8 @@ const source = join(root, 'website');
 const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const pages = [
-  ['QUICKSTART', 'quickstart', 'Get started'], ['DEPLOYMENT', 'deployment', 'Cloud setup'],
+  ['QUICKSTART', 'quickstart', 'Get started'], ['CLOUD-ACCOUNT', 'account', 'Account and access'],
+  ['DEPLOYMENT', 'deployment', 'Cloud setup'],
   ['FIRST-APP', 'first-app', 'Deploy an app'], ['OBSERVABILITY', 'observability', 'Understand operations'],
   ['ARCHITECTURE', 'architecture', 'Visual architecture'],
   ['LOCAL-STARTER', 'local-starter', 'Optional local preview'], ['EVALUATION', 'evaluation', 'Heat experiment'],

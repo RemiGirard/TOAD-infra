@@ -11,6 +11,10 @@ mTLS-protected admin interfaces.
 
 For the shorter cloud-to-app journey, start with [Get started](QUICKSTART.md).
 This detailed guide uses an isolated context named `toad-prod`.
+If you need an account or project first, use [Account and access](CLOUD-ACCOUNT.md).
+TOAD uses OpenStack; the maintained workflow also depends on Infomaniak DNS
+and certificate automation. See the [other-provider checklist](CLOUD-ACCOUNT.md#using-another-openstack-cloud)
+before adapting it to another OpenStack environment.
 
 > All domain names in this documentation are placeholders. Replace
 > `example.com` with a domain you control and `platform.example.com` with the
@@ -113,9 +117,11 @@ only if all secret and backup operations will run through the operator image.
 
 ## 2. Create the cloud service user
 
-In Infomaniak Manager, open **Public Cloud → Users**, create a user dedicated
-to this deployment, and give it the project roles required for Compute,
-Network, Orchestration, Load Balancing, and DNS.
+In Infomaniak Manager, open your **Public Cloud product → project → OpenStack
+user management**. Create or select a user dedicated to this deployment and
+ensure it has the project permissions required for Compute, Network,
+Orchestration, Load Balancing and DNS. These users are separate from Manager
+customer logins; follow the [official user guide](https://www.infomaniak.com/en/support/faq/2492/manage-public-cloud-users).
 
 Download its `clouds.yaml` and save it as:
 
@@ -135,8 +141,10 @@ pnpm run doctor -- --cloud
 pnpm run discover
 ```
 
-`discover` prints the available flavors, immutable image UUIDs, networks,
-availability zones, and quota. Use an image UUID, not a mutable image name.
+`discover` lists flavors, immutable image UUIDs, networks, keypairs and compute
+quotas. Check availability zones and service/network/load-balancer/DNS quotas
+separately; a successful login does not establish deployment compatibility.
+Use an image UUID, not a mutable image name.
 
 ## 3. Configure the deployment
 

@@ -64,6 +64,13 @@ Copy the current terminal command or the full starter prompt. Start from your
 own app repository; the prompt names and links TOAD-infra, asks the agent to
 inspect your app, reuse existing setup, and explain any cloud requirements and
 costs before making changes. No app or context placeholders need filling in.
+The [account/access guide](../docs/CLOUD-ACCOUNT.md) starts before local
+operator setup. It separates customer registration, Public Cloud activation,
+project/service-user access and TOAD configuration, with explicit browser
+hand-offs. Account and billing links were checked on 28 October 2026.
+Describe TOAD as OpenStack-based with Infomaniak as the verified production
+path; the guide records the current DNS/ACME dependencies and other-provider
+compatibility checklist. Do not claim universal OpenStack compatibility.
 Expand **Read the full prompt** to review exactly what will be copied.
 The canonical text lives in `agent-prompt.txt`; the build escapes and embeds it
 in the homepage and publishes the same plain-text file for direct use.

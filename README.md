@@ -3,7 +3,8 @@
 **Deploy and operate your apps on infrastructure you control.**
 
 TOAD is an open-source deployment toolkit for independent developers and small
-teams who want their own Infomaniak Public Cloud. It provisions the servers,
+teams who want their own OpenStack-based cloud. Infomaniak Public Cloud is its
+verified production path. It provisions the servers,
 configures Docker Swarm, routes HTTPS, and gives you one CLI for applications,
 diagnosis, updates, and recovery. It is built for people and coding agents:
 versioned JSON, explicit targets, strict commands, exact release checks, and
@@ -16,7 +17,9 @@ a private visual operation view keep actions understandable and reviewable.
 
 ## 1. Provision your cloud platform
 
-Start with [Get started](docs/QUICKSTART.md). Create an isolated operator
+Start with [Account and access](docs/CLOUD-ACCOUNT.md) if you do not have a cloud
+account or project access yet. Then follow [Get started](docs/QUICKSTART.md).
+Create an isolated operator
 context, add your Infomaniak credentials, choose resources, configure domains,
 and store the restricted DNS token. Then, from `openstackV3`:
 
@@ -57,6 +60,7 @@ workflow for updates; use `apply` for platform changes. See the
 
 | You want to… | Start here | Requirements |
 |---|---|---|
+| Create an account and prepare cloud access | [Account and access](docs/CLOUD-ACCOUNT.md) | Your email and provider billing decisions; an agent can guide the steps |
 | Create a cloud platform and ship your first app | [Get started](docs/QUICKSTART.md) | Infomaniak project, domain and operator tooling |
 | Ship an app to an existing verified platform | [First app](docs/FIRST-APP.md) | Docker, registry and operator access |
 | Understand the architecture | [Visual guide](docs/ARCHITECTURE.md) | No account required |
@@ -90,6 +94,9 @@ also documents explicit build/deploy phases for CI and review.
 
 The maintained production path uses three Swarm managers with Octavia,
 Designate, Traefik, Prometheus, Grafana, Alertmanager, Loki, and Alloy.
+Its DNS updates and certificate automation use Infomaniak. Other OpenStack
+clouds require [compatibility review and adaptation](docs/CLOUD-ACCOUNT.md#using-another-openstack-cloud);
+TOAD does not claim that every OpenStack provider works unchanged.
 
 ## Costs and expectations
 

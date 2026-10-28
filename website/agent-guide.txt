@@ -6,11 +6,15 @@ Read-only release investigation: https://toad.remigirard.dev/agent-debug-prompt.
 Canonical workflow: https://toad.remigirard.dev/agents.html
 Observability and private visual view: https://toad.remigirard.dev/observability.html
 Cloud-first setup: https://toad.remigirard.dev/quickstart.html
+Account, project and provider compatibility: https://toad.remigirard.dev/account.html
 Application delivery: https://toad.remigirard.dev/first-app.html
 
 Read the checkout's AGENTS.md, README.md and SECURITY.md before acting.
 Inspect the user's existing app and TOAD context; do not substitute the starter app.
 If there is no verified platform, explain Infomaniak setup, costs and DNS changes first.
+If account/project access is missing, guide official provider setup; reuse existing accounts and suitable projects.
+Use authorized browser assistance where available. The human completes passwords, verification, payment, final account agreements and approval of new access; then resume and verify the result.
+TOAD uses OpenStack, but its verified production path includes Infomaniak DNS and ACME. Other OpenStack providers need compatibility review, adaptation and validation.
 Keep application source in its own repository. Ask only for missing decisions.
 
 Discover the current CLI: node /path/to/TOAD-infra/toad.mjs capabilities --json

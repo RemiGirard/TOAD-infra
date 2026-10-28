@@ -19,6 +19,26 @@ new Infomaniak platform. You do not need to invent app or context names before
 starting the conversation. Keep application source in your existing repository;
 the [first-app guide](FIRST-APP.md) covers adding TOAD metadata there.
 
+## Guide account setup, then resume
+
+For a user without cloud access, start with [Account and access](CLOUD-ACCOUNT.md).
+Check for an existing customer account, organization and suitable project
+before creating anything. Explain the difference between the customer login,
+OpenStack service user and local TOAD context.
+
+With authorized browser access, navigate official provider pages and help
+prepare ordinary form fields. Hand over passwords, provider-required
+verification, payment, final account agreements and approval of new access to
+the human. Without browser access, provide the precise links and instructions.
+After the hand-off, check the resulting state and resume the local setup;
+missing evidence is not proof of account activation or project access.
+
+TOAD currently automates infrastructure after account access is prepared; it
+does not provide account registration or billing integration. OpenStack is
+the underlying API family, while Infomaniak is the verified production path.
+Use the [compatibility checklist](CLOUD-ACCOUNT.md#using-another-openstack-cloud)
+for another provider and disclose unverified assumptions before provisioning.
+
 ## Give your agent a concrete job
 
 Use the agent's terminal and file access to your local TOAD checkout and

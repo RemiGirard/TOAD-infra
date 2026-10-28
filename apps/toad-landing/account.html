@@ -1,0 +1,172 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Account and access — TOAD</title><meta name="description" content="TOAD: Account and access. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/account.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html">Get started</a><a href="/account.html" aria-current="page">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / ACCOUNT AND ACCESS</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/CLOUD-ACCOUNT.md">Markdown source ↗</a></div><h1 id="from-no-cloud-account-to-toad-access">From no cloud account to TOAD access</h1>
+<p>Start here if you have an app but no cloud account yet. Your coding agent can
+guide the journey, prepare local configuration and explain the choices. You
+complete the provider&#39;s sensitive account, verification and payment steps.
+Then the agent can continue with the approved platform and app deployment.</p>
+<p>Already have a verified TOAD platform? Reuse it and go to
+<a href="/first-app.html">Deploy an app</a>. Do not order another product or create another
+project just to follow this guide.</p>
+<h2 id="choose-the-cloud">Choose the cloud</h2>
+<p><strong>OpenStack is TOAD&#39;s foundation. Infomaniak is its verified production path.</strong>
+The current workflow also uses Infomaniak DNS and its certificate automation.
+Other OpenStack clouds require a compatibility review, configuration changes
+and potentially implementation changes; they are not verified drop-in targets.
+See <a href="#using-another-openstack-cloud">using another OpenStack cloud</a>.</p>
+<p>The path for a new Infomaniak customer is:</p>
+<p><strong>Customer account → Public Cloud product → project and OpenStack user →
+local TOAD context → verified platform → your app.</strong></p>
+<p>These are different things:</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>What it is for</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Infomaniak customer account</td>
+<td>Sign in to Manager, own products and manage billing within your organization.</td>
+</tr>
+<tr>
+<td>Public Cloud product and project</td>
+<td>Enable cloud consumption, then isolate resources and project access.</td>
+</tr>
+<tr>
+<td>Dedicated OpenStack user</td>
+<td>Authenticate TOAD to that project; this is separate from your customer login.</td>
+</tr>
+<tr>
+<td>TOAD context</td>
+<td>Keep the project&#39;s configuration and credentials isolated on your operator machine. Creating a local context does not provision servers.</td>
+</tr>
+</tbody></table>
+<h2 id="1-create-or-reuse-your-customer-account">1. Create or reuse your customer account</h2>
+<p>Follow <a href="https://www.infomaniak.com/en/support/faq/2232/create-an-infomaniak-account">Infomaniak&#39;s account registration guide</a>.
+Use an email address you control and complete the required email verification.
+Choose the organization that should own the cloud and receive its invoices.
+If you already have access to that organization, use the existing account.</p>
+<p>Enter passwords and any verification codes directly in the provider&#39;s
+interface. Do not send them to TOAD or paste them into an agent conversation.</p>
+<h2 id="2-activate-public-cloud-and-review-billing">2. Activate Public Cloud and review billing</h2>
+<p>Use the <strong>Sign Up</strong> link in
+<a href="https://docs.infomaniak.cloud/getting_started/">Infomaniak&#39;s Public Cloud getting-started guide</a>.
+Review the product, organization, payment method and terms before confirming
+the order yourself.</p>
+<p>As documented on <strong>28 October 2026</strong>, direct ordering requires a credit card.
+Infomaniak describes a <strong>20 CHF/EUR temporary card pre-authorization</strong> when
+creating the product, including with a Free Tier offer. This checks the card;
+it is not a TOAD fee or a credit toward resource usage. Read the current
+<a href="https://www.infomaniak.com/en/support/faq/2927/understanding-public-cloud-bank-pre-authorization">pre-authorization explanation</a>
+and <a href="https://www.infomaniak.com/en/support/faq/2605/understanding-public-cloud-billing">billing rules</a>.</p>
+<p>Before provisioning, review TOAD&#39;s <a href="/costs.html">cost worksheet</a>, the provider&#39;s
+current prices and your expected storage, network and backup costs. Resource
+consumption is billed separately from account creation. This guide does not
+order a product or create billable resources for you.</p>
+<h2 id="3-prepare-a-project-and-dedicated-openstack-access">3. Prepare a project and dedicated OpenStack access</h2>
+<p>In Manager, open your Public Cloud product and follow the official
+<a href="https://docs.infomaniak.cloud/getting_started/first_project/create_a_project/">project creation guide</a>.
+Reuse a suitable project if you already have one. Check its ownership, choose
+the deployment region and review quotas before placing TOAD resources there.</p>
+<p>Create or select a dedicated OpenStack user for TOAD using the
+<a href="https://www.infomaniak.com/en/support/faq/2492/manage-public-cloud-users">Public Cloud user guide</a>.
+The OpenStack username is generated by the provider. Its password is separate
+from the customer-account password. The maintained Heat workflow requires a
+dedicated password-authenticated user for Heat trust creation; successful
+application-credential login alone does not establish deployment readiness.</p>
+<p>Complete the new user&#39;s password and access approval yourself. Keep the
+project and service-user names available for your agent, without disclosing
+their credential values.</p>
+<h2 id="4-download-access-configuration-and-prepare-toad-locally">4. Download access configuration and prepare TOAD locally</h2>
+<p>Follow <a href="https://docs.infomaniak.cloud/getting_started/first_project/connect_project/">Connect to the project</a>
+to download the OpenStack cloud configuration for the selected user and region.
+Treat that file as a secret, even if its password field is absent.</p>
+<p>Continue with <a href="/quickstart.html#1-prepare-your-operator-context">Prepare your operator context</a>.
+Create the isolated context first, then place the downloaded <code>clouds.yaml</code> in
+its ignored <code>credentials/</code> directory with permissions restricted to the
+operator. Share the local path with your agent, not the file&#39;s contents.
+TOAD&#39;s <code>setup</code> command can request the service-user password without echoing it.</p>
+<p>The <a href="/quickstart.html">quickstart</a> then covers domain ownership, the restricted
+Infomaniak DNS token, registry access, platform provisioning and verification.
+Account access alone does not create a working TOAD platform.</p>
+<h2 id="let-your-agent-guide-the-setup">Let your agent guide the setup</h2>
+<p>Use the <a href="https://github.com/RemiGirard/TOAD-infra/blob/main/website/agent-prompt.txt">deployment starter prompt</a> from your app
+repository. If your agent has authorized browser access, it can navigate the
+official guides and assist with ordinary form fields using information you
+provide. With terminal and file access, it can inspect your app, prepare the
+TOAD context and check configuration. Without browser access, it can give you
+the exact links and resume when you have completed the provider steps.</p>
+<table>
+<thead>
+<tr>
+<th>Agent can prepare or explain</th>
+<th>Your turn before continuing</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Check existing account/project access, navigate official setup, explain ownership and costs.</td>
+<td>Enter new passwords and complete provider-required email, MFA, CAPTCHA or identity checks.</td>
+</tr>
+<tr>
+<td>Help review the product order and proposed project permissions.</td>
+<td>Complete payment/card authorization, final account agreements and approval of new access.</td>
+</tr>
+<tr>
+<td>Prepare local context files and read-only readiness checks.</td>
+<td>Put credentials into the private provider/local interfaces; never into chat.</td>
+</tr>
+<tr>
+<td>Show the exact resource and DNS plan, then perform the approved deployment.</td>
+<td>Approve the specific spend and DNS changes before infrastructure is created or changed.</td>
+</tr>
+</tbody></table>
+<p>The agent should explain the next hand-off, wait for you, verify the result
+and resume from that point. It must not claim that an account is active,
+payment succeeded or cloud access works without evidence. TOAD itself does
+not register customer accounts, handle payment cards or bypass verification.
+The selected agent&#39;s tools and confirmation rules still apply.</p>
+<h2 id="using-another-openstack-cloud">Using another OpenStack cloud</h2>
+<p>TOAD uses standard OpenStack APIs and Heat resource types for compute,
+networking, load balancing and DNS. Its current production path is not
+provider-neutral: <code>cloud apply</code> selects the three-manager profile, requires
+Infomaniak DNS access, updates parent records through Infomaniak&#39;s API, and
+configures Infomaniak DNS-01 certificate issuance and DNS verification.
+Changing only <code>clouds.yaml</code> does not replace those integrations.</p>
+<p>Before adapting another provider, review:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>What must be checked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Identity and services</td>
+<td>Keystone authentication, project roles and Heat trusts; required Nova, Neutron, Heat, Octavia and Designate resources.</td>
+</tr>
+<tr>
+<td>Capacity</td>
+<td>Three managers, server group, tenant networking, two floating IPs, load balancer/listeners/pools/members/health monitors and a DNS zone. Check each service&#39;s quotas.</td>
+</tr>
+<tr>
+<td>Images and scheduling</td>
+<td>Immutable image UUID, flavor, external network and availability zones. Current SSH/inventory code expects the <code>ubuntu</code> user.</td>
+</tr>
+<tr>
+<td>Network and load balancer</td>
+<td>IPv4 routing, SSH and Swarm connectivity, TCP 80/443 load balancing and health checks. Check conflicts with the current tenant <code>10.0.0.0/24</code> and Swarm <code>10.20.0.0/16</code> ranges.</td>
+</tr>
+<tr>
+<td>DNS and certificates</td>
+<td>Current Infomaniak parent DNS, authoritative-server checks and ACME integration need to remain valid or be replaced in code.</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td>Exercise a disposable environment through platform verification, application deployment/diagnosis and recovery before claiming support.</td>
+</tr>
+</tbody></table>
+<p><code>doctor --cloud</code> checks authentication. <code>discover</code> lists flavors, images,
+networks, keypairs and compute quotas; it does not establish compatibility or
+check all availability-zone, network, load-balancer and DNS requirements.
+Other providers remain <strong>unverified</strong> until these differences are addressed
+and the complete workflow is validated.</p>
+</main></div><footer class="footer wrap"><a class="brand" href="/">TOAD</a><p>Your app. Your infrastructure.</p><div><a href="/security.html">Security</a><a href="/license.html">MIT</a></div></footer></body></html>

@@ -12,12 +12,29 @@ After installing dependencies below, try `./toad --help` from that root.
 `node toad.mjs` is equivalent on platforms without executable symlinks.
 The commands below use package scripts from `openstackV3`; both reach the same CLI.
 
+## 0. Get cloud account and project access
+
+No cloud account yet? Follow [Account and access](CLOUD-ACCOUNT.md) first:
+create or reuse your customer account, activate Public Cloud, prepare a project
+and dedicated OpenStack user, then download its access configuration. The
+guide links the official Infomaniak steps and explains the billing checks.
+
+Your agent can guide the browser flow and prepare local setup. You complete
+passwords, provider verification, payment, final account agreements and new
+access approvals, then the agent resumes. No credentials need to enter chat.
+
+TOAD is **OpenStack-based, with Infomaniak as the verified production path**.
+The current DNS and certificate integrations also use Infomaniak. Other
+OpenStack providers need [compatibility review and adaptation](CLOUD-ACCOUNT.md#using-another-openstack-cloud);
+they are not verified drop-in targets.
+
 ## 1. Prepare your operator context
 
 You need Node.js 22, pnpm, Git, Python 3 with `venv`, OpenSSH, OpenSSL 3 with
 its legacy provider (for browser certificate bundles), Docker with Buildx,
-and `age`. You also need an Infomaniak Public Cloud project, a dedicated
-service user with a password, and a domain hosted in Infomaniak DNS.
+and `age`. After the account/access guide, you should have an Infomaniak
+Public Cloud project and a dedicated service user with a password.
+You also need a domain you control, hosted in Infomaniak DNS.
 Review the [cost worksheet](COSTS.md) before creating billable resources.
 
 ```sh

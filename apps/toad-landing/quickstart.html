@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Get started — TOAD</title><meta name="description" content="TOAD: Get started. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Get started</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / GET STARTED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="get-started-cloud-first-then-your-app">Get started: cloud first, then your app</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Get started — TOAD</title><meta name="description" content="TOAD: Get started. Deploy and operate apps on infrastructure you control."><link rel="canonical" href="https://toad.remigirard.dev/quickstart.html"><link rel="icon" href="/toad.svg"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/diagrams.css"></head><body><a class="skip" href="#main">Skip to content</a><header class="header wrap"><a href="/" class="brand"><img src="/toad.svg" alt="" width="32" height="32">TOAD<span class="tag">DOCUMENTATION</span></a><nav aria-label="Main navigation"><a href="/">Project</a><a href="https://github.com/RemiGirard/TOAD-infra">Source ↗</a></nav></header><div class="docs-layout wrap"><nav class="doc-nav" aria-label="Documentation"><p>GET STARTED & OPERATE</p><a href="/quickstart.html" aria-current="page">Get started</a><a href="/account.html">Account and access</a><a href="/deployment.html">Cloud setup</a><a href="/first-app.html">Deploy an app</a><a href="/observability.html">Understand operations</a><a href="/architecture.html">Visual architecture</a><a href="/local-starter.html">Optional local preview</a><a href="/evaluation.html">Heat experiment</a><a href="/costs.html">Cost worksheet</a><a href="/operations.html">Operations</a><a href="/recovery.html">Recovery</a><a href="/launch.html">Validation record</a><a href="/backups.html">Offsite backup job</a><a href="/drill-plan.html">Proposed recovery drill</a><a href="/agents.html">Agent runbook</a><a href="/storage.html">Stateful storage</a><a href="/security.html">Security</a><a href="/license.html">License</a></nav><main id="main" class="doc-content"><div class="doc-meta"><span>TOAD / GET STARTED</span><a href="https://github.com/RemiGirard/TOAD-infra/blob/main/docs/QUICKSTART.md">Markdown source ↗</a></div><h1 id="get-started-cloud-first-then-your-app">Get started: cloud first, then your app</h1>
 <p>TOAD first creates and configures your cloud platform. You then publish and
 deploy applications onto it. Provision the platform once; repeat the app
 workflow for each app and update.</p>
@@ -8,11 +8,24 @@ For an optional frontend/API preview, <a href="/local-starter.html">run the exam
 After installing dependencies below, try <code>./toad --help</code> from that root.
 <code>node toad.mjs</code> is equivalent on platforms without executable symlinks.
 The commands below use package scripts from <code>openstackV3</code>; both reach the same CLI.</p>
+<h2 id="0-get-cloud-account-and-project-access">0. Get cloud account and project access</h2>
+<p>No cloud account yet? Follow <a href="/account.html">Account and access</a> first:
+create or reuse your customer account, activate Public Cloud, prepare a project
+and dedicated OpenStack user, then download its access configuration. The
+guide links the official Infomaniak steps and explains the billing checks.</p>
+<p>Your agent can guide the browser flow and prepare local setup. You complete
+passwords, provider verification, payment, final account agreements and new
+access approvals, then the agent resumes. No credentials need to enter chat.</p>
+<p>TOAD is <strong>OpenStack-based, with Infomaniak as the verified production path</strong>.
+The current DNS and certificate integrations also use Infomaniak. Other
+OpenStack providers need <a href="/account.html#using-another-openstack-cloud">compatibility review and adaptation</a>;
+they are not verified drop-in targets.</p>
 <h2 id="1-prepare-your-operator-context">1. Prepare your operator context</h2>
 <p>You need Node.js 22, pnpm, Git, Python 3 with <code>venv</code>, OpenSSH, OpenSSL 3 with
 its legacy provider (for browser certificate bundles), Docker with Buildx,
-and <code>age</code>. You also need an Infomaniak Public Cloud project, a dedicated
-service user with a password, and a domain hosted in Infomaniak DNS.
+and <code>age</code>. After the account/access guide, you should have an Infomaniak
+Public Cloud project and a dedicated service user with a password.
+You also need a domain you control, hosted in Infomaniak DNS.
 Review the <a href="/costs.html">cost worksheet</a> before creating billable resources.</p>
 <pre><code class="language-sh">git clone https://github.com/RemiGirard/TOAD-infra.git
 cd TOAD-infra/openstackV3
