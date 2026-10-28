@@ -21,6 +21,13 @@ the [first-app guide](FIRST-APP.md) covers adding TOAD metadata there.
 
 ## Guide account setup, then resume
 
+Do not assume the user knows infrastructure terms. Use
+[Your app explained](UNDERSTAND.md) to sketch their proposed browser-to-app
+route, explain the address people will open, and show the result of each
+setup stage. Separate DNS lookup from website traffic, and planned topology
+from observed checks. Explain the ongoing ownership and hosted-platform
+alternative before a user commits to operating servers.
+
 For a user without cloud access, start with [Account and access](CLOUD-ACCOUNT.md).
 Check for an existing customer account, organization and suitable project
 before creating anything. Explain the difference between the customer login,

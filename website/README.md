@@ -25,6 +25,19 @@ The starter demo is a separate `toad-demo` app routed at `/starter/`.
 
 ## Diagrams
 
+The homepage's `learn.css` / `learn.mjs` teaching map introduces domains,
+DNS, cloud servers, load balancing, TLS, containers and persistent data before
+the technical workflow. It never reads private infrastructure. The static
+`app-map{,-mobile}.svg` pair provides the same visitor path in
+[Your app explained](../docs/UNDERSTAND.md). DNS lookup is separate from the
+HTTPS route; Octavia passes TCP through and TLS terminates at Traefik.
+The private operation renderer shows a labelled route model beside actual
+observed server/application cards, without inventing placement or health.
+
+The hosting comparison describes responsibility and workflow, not price or
+feature superiority. Its Render, Railway and Coolify references were checked
+on 28 October 2026; keep primary-source links next to the comparison.
+
 The landing page starts with the cloud-first `journey{,-mobile}.svg` overview.
 The visual architecture guide then separates `platform{,-mobile}.svg` from
 `delivery{,-mobile}.svg` for releases onto an existing platform. All have

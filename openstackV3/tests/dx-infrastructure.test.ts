@@ -26,9 +26,11 @@ test('dead coordinator locks remain until explicit local acknowledgement', async
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
 test('private operation view escapes observed names and embeds explicit expiry', () => {
-  const observation = { version: 1, ok: false, context: '<script>unsafe</script>', generatedAt: '2026-10-28T09:00:00Z', expiresAt: '2026-10-28T09:01:00Z', nodes: [], apps: [], quorum: { state: 'unknown', healthy: 0, managers: 0, required: 1 }, monitoring: { state: 'unknown' }, operation: null, history: [], gaps: ['Metrics unavailable'], notifications: 'Not verified' } as Observation;
+  const observation = { version: 1, ok: false, context: '<script>unsafe</script>', generatedAt: '2026-10-28T09:00:00Z', expiresAt: '2026-10-28T09:01:00Z', nodes: [], apps: [{ app: '<img src=x onerror=unsafe()>', ok: false, outcome: 'failed', services: [{ name: '<svg onload=unsafe()>', running: 0, desired: 2, expectedImage: '', image: '', updateState: '' }], checks: [], hints: [] }], quorum: { state: 'unknown', healthy: 0, managers: 0, required: 1 }, monitoring: { state: 'unknown' }, operation: null, history: [], gaps: ['Metrics unavailable'], notifications: 'Not verified' } as Observation;
   const html = renderObservation(observation);
   assert.equal(html.includes('<script>unsafe</script>'), false);
+  assert.equal(html.includes('<img src=x onerror=unsafe()>'), false);
+  assert.equal(html.includes('<svg onload=unsafe()>'), false);
   assert.match(html, /data-expiry="2026-10-28T09:01:00Z"/);
   assert.match(html, /Stale evidence/);
   assert.match(html, /Metrics unavailable/);

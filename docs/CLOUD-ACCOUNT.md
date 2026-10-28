@@ -5,6 +5,10 @@ guide the journey, prepare local configuration and explain the choices. You
 complete the provider's sensitive account, verification and payment steps.
 Then the agent can continue with the approved platform and app deployment.
 
+Not sure what a cloud, domain or container is? Read
+[Your app explained](UNDERSTAND.md) first. It shows what you will build and
+helps you choose how much infrastructure you want to operate.
+
 Already have a verified TOAD platform? Reuse it and go to
 [Deploy an app](FIRST-APP.md). Do not order another product or create another
 project just to follow this guide.

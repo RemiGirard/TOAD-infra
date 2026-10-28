@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="1100" viewBox="0 0 360 1100" role="img" aria-labelledby="title desc">
+  <title id="title">From your app name to a running container</title>
+  <desc id="desc">DNS returns an address. The browser then connects over HTTPS through the load balancer and Swarm network to Traefik and the app. Data storage is optional and must be planned.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#718c56"/></marker></defs>
+  <style>text{font-family:Arial,Helvetica,sans-serif;fill:#29432d}.label{font-size:10px;fill:#5a7249}.title{font-size:19px;font-weight:600}.detail{font-size:13px;fill:#536c44}.line{fill:none;stroke:#718c56;stroke-width:1.5;marker-end:url(#arrow)}.box{fill:#fafbf3;stroke:#b3c39f;rx:8}</style>
+  <rect width="360" height="1100" rx="10" fill="#f5f8ed"/>
+  <rect class="box" x="16" y="16" width="328" height="97"/>
+  <text class="label" x="32" y="41">A VISITOR OPENS YOUR APP</text><text class="title" x="32" y="70">hello.platform.example.com</text><text class="detail" x="32" y="94">A name you control · domain</text>
+  <path class="line" d="M155 117V147"/><path class="line" d="M202 151V121"/><text class="label" x="22" y="138">lookup</text><text class="label" x="220" y="138">address</text>
+  <rect class="box" x="16" y="158" width="328" height="110"/>
+  <text class="label" x="32" y="185">DNS · THE NAME LOOKUP</text><text class="title" x="32" y="215">Returns the public address</text><text class="detail" x="32" y="240">Website traffic does not pass through DNS</text>
+  <text class="detail" x="23" y="303">Then the browser connects to that</text><text class="detail" x="23" y="324">address over HTTPS ↓</text>
+  <rect x="6" y="346" width="348" height="669" rx="10" fill="#e8efdb" stroke="#a8bc90" stroke-dasharray="5 4"/>
+  <text class="label" x="22" y="373">YOUR CLOUD ACCOUNT</text><text class="detail" x="22" y="396">Three rented servers · coordinated by Swarm</text>
+  <rect class="box" x="22" y="417" width="316" height="106"/>
+  <text class="label" x="38" y="443">01 / PUBLIC ENTRY</text><text class="title" x="38" y="473">Load balancer</text><text class="detail" x="38" y="499">Octavia passes connections to Swarm</text>
+  <path class="line" d="M180 527V548"/>
+  <rect class="box" x="22" y="555" width="316" height="106"/>
+  <text class="label" x="38" y="581">02 / HTTPS GATEWAY</text><text class="title" x="38" y="611">Traefik</text><text class="detail" x="38" y="637">Handles browser TLS and selects the app</text>
+  <path class="line" d="M180 665V686"/>
+  <rect class="box" x="22" y="693" width="316" height="106"/>
+  <text class="label" x="38" y="719">03 / YOUR RUNNING APP</text><text class="title" x="38" y="749">Containers</text><text class="detail" x="38" y="775">Packaged app copies serve a page or API</text>
+  <path class="line" d="M180 803V824"/>
+  <rect class="box" x="22" y="831" width="316" height="106" stroke-dasharray="4 3"/>
+  <text class="label" x="38" y="857">OPTIONAL / PLAN EXPLICITLY</text><text class="title" x="38" y="887">Stored data</text><text class="detail" x="38" y="913">Database or files, with a recovery plan</text>
+  <text class="detail" x="22" y="962">One Traefik replica. App copies and data</text><text class="detail" x="22" y="983">depend on your manifest. No database implied.</text>
+  <text class="label" x="16" y="1046">TEACHING MAP · NOT LIVE HEALTH OR PLACEMENT</text><text class="label" x="16" y="1070">TLS ENDS AT TRAEFIK IN THIS SETUP</text>
+</svg>

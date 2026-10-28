@@ -7,6 +7,7 @@ Canonical workflow: https://toad.remigirard.dev/agents.html
 Observability and private visual view: https://toad.remigirard.dev/observability.html
 Cloud-first setup: https://toad.remigirard.dev/quickstart.html
 Account, project and provider compatibility: https://toad.remigirard.dev/account.html
+Beginner map, terminology and hosting choices: https://toad.remigirard.dev/understand.html
 Application delivery: https://toad.remigirard.dev/first-app.html
 
 Read the checkout's AGENTS.md, README.md and SECURITY.md before acting.
@@ -16,6 +17,7 @@ If account/project access is missing, guide official provider setup; reuse exist
 Use authorized browser assistance where available. The human completes passwords, verification, payment, final account agreements and approval of new access; then resume and verify the result.
 TOAD uses OpenStack, but its verified production path includes Infomaniak DNS and ACME. Other OpenStack providers need compatibility review, adaptation and validation.
 Keep application source in its own repository. Ask only for missing decisions.
+Explain unfamiliar terms through the user's own proposed app diagram and URL; distinguish DNS lookup from traffic, planned topology from observed health, and automation from ongoing operator responsibility.
 
 Discover the current CLI: node /path/to/TOAD-infra/toad.mjs capabilities --json
 Use an explicit --context NAME and --project DIR where appropriate.

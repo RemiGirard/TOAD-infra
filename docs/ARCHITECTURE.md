@@ -1,5 +1,8 @@
 # See how TOAD fits together
 
+For the visitor's path and ordinary-language definitions, start with
+[Your app explained](UNDERSTAND.md). This page goes deeper into the tools.
+
 First provision and verify your cloud platform. Then publish and deploy apps
 onto it. Platform provisioning and application releases are separate workflows.
 

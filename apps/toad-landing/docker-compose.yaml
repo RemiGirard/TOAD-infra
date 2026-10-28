@@ -85,46 +85,56 @@ services:
       - source: asset-38
         target: /usr/share/nginx/html/agent-debug-prompt.txt
       - source: asset-39
-        target: /usr/share/nginx/html/quickstart.html
+        target: /usr/share/nginx/html/learn.css
       - source: asset-40
-        target: /usr/share/nginx/html/account.html
+        target: /usr/share/nginx/html/learn.mjs
       - source: asset-41
-        target: /usr/share/nginx/html/deployment.html
+        target: /usr/share/nginx/html/app-map.svg
       - source: asset-42
-        target: /usr/share/nginx/html/first-app.html
+        target: /usr/share/nginx/html/app-map-mobile.svg
       - source: asset-43
-        target: /usr/share/nginx/html/observability.html
+        target: /usr/share/nginx/html/understand.html
       - source: asset-44
-        target: /usr/share/nginx/html/architecture.html
+        target: /usr/share/nginx/html/quickstart.html
       - source: asset-45
-        target: /usr/share/nginx/html/local-starter.html
+        target: /usr/share/nginx/html/account.html
       - source: asset-46
-        target: /usr/share/nginx/html/evaluation.html
+        target: /usr/share/nginx/html/deployment.html
       - source: asset-47
-        target: /usr/share/nginx/html/costs.html
+        target: /usr/share/nginx/html/first-app.html
       - source: asset-48
-        target: /usr/share/nginx/html/operations.html
+        target: /usr/share/nginx/html/observability.html
       - source: asset-49
-        target: /usr/share/nginx/html/recovery.html
+        target: /usr/share/nginx/html/architecture.html
       - source: asset-50
-        target: /usr/share/nginx/html/launch.html
+        target: /usr/share/nginx/html/local-starter.html
       - source: asset-51
-        target: /usr/share/nginx/html/backups.html
+        target: /usr/share/nginx/html/evaluation.html
       - source: asset-52
-        target: /usr/share/nginx/html/drill-plan.html
+        target: /usr/share/nginx/html/costs.html
       - source: asset-53
-        target: /usr/share/nginx/html/agents.html
+        target: /usr/share/nginx/html/operations.html
       - source: asset-54
-        target: /usr/share/nginx/html/storage.html
+        target: /usr/share/nginx/html/recovery.html
       - source: asset-55
-        target: /usr/share/nginx/html/security.html
+        target: /usr/share/nginx/html/launch.html
       - source: asset-56
-        target: /usr/share/nginx/html/license.html
+        target: /usr/share/nginx/html/backups.html
       - source: asset-57
-        target: /usr/share/nginx/html/robots.txt
+        target: /usr/share/nginx/html/drill-plan.html
       - source: asset-58
-        target: /usr/share/nginx/html/sitemap.xml
+        target: /usr/share/nginx/html/agents.html
       - source: asset-59
+        target: /usr/share/nginx/html/storage.html
+      - source: asset-60
+        target: /usr/share/nginx/html/security.html
+      - source: asset-61
+        target: /usr/share/nginx/html/license.html
+      - source: asset-62
+        target: /usr/share/nginx/html/robots.txt
+      - source: asset-63
+        target: /usr/share/nginx/html/sitemap.xml
+      - source: asset-64
         target: /etc/nginx/conf.d/default.conf
     healthcheck:
       test:
@@ -159,7 +169,7 @@ services:
         monitor: 2m
 configs:
   asset-0:
-    name: toad-web-0-d11efd8ba845bf34
+    name: toad-web-0-453f04cf176d3f48
     file: ./index.html
   asset-1:
     name: toad-web-1-294171d4baa9f6d6
@@ -195,7 +205,7 @@ configs:
     name: toad-web-11-60ef9c4777338ad8
     file: ./observability-mobile.svg
   asset-12:
-    name: toad-web-12-5db039b40eb2a01c
+    name: toad-web-12-9b7dc5f05863bb32
     file: ./agent-guide.txt
   asset-13:
     name: toad-web-13-a83ee0cd889bb1ef
@@ -267,7 +277,7 @@ configs:
     name: toad-web-35-785a55dfbcd81bf6
     file: ./diagram-recovery-2.svg
   asset-36:
-    name: toad-web-36-ac1d71262336fcf1
+    name: toad-web-36-9fbb4561eb79d6a2
     file: ./agent-prompt.txt
   asset-37:
     name: toad-web-37-9fff2351ea3a1797
@@ -276,67 +286,82 @@ configs:
     name: toad-web-38-00711aee178b7dd6
     file: ./agent-debug-prompt.txt
   asset-39:
-    name: toad-web-39-b2cf36db3adfb189
-    file: ./quickstart.html
+    name: toad-web-39-c6444a90b46855f4
+    file: ./learn.css
   asset-40:
-    name: toad-web-40-afd27dfd0695dc0b
-    file: ./account.html
+    name: toad-web-40-7213bbe6249c6f73
+    file: ./learn.mjs
   asset-41:
-    name: toad-web-41-ff1b3d3a6704cff5
-    file: ./deployment.html
+    name: toad-web-41-e17a54b5667a350c
+    file: ./app-map.svg
   asset-42:
-    name: toad-web-42-018eb72704661433
-    file: ./first-app.html
+    name: toad-web-42-6282592218304c9c
+    file: ./app-map-mobile.svg
   asset-43:
-    name: toad-web-43-d628fa0a4f592d5f
-    file: ./observability.html
+    name: toad-web-43-4becaa75d9b5ccde
+    file: ./understand.html
   asset-44:
-    name: toad-web-44-c568b1a08affa60f
-    file: ./architecture.html
+    name: toad-web-44-831816d861acf3a9
+    file: ./quickstart.html
   asset-45:
-    name: toad-web-45-cd1a353615cfa905
-    file: ./local-starter.html
+    name: toad-web-45-ba67a7cca2a54426
+    file: ./account.html
   asset-46:
-    name: toad-web-46-3cb5038836fd7fa6
-    file: ./evaluation.html
+    name: toad-web-46-581a580b728d1f98
+    file: ./deployment.html
   asset-47:
-    name: toad-web-47-422f60a25179ad43
-    file: ./costs.html
+    name: toad-web-47-05593e981791d984
+    file: ./first-app.html
   asset-48:
-    name: toad-web-48-b50684ca7b211c95
-    file: ./operations.html
+    name: toad-web-48-e284061b58c3c56c
+    file: ./observability.html
   asset-49:
-    name: toad-web-49-b55926b46492f621
-    file: ./recovery.html
+    name: toad-web-49-ab4f3bf0d1f08c1f
+    file: ./architecture.html
   asset-50:
-    name: toad-web-50-cd83c5441d386f06
-    file: ./launch.html
+    name: toad-web-50-41a72e7d665c3a16
+    file: ./local-starter.html
   asset-51:
-    name: toad-web-51-41d415e7f49ab14b
-    file: ./backups.html
+    name: toad-web-51-7ab6e3f0da31ad2d
+    file: ./evaluation.html
   asset-52:
-    name: toad-web-52-ad78e4cb86a6caea
-    file: ./drill-plan.html
+    name: toad-web-52-ddd155d6ce72c631
+    file: ./costs.html
   asset-53:
-    name: toad-web-53-26c8b38c7929e422
-    file: ./agents.html
+    name: toad-web-53-4dc9f2f2d4cff1ad
+    file: ./operations.html
   asset-54:
-    name: toad-web-54-761d5c69ac57a585
-    file: ./storage.html
+    name: toad-web-54-dfa2f66a86d9c195
+    file: ./recovery.html
   asset-55:
-    name: toad-web-55-05744c80271edca3
-    file: ./security.html
+    name: toad-web-55-e797e760b615cf6b
+    file: ./launch.html
   asset-56:
-    name: toad-web-56-40950631ccf5be96
-    file: ./license.html
+    name: toad-web-56-f57d288be0a15f72
+    file: ./backups.html
   asset-57:
-    name: toad-web-57-72e05da304522bb6
-    file: ./robots.txt
+    name: toad-web-57-ef7ec7435f50c672
+    file: ./drill-plan.html
   asset-58:
-    name: toad-web-58-35f04f422eb2dbc2
-    file: ./sitemap.xml
+    name: toad-web-58-788cb0cb33fd3735
+    file: ./agents.html
   asset-59:
-    name: toad-web-59-547a3261c8a9e667
+    name: toad-web-59-03caeffae91a3516
+    file: ./storage.html
+  asset-60:
+    name: toad-web-60-25ab5574aee3353c
+    file: ./security.html
+  asset-61:
+    name: toad-web-61-487fa69780ec718d
+    file: ./license.html
+  asset-62:
+    name: toad-web-62-72e05da304522bb6
+    file: ./robots.txt
+  asset-63:
+    name: toad-web-63-2c378cb0b30730bc
+    file: ./sitemap.xml
+  asset-64:
+    name: toad-web-64-547a3261c8a9e667
     file: ./nginx.conf
 networks:
   traefik-public:

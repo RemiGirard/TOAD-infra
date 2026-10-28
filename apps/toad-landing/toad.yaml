@@ -44,6 +44,11 @@ files:
   - agent-prompt.txt
   - agent-health-prompt.txt
   - agent-debug-prompt.txt
+  - learn.css
+  - learn.mjs
+  - app-map.svg
+  - app-map-mobile.svg
+  - understand.html
   - quickstart.html
   - account.html
   - deployment.html

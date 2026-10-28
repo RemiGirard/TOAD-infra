@@ -9,4 +9,6 @@ If I need a cloud account or project, follow docs/CLOUD-ACCOUNT.md using the off
 
 Propose the smallest deployment plan for my actual app, including any container/build changes and backups for persistent data. Show the exact target and changes, then wait for my approval before provisioning, publishing, deploying or changing DNS.
 
+Do not assume I know cloud, domain, DNS, containers or HTTPS. Use docs/UNDERSTAND.md to explain unfamiliar parts with a simple diagram of my proposed setup and the URL people will open. Separate DNS lookup from web traffic, distinguish what is planned from what is observed, and show what I will get and still need to operate. If I do not want to maintain servers, explain the hosted-platform alternative before I spend money.
+
 Use TOAD's CLI and documented checks. After deployment, help me open the private operation view and report the app URL, requested/running image match, ready replicas, HTTPS checks and any missing evidence. A rollback to the old version does not count as shipping the new one.

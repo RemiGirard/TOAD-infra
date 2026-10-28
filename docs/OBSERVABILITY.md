@@ -35,6 +35,15 @@ never load your cluster credentials or private state.
 
 ## Read the view
 
+Start with **Your infrastructure map**. The route model explains DNS lookup,
+the public load balancer, the HTTPS gateway and containers. Below it, observed
+server and application cards use the selected context's collected names,
+states and running-copy counts. No placement edges are inferred between them.
+Expand **Explain the infrastructure terms** for plain-language definitions.
+DNS/load-balancer/gateway health, container placement, storage and backup state
+are not separately discovered by this map. Use the check evidence below it.
+The [beginner guide](UNDERSTAND.md) explains the full visitor journey.
+
 | Area | What it proves | What it does not prove |
 |---|---|---|
 | Managers | Readiness, reachability, role and quorum at capture time | Application data replication or future availability |

@@ -6,6 +6,9 @@ workflow for each app and update.
 
 Already operate a verified TOAD platform? Go to [First app](FIRST-APP.md).
 For an optional frontend/API preview, [run the example locally](LOCAL-STARTER.md).
+New to domains, DNS, cloud servers or containers? Start with
+[Your app explained](UNDERSTAND.md): a visual map, plain-language terms and a
+comparison of hosting responsibilities.
 
 The homepage uses the repository launcher `./toad` from the checkout root.
 After installing dependencies below, try `./toad --help` from that root.

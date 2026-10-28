@@ -13,6 +13,7 @@ const source = join(root, 'website');
 const output = join(root, 'apps', 'toad-landing');
 mkdirSync(output, { recursive: true });
 const pages = [
+  ['UNDERSTAND', 'understand', 'Your app explained'],
   ['QUICKSTART', 'quickstart', 'Get started'], ['CLOUD-ACCOUNT', 'account', 'Account and access'],
   ['DEPLOYMENT', 'deployment', 'Cloud setup'],
   ['FIRST-APP', 'first-app', 'Deploy an app'], ['OBSERVABILITY', 'observability', 'Understand operations'],
@@ -54,6 +55,11 @@ for (const definition of definitions) {
 }
 const escape = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 const pagePaths = new Map(pages.map(([name, slug]) => [resolve(root, 'docs', `${name}${name === '../LICENSE' ? '' : '.md'}`), `/${slug}.html`]));
+const illustrations: Record<string, { desktopHeight: number; mobileHeight: number }> = {
+  delivery: { desktopHeight: 258, mobileHeight: 864 }, platform: { desktopHeight: 318, mobileHeight: 890 },
+  journey: { desktopHeight: 320, mobileHeight: 960 }, observability: { desktopHeight: 350, mobileHeight: 790 },
+  'app-map': { desktopHeight: 470, mobileHeight: 1100 },
+};
 function href(value: string, document: string): string {
   if (value.startsWith('#') || /^(?:https?:|mailto:)/.test(value)) return value;
   if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(value)) return '#';
@@ -75,8 +81,11 @@ for (const [name, slug, label] of pages) {
     return `<figure class="doc-diagram ${diagram.layout}${token.text.startsWith('sequenceDiagram') ? ' sequence' : ''}"><div class="diagram-scroll" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to explore"><picture>${diagram.mobile ? `<source media="(max-width:760px)" srcset="/${diagram.mobile}">` : ''}<img src="/${diagram.file}" alt="${escape(diagram.description)}" loading="lazy"></picture></div>${diagram.layout ? '<p class="diagram-hint">Scroll sideways to explore the diagram.</p>' : ''}<figcaption><span>${escape(diagram.description)}.</span><a href="/${diagram.file}">Open full size ↗</a></figcaption><details><summary>Diagram source</summary><pre><code>${escape(token.text)}</code></pre></details></figure>\n`;
   };
   renderer.image = ({ href: target, text: description }) => {
-    const illustration = ['delivery', 'platform', 'journey', 'observability'].find((asset) => target === `../website/${asset}.svg`);
-    if (illustration) return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${illustration === 'delivery' ? 864 : illustration === 'journey' ? 960 : illustration === 'observability' ? 790 : 890}"><img src="/${illustration}.svg" width="1120" height="${illustration === 'delivery' ? 258 : illustration === 'journey' ? 320 : illustration === 'observability' ? 350 : 318}" alt="${escape(description)}" loading="lazy"></picture></span>`;
+    const illustration = Object.keys(illustrations).find((asset) => target === `../website/${asset}.svg`);
+    if (illustration) {
+      const size = illustrations[illustration]!;
+      return `<span class="illustration"><picture><source media="(max-width:760px)" srcset="/${illustration}-mobile.svg" width="360" height="${size.mobileHeight}"><img src="/${illustration}.svg" width="1120" height="${size.desktopHeight}" alt="${escape(description)}" loading="lazy"></picture></span>`;
+    }
     return `<img src="${escape(href(target, `${name}.md`))}" alt="${escape(description)}" loading="lazy">`;
   };
   renderer.link = function ({ href: target, tokens }) { return `<a href="${escape(href(target, `${name}.md`))}">${this.parser.parseInline(tokens)}</a>`; };
@@ -92,7 +101,7 @@ for (const [name, slug, label] of pages) {
   writeFileSync(join(output, `${slug}.html`), html);
 }
 const assets = ['index.html', 'style.css', 'app.mjs', 'toad.svg', 'starter.png', 'walkthrough.json', 'walkthrough.css',
-  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt'];
+  'diagrams.css', 'agent-view.mjs', 'agent-view.css', 'observability.svg', 'observability-mobile.svg', 'agent-guide.txt', 'journey.svg', 'journey-mobile.svg', 'delivery.svg', 'delivery-mobile.svg', 'platform.svg', 'platform-mobile.svg', ...diagramAssets, 'agent-prompt.txt', 'agent-health-prompt.txt', 'agent-debug-prompt.txt', 'learn.css', 'learn.mjs', 'app-map.svg', 'app-map-mobile.svg'];
 for (const asset of assets) {
   if (!existsSync(join(source, asset))) throw new Error(`Missing reviewed website asset: ${asset}`);
   if (asset === 'index.html') {

@@ -22,6 +22,10 @@ before adapting it to another OpenStack environment.
 
 ## What gets deployed
 
+For a beginner-friendly request map, see [Your app explained](UNDERSTAND.md).
+DNS arrows below describe name lookup/delegation, not traffic forwarding.
+Octavia passes TCP through; browser TLS terminates at Traefik.
+
 ```mermaid
 flowchart LR
     user["Public users"] --> parentDns["Parent DNS<br/>example.com"]

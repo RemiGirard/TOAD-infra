@@ -15,6 +15,10 @@ a private visual operation view keep actions understandable and reviewable.
 [Deploy an app](docs/FIRST-APP.md) · [Use with an agent](docs/AGENT-RUNBOOK.md) ·
 [Understand operations](docs/OBSERVABILITY.md)
 
+New to cloud, domains or containers? [See your app explained visually](docs/UNDERSTAND.md)
+and compare the responsibilities of a hosted platform, Coolify and TOAD before
+creating resources.
+
 ## 1. Provision your cloud platform
 
 Start with [Account and access](docs/CLOUD-ACCOUNT.md) if you do not have a cloud
@@ -60,6 +64,7 @@ workflow for updates; use `apply` for platform changes. See the
 
 | You want to… | Start here | Requirements |
 |---|---|---|
+| Understand what runs where and compare hosting approaches | [Your app explained](docs/UNDERSTAND.md) | No account or infrastructure vocabulary required |
 | Create an account and prepare cloud access | [Account and access](docs/CLOUD-ACCOUNT.md) | Your email and provider billing decisions; an agent can guide the steps |
 | Create a cloud platform and ship your first app | [Get started](docs/QUICKSTART.md) | Infomaniak project, domain and operator tooling |
 | Ship an app to an existing verified platform | [First app](docs/FIRST-APP.md) | Docker, registry and operator access |

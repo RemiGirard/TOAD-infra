@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="470" viewBox="0 0 1120 470" role="img" aria-labelledby="title desc">
+  <title id="title">From a name to your running app</title>
+  <desc id="desc">A browser asks DNS for an address. It then connects over HTTPS through Octavia and the Swarm network to Traefik, which handles TLS and routes to the app. Storage is an explicit optional choice.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#718c56"/></marker></defs>
+  <style>text{font-family:Arial,Helvetica,sans-serif;fill:#29432d}.label{font-size:11px;fill:#5a7249}.title{font-size:20px;font-weight:600}.detail{font-size:13px;fill:#536c44}.line{fill:none;stroke:#718c56;stroke-width:1.5;marker-end:url(#arrow)}.box{fill:#fafbf3;stroke:#b3c39f;rx:8}</style>
+  <rect width="1120" height="470" rx="10" fill="#f5f8ed"/>
+  <rect class="box" x="20" y="22" width="410" height="95"/>
+  <text class="label" x="40" y="48">A VISITOR OPENS YOUR APP</text>
+  <text class="title" x="40" y="76">hello.platform.example.com</text>
+  <text class="detail" x="40" y="100">A name you control · domain</text>
+  <path class="line" d="M434 55H568"/><path class="line" d="M572 88H438"/>
+  <text class="label" x="458" y="45">lookup</text><text class="label" x="458" y="109">address</text>
+  <rect class="box" x="580" y="22" width="390" height="95"/>
+  <text class="label" x="600" y="48">DNS · THE NAME LOOKUP</text>
+  <text class="title" x="600" y="76">Returns the public address</text>
+  <text class="detail" x="600" y="100">Website traffic does not pass through DNS</text>
+  <path class="line" d="M150 119V170"/>
+  <text class="detail" x="166" y="152">Then connect to that address over HTTPS</text>
+  <rect x="8" y="175" width="1104" height="242" rx="10" fill="#e8efdb" stroke="#a8bc90" stroke-dasharray="5 4"/>
+  <text class="label" x="28" y="204">YOUR CLOUD ACCOUNT · THREE RENTED SERVERS COORDINATED BY SWARM</text>
+  <rect class="box" x="24" y="240" width="240" height="123"/>
+  <text class="label" x="42" y="267">01 / PUBLIC ENTRY</text><text class="title" x="42" y="297">Load balancer</text><text class="detail" x="42" y="325">Octavia passes connections</text><text class="detail" x="42" y="345">through the Swarm network</text>
+  <path class="line" d="M269 301H295"/>
+  <rect class="box" x="302" y="240" width="240" height="123"/>
+  <text class="label" x="320" y="267">02 / HTTPS GATEWAY</text><text class="title" x="320" y="297">Traefik</text><text class="detail" x="320" y="325">Handles browser TLS</text><text class="detail" x="320" y="345">and selects the right app</text>
+  <path class="line" d="M547 301H573"/>
+  <rect class="box" x="580" y="240" width="240" height="123"/>
+  <text class="label" x="598" y="267">03 / YOUR RUNNING APP</text><text class="title" x="598" y="297">Containers</text><text class="detail" x="598" y="325">Copies of a packaged app</text><text class="detail" x="598" y="345">serve a page or API</text>
+  <path class="line" d="M825 301H851"/>
+  <rect class="box" x="858" y="240" width="238" height="123" stroke-dasharray="4 3"/>
+  <text class="label" x="876" y="267">OPTIONAL / PLAN EXPLICITLY</text><text class="title" x="876" y="297">Stored data</text><text class="detail" x="876" y="325">Database or uploaded files</text><text class="detail" x="876" y="345">with a recovery plan</text>
+  <text class="detail" x="28" y="393">Simplified route. One Traefik replica. App copies and storage depend on your manifest; no database is implied.</text>
+  <text class="label" x="20" y="448">TEACHING MAP · NOT LIVE HEALTH OR CONTAINER PLACEMENT · TLS ENDS AT TRAEFIK IN THIS SETUP</text>
+</svg>
