@@ -10,9 +10,12 @@ access, costs and responsibilities.
 ![You and your agent use TOAD to prepare cloud servers and deploy a packaged app. Visitors look up its name in DNS, then connect to the public IP over HTTPS to reach the app. Read-only monitoring returns evidence to you and your agent.](../website/global-map.svg)
 
 Move the difficulty slider on the [evolving diagram](https://toad.remigirard.dev/#whole-picture).
-The same scene gradually reveals web basics, the TOAD platform and technical
-detail. The [expert implementation notes](IMPLEMENTATION.md) include exact
-network paths, ports, trust boundaries and failure behavior, with source links.
+Ten steps gradually reveal web basics, your cloud, shipping, Swarm, networking,
+trust, observation and the full system. The maximum unfolds 42 connected detail
+cards in the same scene. Use zoom and **View this step** to inspect addresses,
+ports, secret movement, metrics/log flows, exact release proof and recovery
+boundaries. The [expert implementation notes](IMPLEMENTATION.md) provide the
+full explanation and source links. These are declarations, not live health.
 
 **Read it in two directions.** The green arrows show you shipping the app:
 prepare the cloud once, publish a package, then deploy it. The blue arrows

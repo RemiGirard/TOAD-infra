@@ -1,33 +1,31 @@
 // One persistent public SVG scene; attributes only, compatible with the site's CSP.
-const stops = [
-  { at: 0, key: 'simple', name: 'Just the idea', title: 'A page travels between two computers.', description: 'You open a link. The Internet carries the request to the website computer, then brings the page back. TOAD helps put your app on that other computer.' },
-  { at: 33, key: 'web', name: 'Web basics', title: 'First find the address. Then connect securely.', description: 'DNS looks up a name and returns an IP address. The browser connects over HTTPS. DNS does not carry the page; the lock protects the connection.' },
-  { at: 67, key: 'toad', name: 'TOAD platform', title: 'The same visit, on a platform you control.', description: 'You or your agent use TOAD to prepare the cloud, publish an image and deploy it. Visitors reach the app through the public entry and HTTPS gateway. Monitoring brings evidence back.' },
-  { at: 100, key: 'expert', name: 'Expert', title: 'The implementation underneath the same route.', description: 'Octavia forwards TCP to Swarm ingress. One pinned Traefik task terminates TLS and routes to the app. Three managers protect quorum; certificates, monitoring and app data have their own recovery boundaries. Read the implementation notes below for the full contract.' },
-];
 const mix = (a, b, amount) => a + (b - a) * amount;
 const smooth = value => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
 const reveal = (value, layer) => {
-  const [start, end] = { web: [5, 30], toad: [50, 64], expert: [73, 97] }[layer];
+  const [start, end] = { dns: [3, 12], https: [15, 24], cloud: [30, 36], delivery: [39, 48], runtime: [51, 60], network: [64, 72], trust: [75, 82], observe: [85, 92], expert: [94, 100] }[layer];
   return smooth((value - start) / (end - start));
 };
-const nearest = value => stops.reduce((best, stop) => Math.abs(stop.at - value) < Math.abs(best.at - value) ? stop : best);
-const fromUrl = () => {
+const nearest = (stops, value) => stops.reduce((best, stop) => Math.abs(stop.at - value) < Math.abs(best.at - value) ? stop : best);
+const fromUrl = stops => {
   const params = new URL(location.href).searchParams;
   const raw = params.get('detail');
   if (raw !== null && /^\d{1,3}$/.test(raw) && Number(raw) <= 100) return Number(raw);
-  return (stops.find(stop => stop.key === params.get('level')) ?? stops[2]).at;
+  const key = ({ web: 'https', toad: 'runtime' })[params.get('level')] ?? params.get('level');
+  return (stops.find(stop => stop.key === key) ?? stops[5]).at;
 };
 
 for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
+  const stops = [...root.querySelectorAll('[data-detail-stop]')].map(button => ({ at: Number(button.dataset.detailStop), key: button.dataset.stepKey, name: button.dataset.stepName, title: button.dataset.stepTitle, description: button.dataset.stepDescription }));
   const slider = root.querySelector('[data-detail-slider]');
   const svg = root.querySelector('[data-evolving-map]');
   const viewport = root.querySelector('[data-map-viewport]');
   const nodes = new Map([...svg.querySelectorAll('[data-map-node]')].map(node => [node.dataset.mapNode, node]));
   const paths = new Map([...svg.querySelectorAll('[data-map-path]')].map(path => [path.dataset.mapPath, path]));
   const layers = [...svg.querySelectorAll('[data-reveal], [data-conceal]')];
+  const branches = [...svg.querySelectorAll('[data-map-branch]')];
+  const branchPreparation = { network: [61, 64], trust: [73, 75], observe: [83, 85], expert: [93, 94] };
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  let target = fromUrl();
+  let target = fromUrl(stops);
   let current = target;
   let frame;
   let lastTime;
@@ -35,10 +33,11 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   let mobile = viewport.clientWidth < 700;
 
   function draw(value) {
-    const web = reveal(value, 'web');
-    const toad = reveal(value, 'toad');
+    const web = reveal(value, 'dns');
+    const cloud = reveal(value, 'cloud');
+    const toad = reveal(value, 'runtime');
     // Make room just before the new parts arrive, so labels do not pile up mid-drag.
-    const space = smooth((value - 35) / 17);
+    const space = smooth((value - 24) / 8);
     const points = mobile ? {
       visitor: [mix(180, 85, web), 130 + 420 * space], internet: [180, 340 + 430 * space], app: [180, 580 + 960 * space],
       dns: [270, 130 + 420 * space], 'dns-detail': [180, 678], lock: [mix(230, 180, space), 455 + 855 * space], entry: [180, 455 + 655 * space],
@@ -47,7 +46,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       'prepare-label': [264, 385], 'publish-label': [92, 230], 'deploy-label': [248, 565 + 895 * space],
       'ingress-label': [270, 1250],
     } : {
-      visitor: [110, 390], internet: [mix(455, 365, toad), 390], app: [1000, 390], dns: [110, 235], 'dns-detail': [315, 272],
+      visitor: [110, 390], internet: [mix(455, 365, cloud), 390], app: [1000, 390], dns: [110, 235], 'dns-detail': [315, 272],
       lock: [mix(745, 795, toad), mix(350, 390, toad)], entry: [595, 390], agent: [110, 80], toad: [420, 80], package: [725, 80],
       managers: [795, 580], monitor: [795, 740], 'cloud-label': [795, 268], 'other-paths': [270, 590],
       'return-label': [555, 565], 'route-label': [mix(720, 462, toad), mix(300, 344, toad)],
@@ -71,7 +70,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     if (mobile) {
       p('request', `M${vx} ${vy + 115}L180 ${iy - 65}`);
       p('simple-route', `M180 ${iy + 115}V${ay - 56}`, 1 - toad);
-      p('return', `M125 ${ay}H28V${vy}H${vx - 55}`, 1 - toad);
+      p('return', `M125 ${ay}H28V${vy}H${vx - 55}`, 1 - cloud);
       p('lookup-ask', `M${vx + 43} ${vy - 10}H226`);
       p('lookup-reply', `M226 ${vy + 15}H${vx + 43}`);
       const entryY = points.entry[1];
@@ -84,14 +83,14 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       p('prepare', `M320 95H341V${attrs.y - 20}H270V${attrs.y - 2}`);
       p('deploy', `M85 412V440H28V${ay - 5}H125`);
       p('observe', `M180 ${attrs.y + attrs.height + 3}V${points.monitor[1] - 35}`);
-      const height = mix(mix(790, 830, web), mix(2090, 2300, reveal(value, 'expert')), space);
+      const height = mix(mix(790, 830, web), mix(2090, 2300, reveal(value, 'network')), space);
       svg.setAttribute('viewBox', `0 0 360 ${height.toFixed(2)}`);
       svg.setAttribute('width', '360');
       svg.setAttribute('height', height.toFixed(2));
     } else {
       p('request', `M172 390H${ix - 67}`);
       p('simple-route', `M${ix + 67} 390H944`, 1 - toad);
-      p('return', 'M1000 520V580H110V520', 1 - toad);
+      p('return', 'M1000 520V580H110V520', 1 - cloud);
       p('lookup-ask', 'M85 335V293');
       p('lookup-reply', 'M135 293V335');
       p('public-route', `M${ix + 67} 390H540`);
@@ -108,7 +107,27 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       svg.setAttribute('width', '1120');
       svg.setAttribute('height', height.toFixed(2));
     }
-    nodes.get('return-label').setAttribute('opacity', (1 - toad).toFixed(4));
+    // Each branch gets its full space before it fades in. Earlier nodes never get replaced.
+    svg.dataset.layout = mobile ? 'mobile' : 'desktop';
+    let height = Number(svg.getAttribute('height'));
+    let nextY = (mobile ? 2300 : 880) + 60;
+    let previous;
+    let spine = mobile ? 'M344 1863V2320H180V2360' : 'M1098 665H1105V910H560V940';
+    for (const branch of branches) {
+      const branchHeight = Number(mobile ? branch.dataset.mobileHeight : branch.dataset.desktopHeight);
+      branch.setAttribute('transform', `translate(0 ${nextY})`);
+      const [start, end] = branchPreparation[branch.dataset.mapBranch];
+      const open = smooth((value - start) / (end - start));
+      if (open > 0) height = Math.max(height, nextY + branchHeight * open + 40);
+      if (previous) spine += ` M${mobile ? 180 : 560} ${previous}V${nextY}`;
+      previous = nextY + branchHeight - 16;
+      nextY += branchHeight + 60;
+    }
+    svg.querySelector('[data-map-spine]').setAttribute('d', spine);
+    const top = svg.getAttribute('viewBox').split(' ')[1];
+    svg.setAttribute('height', height.toFixed(2));
+    svg.setAttribute('viewBox', `0 ${top} ${mobile ? 360 : 1120} ${height.toFixed(2)}`);
+    nodes.get('return-label').setAttribute('opacity', (1 - cloud).toFixed(4));
     svg.dataset.renderedDetail = value.toFixed(2);
   }
 
@@ -122,15 +141,22 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     else { frame = undefined; lastTime = undefined; }
   }
   function set(value, immediate = false) {
+    const previousTarget = target;
     target = Math.max(0, Math.min(100, value));
+    if (previousTarget >= 64 && target < 64) viewport.scrollTo({ top: 0, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
     slider.value = String(target);
-    const stop = nearest(target);
-    root.querySelector('[data-level-status]').textContent = stop.name;
-    slider.setAttribute('aria-valuetext', `${stop.name}, ${target}% detail`);
+    const stop = nearest(stops, target);
+    const stepIndex = stops.indexOf(stop);
+    root.querySelector('[data-level-status]').textContent = `${String(stepIndex + 1).padStart(2, '0')} / ${stops.length} · ${stop.name}`;
+    slider.setAttribute('aria-valuetext', `Step ${stepIndex + 1} of ${stops.length}: ${stop.name}, ${target}% detail`);
     for (const button of root.querySelectorAll('[data-detail-stop]')) button.setAttribute('aria-pressed', String(Number(button.dataset.detailStop) === stop.at));
     root.querySelector('[data-scene-title]').textContent = stop.title;
     root.querySelector('[data-scene-description]').textContent = stop.description;
     svg.querySelector('desc').textContent = `${stop.description} Teaching model, not live health or placement.`;
+    const branch = branches.find(branch => branch.dataset.mapBranch === stop.key);
+    root.querySelector('[data-view-step]').hidden = !branch;
+    root.querySelector('[data-view-overview]').hidden = !branch;
+    root.querySelector('[data-view-step]').textContent = `View ${stop.name.toLowerCase()} ↓`;
     const url = new URL(location.href);
     url.searchParams.set('level', stop.key);
     if (target === stop.at) url.searchParams.delete('detail');
@@ -151,13 +177,39 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   // A held arrow key emits many changes. Save the settled adjustment as one entry.
   slider.addEventListener('change', () => { clearTimeout(historyTimer); historyTimer = setTimeout(remember, 450); });
   for (const button of root.querySelectorAll('[data-detail-stop]')) button.addEventListener('click', () => { clearTimeout(historyTimer); set(Number(button.dataset.detailStop)); remember(); });
-  addEventListener('popstate', () => { clearTimeout(historyTimer); set(fromUrl(), true); });
+  addEventListener('popstate', () => { clearTimeout(historyTimer); set(fromUrl(stops), true); });
   reduced.addEventListener('change', () => { if (reduced.matches) set(target, true); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) set(target, true); });
   new ResizeObserver(() => {
     const next = viewport.clientWidth < 700;
     if (next !== mobile) { mobile = next; set(target, true); }
   }).observe(viewport);
+  const zooms = [100, 125, 150, 200, 250];
+  let zoomIndex = 0;
+  function zoom(index) {
+    const previous = zooms[zoomIndex];
+    const centerX = viewport.scrollLeft + viewport.clientWidth / 2;
+    const centerY = viewport.scrollTop + viewport.clientHeight / 2;
+    zoomIndex = Math.max(0, Math.min(zooms.length - 1, index));
+    viewport.dataset.zoom = String(zooms[zoomIndex]);
+    const ratio = zooms[zoomIndex] / previous;
+    viewport.scrollLeft = centerX * ratio - viewport.clientWidth / 2;
+    viewport.scrollTop = centerY * ratio - viewport.clientHeight / 2;
+    root.querySelector('[data-zoom-label]').textContent = `${zooms[zoomIndex]}%`;
+    root.querySelector('[data-zoom-out]').disabled = zoomIndex === 0;
+    root.querySelector('[data-zoom-in]').disabled = zoomIndex === zooms.length - 1;
+  }
+  root.querySelector('[data-zoom-in]').addEventListener('click', () => zoom(zoomIndex + 1));
+  root.querySelector('[data-zoom-out]').addEventListener('click', () => zoom(zoomIndex - 1));
+  root.querySelector('[data-zoom-fit]').addEventListener('click', () => { zoom(0); viewport.scrollLeft = 0; });
+  root.querySelector('[data-view-step]').addEventListener('click', () => {
+    set(target, true);
+    const branch = branches.find(branch => branch.dataset.mapBranch === nearest(stops, target).key);
+    if (!branch) return;
+    const top = branch.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 8;
+    viewport.scrollTo({ top, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
+  });
+  root.querySelector('[data-view-overview]').addEventListener('click', () => viewport.scrollTo({ top: 0, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' }));
   const expand = root.querySelector('[data-expand-expert]');
   const chapters = [...root.querySelectorAll('.expert-chapter')];
   function syncExpansion() {
@@ -168,9 +220,11 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   for (const chapter of chapters) chapter.addEventListener('toggle', syncExpansion);
   expand.addEventListener('click', () => { const open = !chapters.every(chapter => chapter.open); for (const chapter of chapters) chapter.open = open; syncExpansion(); });
   set(target, true);
+  zoom(0);
   root.querySelector('[data-static-overview]').hidden = true;
   svg.removeAttribute('hidden');
   root.querySelector('[data-level-controls]').hidden = false;
+  root.querySelector('[data-map-tools]').hidden = false;
   root.querySelector('[data-level-link]').hidden = false;
   expand.hidden = false;
 }

@@ -54,16 +54,24 @@ presentation attributes keep both image embeds and standalone diagrams
 compatible with the deployed Content Security Policy, without inline CSS.
 
 The homepage has one evolving SVG scene, rendered by `presentation/evolving-map.ts`.
-A native difficulty range reveals DNS and HTTPS, then TOAD delivery and cloud
-resources, then technical addresses and boundaries. The same device, Internet
-and app nodes persist throughout. Four named stops are available: **Just the
-idea**, **Web basics**, **TOAD platform** (the default), and **Expert**.
+A native difficulty range has ten stops: **A link**, **Names & IPs**, **HTTPS**,
+**Your cloud**, **Shipping**, **Swarm** (the default), **Networking**, **Trust**,
+**Observation**, and **Full system**. The same device, Internet and app nodes
+persist throughout. `presentation/diagram-depth.ts` owns the step descriptions
+and 42 advanced detail cards. Its four connected branches unfold below the core
+route in the same SVG: network paths, trust/secrets, observation, and the full
+provision/release/recovery lifecycle. Desktop cards use three columns; mobile
+uses a vertical layout with the same content.
 `diagram-levels.mjs` gently interpolates SVG attributes and makes room before
 fading in new parts; it does not replace diagrams or inject inline styles.
 Motion stops when settled or hidden, and honors reduced-motion preferences.
 The mobile layout follows the same scene vertically in a scrollable viewport.
 Native keyboard controls work, and the URL shares both named levels
-(`?level=web#whole-picture`) and intermediate detail (`?level=web&detail=42#whole-picture`).
+(`?level=network#whole-picture`) and intermediate detail (`?detail=61#whole-picture`).
+Old `web` and `toad` named links still resolve to HTTPS and Swarm. Fit and
+100–250% zoom operate inside the diagram viewport; View this step and Overview
+pan within it. New advanced layers do not auto-pan; returning to a basic step
+brings the original route back into view.
 Range adjustments are coalesced into history entries; Back/Forward restore the scene.
 
 The optional implementation notes reuse `IMPLEMENTATION.md` in six expandable
