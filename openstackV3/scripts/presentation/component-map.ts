@@ -1,3 +1,5 @@
+import { renderTechnicalSystem, technicalSystemHeight } from './technical-system.js';
+
 /** Public, source-reviewed architecture. No operator configuration or live observations. */
 type Point = [number, number];
 type Kind = 'ship' | 'visit' | 'watch' | 'lookup';
@@ -135,7 +137,8 @@ function renderPanel(key: string, title: string, subtitle: string, components: C
 }
 
 export function renderComponentMap(): string {
-  return `<g data-map-branch="components" data-reveal="expert" data-desktop-height="2990" data-mobile-height="7050">${[false,true].map(mobile => {
+  const detailOffset=technicalSystemHeight+60;
+  return `<g data-map-branch="components" data-reveal="expert" data-desktop-height="${2990+detailOffset}" data-mobile-height="${7050+detailOffset}">${renderTechnicalSystem()}<g transform="translate(0 ${detailOffset})">${[false,true].map(mobile => {
     const toolsHeight=mobile?1600:640, runtimeHeight=mobile?2500:1110, monitoringHeight=mobile?2710:1030;
     const runtimeY=toolsHeight+80, monitoringY=runtimeY+runtimeHeight+80;
     const note = (x:number,y:number,lines:string[]) => `<g class="component-note">${lines.map((line,index)=>`<text x="${x}" y="${y+index*20}" class="component-line">${escape(line)}</text>`).join('')}</g>`;
@@ -143,5 +146,5 @@ export function renderComponentMap(): string {
     const runtimeExtra = `${mobile?'':`<rect x="396" y="270" width="700" height="756" rx="18" class="component-swarm"/><text x="420" y="297" class="component-kicker">DOCKER SWARM · DECLARED SERVICES, NOT OBSERVED TASK PLACEMENT</text>`}${note(mobile?34:40,mobile?2170:973,mobile?['Swarm: overlay pool 10.20.0.0/16','traefik-public: attachable, not encrypted','One Traefik task + node-local ACME','Three managers protect quorum,','not every service or local volume.']:['Ansible over SSH → manager-1 → docker stack deploy --prune. The registry is a separate service you choose.','Image publication does not provision or deploy. Private pull authentication must be configured on the nodes.','Traefik uses the manager socket read-only; that mount still crosses a root-equivalent trust boundary.'])}`;
     const monitoringExtra = `${mobile?'':`<rect x="396" y="76" width="700" height="528" rx="18" class="component-state"/><text x="420" y="96" class="component-kicker">PROMETHEUS / GRAFANA / BLACKBOX / ALERTMANAGER: ONE PINNED TASK EACH</text>`}${note(mobile?34:40,mobile?2340:875,mobile?['Loki is also one pinned task.','All five use the monitoring-state node.','Named volumes remain node-local.','No external alert receiver by default.','Unknown / expired evidence ≠ healthy.']:['Loki also runs one pinned task. All five central services use the monitoring-state node; local volumes are not replicated.','Grafana panels: target / HTTPS health, alerts, HTTP rate / status, host CPU / memory / disk, logs and sample freshness.','observe does not export Loki logs or Grafana time series. Missing access is unknown; external alert delivery needs separate proof.'])}`;
     return `<g class="map-advanced-${mobile?'mobile':'desktop'} component-map">${renderPanel('workstation','10 / INSIDE YOUR COMPUTER','Local tools that TOAD orchestrates · source checkout and optional operator image',tools,toolEdges,mobile,toolsHeight,toolsExtra)}<path d="M${mobile?180:560} ${toolsHeight}V${runtimeY}" class="map-arrow ship" marker-end="url(#evolving-ship)"/><text x="${mobile?193:576}" y="${toolsHeight+42}" class="component-edge-label">APIs · SSH · image push</text><g transform="translate(0 ${runtimeY})">${renderPanel('swarm','YOUR CLOUD / DOCKER SWARM','Provider resources, registry and running services · public IPv4 profile; ports are declared defaults',runtime,runtimeEdges,mobile,runtimeHeight,runtimeExtra)}</g><path d="M${mobile?180:560} ${runtimeY+runtimeHeight}V${monitoringY}" class="map-arrow watch" marker-end="url(#evolving-watch)"/><text x="${mobile?193:576}" y="${runtimeY+runtimeHeight+42}" class="component-edge-label">metrics · logs · probes</text><g transform="translate(0 ${monitoringY})">${renderPanel('monitoring','MONITORING / EVERY SIGNAL HAS A PATH','Collectors, storage, dashboards, alerts and agent evidence · no live queries from this website',monitoring,monitoringEdges,mobile,monitoringHeight,monitoringExtra)}</g></g>`;
-  }).join('')}</g>`;
+  }).join('')}</g></g>`;
 }

@@ -11,8 +11,12 @@ access, costs and responsibilities.
 
 Move the difficulty slider on the [evolving diagram](https://toad.remigirard.dev/#whole-picture).
 Ten steps gradually reveal web basics, your cloud, shipping, Swarm, networking,
-trust, observation and the full system. At maximum, open **Your computer**,
-**Swarm & registry**, or **Monitoring** to follow the actual component topology:
+trust, observation and the full system. Maximum detail opens directly on a
+technical schematic: OpenStack resources, floating IPs, security groups, three
+manager interiors, global collectors, pinned services, overlays and signal paths.
+It uses the same wide canvas on every screen; zoom up to 600% and pan to inspect
+addresses, ports, configuration and commands. **Operator tools**, **Runtime
+details** and **Signal details** open further component specifications:
 OpenStack CLI, Ansible, Buildx, registry push/pull, Swarm tasks, Traefik, collectors,
 Prometheus, Loki, Grafana and Alertmanager. The 42 network, trust, observation and
 lifecycle detail cards remain below it. Use zoom to inspect the ports and arrows.

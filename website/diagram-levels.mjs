@@ -30,9 +30,15 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   let frame;
   let lastTime;
   let historyTimer;
-  let mobile = viewport.clientWidth < 700;
+  let compact = viewport.clientWidth < 700;
 
   function draw(value) {
+    // Expert mode uses the full engineering canvas on every screen. It replaces
+    // the overview at the top of this same SVG, rather than hiding below it.
+    const expert = reveal(value, 'expert');
+    const mobile = compact && value < 94;
+    svg.dataset.technical = String(value >= 94);
+    svg.querySelector('[data-map-core]').setAttribute('opacity', (1-expert).toFixed(4));
     const web = reveal(value, 'dns');
     const cloud = reveal(value, 'cloud');
     const toad = reveal(value, 'runtime');
@@ -114,7 +120,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     // Each branch gets its full space before it fades in. Earlier nodes never get replaced.
     svg.dataset.layout = mobile ? 'mobile' : 'desktop';
     let height = Number(svg.getAttribute('height'));
-    let nextY = (mobile ? 2300 : 880) + 60;
+    let nextY = mix((mobile ? 2300 : 880) + 60, 0, expert);
     let previous;
     let spine = mobile ? 'M344 1863V2320H180V2360' : 'M1098 665H1105V910H560V940';
     for (const branch of branches) {
@@ -128,6 +134,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
       nextY += (branchHeight + 60) * open;
     }
     svg.querySelector('[data-map-spine]').setAttribute('d', spine);
+    svg.querySelector('[data-map-spine]').setAttribute('opacity', (reveal(value,'network')*(1-expert)).toFixed(4));
     const top = svg.getAttribute('viewBox').split(' ')[1];
     svg.setAttribute('height', height.toFixed(2));
     svg.setAttribute('viewBox', `0 ${top} ${mobile ? 360 : 1120} ${height.toFixed(2)}`);
@@ -147,7 +154,7 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   function set(value, immediate = false) {
     const previousTarget = target;
     target = Math.max(0, Math.min(100, value));
-    if (previousTarget >= 64 && target < 64) viewport.scrollTo({ top: 0, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
+    if ((previousTarget >= 64 && target < 64) || (previousTarget < 94 && target >= 94)) viewport.scrollTo({ top: 0, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
     slider.value = String(target);
     const stop = nearest(stops, target);
     const stepIndex = stops.indexOf(stop);
@@ -158,8 +165,9 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
     root.querySelector('[data-scene-description]').textContent = stop.description;
     svg.querySelector('desc').textContent = `${stop.description} Teaching model, not live health or placement.`;
     const branch = branches.find(branch => branch.dataset.mapBranch === (stop.key === 'expert' ? 'components' : stop.key));
-    root.querySelector('[data-view-step]').hidden = !branch;
+    root.querySelector('[data-view-step]').hidden = !branch || stop.key === 'expert';
     root.querySelector('[data-view-overview]').hidden = !branch;
+    root.querySelector('[data-view-overview]').textContent = stop.key === 'expert' ? 'System top ↑' : 'Overview ↑';
     root.querySelector('[data-view-step]').textContent = stop.key === 'expert' ? 'View components ↓' : `View ${stop.name.toLowerCase()} ↓`;
     root.querySelector('[data-component-tools]').hidden = target < 94;
     const url = new URL(location.href);
@@ -187,9 +195,9 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) set(target, true); });
   new ResizeObserver(() => {
     const next = viewport.clientWidth < 700;
-    if (next !== mobile) { mobile = next; set(target, true); }
+    if (next !== compact) { compact = next; set(target, true); }
   }).observe(viewport);
-  const zooms = [100, 125, 150, 200, 250];
+  const zooms = [100, 125, 150, 200, 250, 400, 600];
   let zoomIndex = 0;
   function zoom(index) {
     const previous = zooms[zoomIndex];
@@ -218,7 +226,9 @@ for (const root of document.querySelectorAll('[data-diagram-explorer]')) {
   for (const button of root.querySelectorAll('[data-component-jump]')) button.addEventListener('click', () => {
     set(100, true);
     remember();
-    const section = svg.querySelector(`.map-advanced-${mobile ? 'mobile' : 'desktop'} [data-map-section="${button.dataset.componentJump}"]`);
+    const section = button.dataset.componentJump === 'topology'
+      ? svg.querySelector('[data-map-section="topology"]')
+      : svg.querySelector(`.map-advanced-${svg.dataset.layout} [data-map-section="${button.dataset.componentJump}"]`);
     const top = section.getBoundingClientRect().top - viewport.getBoundingClientRect().top + viewport.scrollTop - 8;
     viewport.scrollTo({ top, left: 0, behavior: reduced.matches ? 'instant' : 'smooth' });
   });

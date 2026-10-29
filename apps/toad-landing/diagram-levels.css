@@ -29,6 +29,28 @@
 .evolving-viewport[data-zoom="150"] .evolving-map{width:150%;max-width:none}
 .evolving-viewport[data-zoom="200"] .evolving-map{width:200%;max-width:none}
 .evolving-viewport[data-zoom="250"] .evolving-map{width:250%;max-width:none}
+.evolving-viewport[data-zoom="400"] .evolving-map{width:400%;max-width:none}
+.evolving-viewport[data-zoom="600"] .evolving-map{width:600%;max-width:none}
+.evolving-map .tech-sheet{fill:#f6f8f2;stroke:#92a58a;stroke-width:1.3}
+.evolving-map .tech-zone{fill:#eef3e8;stroke:#9eb48e;stroke-width:1.2}
+.evolving-map .tech-zone.swarm{fill:#e4eddb;stroke-dasharray:6 4}
+.evolving-map .tech-zone.host{fill:#f8faf4;stroke:#93aa82}
+.evolving-map .tech-zone.network{fill:#e9f1ee;stroke:#97b5aa}
+.evolving-map .tech-zone.monitoring{fill:#eee9f3;stroke:#b3a0c1}
+.evolving-map .tech-zone.operator{fill:#edf0e5;stroke:#a8b795}
+.evolving-map .tech-box{fill:#fbfcf8;stroke:#a7b89a;stroke-width:1}
+.evolving-map .tech-box.visit{fill:#edf5f5;stroke:#86b0b8}
+.evolving-map .tech-box.ship{fill:#f1f5e9;stroke:#a4b780}
+.evolving-map .tech-box.watch{fill:#f8f4fa;stroke:#b7a4c8}
+.evolving-map .tech-heading{font:700 18px Arial,Helvetica,sans-serif;letter-spacing:.7px;fill:#294332}
+.evolving-map .tech-zone-title{font:700 12px Arial,Helvetica,sans-serif;letter-spacing:.3px;fill:#36543d}
+.evolving-map .tech-node-title{font:700 13px Arial,Helvetica,sans-serif;fill:#294332}
+.evolving-map .tech-code{font:11px ui-monospace,monospace;fill:#40583c}
+.evolving-map .tech-small{font:11px Arial,Helvetica,sans-serif;fill:#53694b}
+.evolving-map .tech-mini .tech-code{font-size:10px}
+.evolving-map .tech-mini .tech-node-title{font-size:11px}
+.evolving-map .tech-wire{stroke-width:1.6}
+.evolving-map .tech-wire-label{font:10px ui-monospace,monospace;fill:#4d6450;paint-order:stroke;stroke:#f6f8f2;stroke-width:4;stroke-linejoin:round}
 .evolving-map[data-layout="mobile"] .map-advanced-desktop,.evolving-map[data-layout="desktop"] .map-advanced-mobile{display:none}
 .evolving-map .branch-boundary{fill:#f1f5e9;stroke:#adbf99;stroke-width:1.2}
 .evolving-map .branch-card{fill:#fbfcf7;stroke:#b8c8a7;stroke-width:1}

@@ -14,6 +14,7 @@ export function renderEvolvingMap(): string {
 <desc id="evolving-desc">The same browser, Internet and app remain in view as details are revealed. This is a teaching model, not live infrastructure.</desc>
 <defs>${[['visit', '#267b88'], ['ship', '#69873e'], ['lookup', '#7d8d89'], ['watch', '#827194']].map(([name, color]) => `<marker id="evolving-${name}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="${color}"/></marker>`).join('')}</defs>
 <g aria-hidden="true">
+<g data-map-core>
 <g data-reveal="cloud"><rect data-map-boundary rx="22" class="map-cloud-boundary"/>
 ${node('cloud-label', `${text(0, 'Your cloud account')}${text(24, 'Infomaniak · 3 rented servers', 'map-small')}${layer('network', text(45, 'Heat / Neutron · 10.0.0.0/24', 'map-technical'))}`)}</g>
 ${path('request')}${path('simple-route')}${path('return')}${path('simple-deploy', 'ship')}
@@ -40,6 +41,7 @@ ${node('ingress-label', text(0, 'Swarm ingress · 80/443', 'map-technical'), 'ne
 ${node('prepare-label', text(0, '1 · prepare your cloud', 'map-small ship'), 'delivery')}
 ${node('publish-label', text(0, '2 · publish', 'map-small ship'), 'delivery')}
 ${node('deploy-label', text(0, '3 · deploy', 'map-small ship'), 'delivery')}
+</g>
 <path data-map-spine class="map-unfold-path" data-reveal="network"/>
 ${renderComponentMap()}
 ${renderDetailBranches()}

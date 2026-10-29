@@ -57,7 +57,15 @@ The homepage has one evolving SVG scene, rendered by `presentation/evolving-map.
 A native difficulty range has ten stops: **Your code**, **Names & IPs**, **HTTPS**,
 **Your cloud**, **Shipping**, **Swarm** (the default), **Networking**, **Trust**,
 **Observation**, and **Full system**. The same device, Internet and app nodes
-persist throughout. `presentation/diagram-depth.ts` owns the step descriptions
+persist through the first nine levels. At Full system, the overview fades and
+the implementation unfolds at the top of the same SVG; no extra click is needed.
+`presentation/technical-system.ts` draws the engineering schematic with nested
+OpenStack / tenant / manager / service / monitoring boundaries, fixed private
+addresses, three explicit host interiors, global collectors, ports, protocols,
+provider resources, exact configuration fields and operator command paths.
+It remains a wide technical canvas on phones; zoom and pan expose the same
+details rather than substituting a simpler mobile diagram.
+`presentation/diagram-depth.ts` owns the step descriptions
 and 42 advanced detail cards. `presentation/component-map.ts` adds an explicit
 component topology at Full system: local tools, provider APIs, chosen OCI registry,
 Docker Swarm services and the monitoring pipelines. Workstation, Swarm/registry
@@ -81,10 +89,9 @@ The mobile layout follows the same scene vertically in a scrollable viewport.
 Native keyboard controls work, and the URL shares both named levels
 (`?level=network#whole-picture`) and intermediate detail (`?detail=61#whole-picture`).
 Old `web` and `toad` named links still resolve to HTTPS and Swarm. Fit and
-100–250% zoom operate inside the diagram viewport; View this step and Overview
-pan within it. View components opens the topology before the advanced detail
-cards. Inactive branches reserve no vertical space. New advanced layers do not
-auto-pan; returning to a basic step
+100–600% zoom operate inside the diagram viewport; section shortcuts and System
+top pan within it. Inactive branches reserve no vertical space. Selecting Full
+system returns to the top so the implementation is immediately visible. Returning to a basic step
 brings the original route back into view.
 Range adjustments are coalesced into history entries; Back/Forward restore the scene.
 

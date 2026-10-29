@@ -8,12 +8,16 @@ inventory of your account. Public `198.51.100.x` addresses are reserved examples
 private addresses below are the template's defaults.
 
 The same implementation can be read in the homepage's **Expert** level.
+At maximum detail, its schematic opens directly in the diagram viewport.
+It shows declared host interiors and service constraints; unconstrained app-task
+placement is explicitly left unassigned. The wide technical canvas is retained
+on phones, with zoom up to 600% and horizontal/vertical scrolling.
 Start with [the evolving diagram](https://toad.remigirard.dev/#whole-picture) or the
 [complete Infomaniak recipe](INFOMANIAK-EXAMPLE.md) for the runnable setup.
 
 ## Network and runtime
 
-![Declared network and runtime: separate operator, DNS and browser paths; public SSH, outbound router and load-balancer addresses; three private managers, one Traefik replica, application and monitoring services. This is not a live placement or health map.](../website/implementation-map.svg)
+![Declared network and runtime: separate operator, DNS and browser paths; public SSH and load-balancer addresses, an outbound router, three private managers, one Traefik replica, application and monitoring services. This is not a live placement or health map.](../website/implementation-map.svg)
 
 ### Resource and address ownership
 
@@ -25,7 +29,7 @@ Start with [the evolving diagram](https://toad.remigirard.dev/#whole-picture) or
 | Tenant network | `10.0.0.0/24`, gateway `10.0.0.1`; managers `10.0.0.20`, `.21`, `.22`. VM resolver defaults are `1.1.1.1` and `9.9.9.9`. |
 | App public entry | Octavia's floating IPv4, `198.51.100.30` in the example, is bound to its VIP port. The private VIP is provider assigned. App DNS resolves to this public address. |
 | Operator public entry | Manager 1's floating IPv4, `198.51.100.20` in the example. Inventory uses it directly for manager 1 and an explicit OpenSSH ProxyCommand through it for the other private managers. The generated inventory is private, mode `0600`. |
-| Outbound networking | The Neutron router has an external gateway on the configured public network. Its provider-assigned public address is separate from the two floating-IP resources. `198.51.100.40` is only an example of this third role. |
+| Outbound networking | The Neutron router binds an external gateway to `ext-floating1`. The template does not declare its egress address or guarantee a distinct outbound IP; floating-IP outbound NAT may also apply. Inspect actual provider state before asserting the source IP. |
 
 ### Allowed paths and routing
 
@@ -46,6 +50,15 @@ Traefik is **one replica**, placed on the manager labelled
 store is a local named volume. Three healthy managers do not make this ingress
 state highly available. Application tasks use the external `traefik-public`
 network; application manifests cannot expose their own published host ports.
+
+The Swarm provider reads the manager Unix socket using Docker API version
+`1.44`, with service discovery opt-in through labels. The file provider watches
+`/etc/traefik/dynamic.yaml`. Internal entrypoints are `8080` for Traefik/ping
+and `9100` for Prometheus metrics; only `80` and `443` are ingress-published.
+Its update order is `stop-first`, with rollback on failure. These details do not
+make the read-only Docker socket mount an unprivileged capability. Neither an
+explicit overlay MTU nor the encrypted network flag is declared in the inspected
+Swarm and monitoring network setup.
 
 Sources: [Heat profile](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/heat/level5-production.yaml),
 [Swarm initialization](https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/ansible/playbooks/initJoinSwarm.yaml),

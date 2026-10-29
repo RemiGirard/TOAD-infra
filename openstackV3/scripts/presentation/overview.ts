@@ -220,7 +220,7 @@ ${text(360, 380, 'NEUTRON TENANT 10.0.0.0/24 · gateway 10.0.0.1', 'label', 'sta
 ${card(40, 400, 260, 170, 'SSH entry', ['Floating IPv4: 198.51.100.20', 'TCP 22 from configured CIDR', '/32 in the worked example', 'ubuntu; manager 1 is the jump'], 'laptop')}
 ${arrow('M15 200H8V485H34')}
 ${arrow('M305 525H331V665H369')}
-${card(40, 630, 260, 170, 'Outbound router', ['Provider-assigned gateway IP', '198.51.100.40 here is an example', 'Private VMs use it for egress', 'Separate from the app / SSH IP'], 'cloud')}
+${card(40, 630, 260, 170, 'Outbound router', ['External gateway: ext-floating1', 'Subnet gateway: 10.0.0.1', 'Egress address is not declared', 'Floating-IP outbound NAT may apply'], 'cloud')}
 ${arrow('M370 742H320V715H305', 'lookup')}
 ${card(40, 860, 260, 230, 'Declared resources', ['3 Nova servers; configured AZs', 'Soft anti-affinity server group', 'Private net, subnet and router', 'Two floating IP resources', 'Octavia LB, pools and members', 'Designate child DNS zone', 'Not a live resource inventory'], 'server')}
 ${card(750, 410, 450, 145, 'Octavia public entrance', ['Floating IPv4: 198.51.100.30 → private VIP', 'TCP 80 + 443; ROUND_ROBIN pools', 'TCP checks: delay 10 s / timeout 5 s / retries 3', 'TCP passthrough: no TLS termination here'], 'cloud')}

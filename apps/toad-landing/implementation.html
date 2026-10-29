@@ -6,10 +6,14 @@ It describes declarations and control flow, not the current health or resource
 inventory of your account. Public <code>198.51.100.x</code> addresses are reserved examples;
 private addresses below are the template&#39;s defaults.</p>
 <p>The same implementation can be read in the homepage&#39;s <strong>Expert</strong> level.
+At maximum detail, its schematic opens directly in the diagram viewport.
+It shows declared host interiors and service constraints; unconstrained app-task
+placement is explicitly left unassigned. The wide technical canvas is retained
+on phones, with zoom up to 600% and horizontal/vertical scrolling.
 Start with <a href="https://toad.remigirard.dev/#whole-picture">the evolving diagram</a> or the
 <a href="/infomaniak.html">complete Infomaniak recipe</a> for the runnable setup.</p>
 <h2 id="network-and-runtime">Network and runtime</h2>
-<p><span class="implementation-figure"><span class="implementation-scroll" tabindex="0" role="region" aria-label="Expert topology; scroll horizontally to inspect"><span class="implementation-canvas"><img src="/implementation-map.svg" width="1280" height="1240" alt="Declared network and runtime: separate operator, DNS and browser paths; public SSH, outbound router and load-balancer addresses; three private managers, one Traefik replica, application and monitoring services. This is not a live placement or health map." loading="lazy"></span></span><span class="implementation-caption"><span>Source-defined topology · scroll horizontally for the complete map · public IPs are examples</span><a href="/implementation-map.svg">Open full size ↗</a></span></span></p>
+<p><span class="implementation-figure"><span class="implementation-scroll" tabindex="0" role="region" aria-label="Expert topology; scroll horizontally to inspect"><span class="implementation-canvas"><img src="/implementation-map.svg" width="1280" height="1240" alt="Declared network and runtime: separate operator, DNS and browser paths; public SSH and load-balancer addresses, an outbound router, three private managers, one Traefik replica, application and monitoring services. This is not a live placement or health map." loading="lazy"></span></span><span class="implementation-caption"><span>Source-defined topology · scroll horizontally for the complete map · public IPs are examples</span><a href="/implementation-map.svg">Open full size ↗</a></span></span></p>
 <h3 id="resource-and-address-ownership">Resource and address ownership</h3>
 <table>
 <thead>
@@ -44,7 +48,7 @@ Start with <a href="https://toad.remigirard.dev/#whole-picture">the evolving dia
 </tr>
 <tr>
 <td>Outbound networking</td>
-<td>The Neutron router has an external gateway on the configured public network. Its provider-assigned public address is separate from the two floating-IP resources. <code>198.51.100.40</code> is only an example of this third role.</td>
+<td>The Neutron router binds an external gateway to <code>ext-floating1</code>. The template does not declare its egress address or guarantee a distinct outbound IP; floating-IP outbound NAT may also apply. Inspect actual provider state before asserting the source IP.</td>
 </tr>
 </tbody></table>
 <h3 id="allowed-paths-and-routing">Allowed paths and routing</h3>
@@ -97,6 +101,14 @@ Start with <a href="https://toad.remigirard.dev/#whole-picture">the evolving dia
 store is a local named volume. Three healthy managers do not make this ingress
 state highly available. Application tasks use the external <code>traefik-public</code>
 network; application manifests cannot expose their own published host ports.</p>
+<p>The Swarm provider reads the manager Unix socket using Docker API version
+<code>1.44</code>, with service discovery opt-in through labels. The file provider watches
+<code>/etc/traefik/dynamic.yaml</code>. Internal entrypoints are <code>8080</code> for Traefik/ping
+and <code>9100</code> for Prometheus metrics; only <code>80</code> and <code>443</code> are ingress-published.
+Its update order is <code>stop-first</code>, with rollback on failure. These details do not
+make the read-only Docker socket mount an unprivileged capability. Neither an
+explicit overlay MTU nor the encrypted network flag is declared in the inspected
+Swarm and monitoring network setup.</p>
 <p>Sources: <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/heat/level5-production.yaml">Heat profile</a>,
 <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/ansible/playbooks/initJoinSwarm.yaml">Swarm initialization</a>,
 <a href="https://github.com/RemiGirard/TOAD-infra/blob/bfaa413/openstackV3/scripts/presentation/pages/inventory.ts">inventory generation</a>,
